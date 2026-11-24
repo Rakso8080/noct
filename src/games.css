@@ -1,5 +1,49 @@
 /* Noct — the side boards: chess, mines, pairs, lights. */
 
+/* ------------------------------------------------------ hub / resume chrome */
+
+.game-today {
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  color: var(--text);
+  opacity: 0.85;
+}
+
+.resume-card {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 14px;
+  border-color: var(--accent);
+}
+
+.route-loading {
+  display: grid;
+  gap: 10px;
+  margin: 18px 0;
+}
+
+.route-loading span {
+  display: block;
+  height: 18px;
+  border-radius: var(--r-sm);
+  background: linear-gradient(90deg, var(--surface), var(--surface-2), var(--surface));
+  background-size: 200% 100%;
+  animation: route-shimmer 1.4s linear infinite;
+}
+
+.route-loading span:nth-child(2) {
+  width: 72%;
+}
+
+.route-loading span:nth-child(3) {
+  width: 48%;
+}
+
+@keyframes route-shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+
 /* ---------------------------------------------------------- menu tile tones */
 
 .game-card[data-tone='orchard'] {
@@ -1338,4 +1382,8 @@
 
 [data-motion='reduced'] .num-cell {
   transition: none;
+}
+
+[data-motion='reduced'] .route-loading span {
+  animation: none;
 }

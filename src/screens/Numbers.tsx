@@ -10,11 +10,20 @@ import {
   startBoard,
   type NumDir,
 } from '../lib/g2048';
-import { readGames, recordNumbers, resetNumbers } from '../lib/gamesStore';
+import {
+  clearNumbersRound,
+  readGames,
+  recordNumbers,
+  resetNumbers,
+  saveNumbersRound,
+  type SavedNumbersRound,
+} from '../lib/gamesStore';
+import { ResumeCard } from '../components/ResumeCard';
 import { hashSeed, mulberry32 } from '../lib/rng';
 import { sfx } from '../lib/audio';
 import { haptic } from '../lib/settings';
 import { ScreenHead } from '../components/ui';
+import { useT } from '../lib/i18n';
 import { LeaveGame } from '../components/LeaveGame';
 
 const KEY_DIR: Record<string, NumDir> = {
@@ -35,6 +44,7 @@ const KEY_DIR: Record<string, NumDir> = {
 type Phase = 'playing' | 'won' | 'lost';
 
 export function Numbers({ navigate }: { navigate: (path: string) => void }) {
+  const t = useT();
   const day = dayNumber();
   const [round, setRound] = useState(0);
   const [board, setBoard] = useState<number[]>(() => startBoard(mulberry32(hashSeed('numbers', day, 0))));
@@ -46,6 +56,10 @@ export function Numbers({ navigate }: { navigate: (path: string) => void }) {
   const [startedAt, setStartedAt] = useState<number | null>(null);
   const [elapsed, setElapsed] = useState(0);
   const [leaveOpen, setLeaveOpen] = useState(false);
+  const [resume, setResume] = useState<SavedNumbersRound | null>(() => {
+    const saved = readGames().numbers.saved;
+    return saved && saved.day === day ? saved : null;
+  });
   const recorded = useRef(false);
 
   useEffect(() => {
@@ -63,7 +77,7 @@ export function Numbers({ navigate }: { navigate: (path: string) => void }) {
   useEffect(() => {
     if (phase === 'playing' || recorded.current) return;
     recorded.current = true;
-    recordNumbers(score, maxTile(board), phase === 'won');
+    recordNumbers(day, score, maxTile(board), phase === 'won');
     const store = readGames().numbers;
     setBest(store.bestScore);
     setBestTile(store.bestTile);
@@ -74,7 +88,16 @@ export function Numbers({ navigate }: { navigate: (path: string) => void }) {
       sfx.blocked();
       haptic(12);
     }
-  }, [phase, score, board]);
+  }, [board, day, phase, score]);
+
+  useEffect(() => {
+    if (moves === 0) return;
+    if (phase === 'playing') {
+      saveNumbersRound({ day, board, score, moves });
+    } else {
+      clearNumbersRound();
+    }
+  }, [board, day, moves, phase, score]);
 
   const reset = useCallback(() => {
     const nextRound = round + 1;
@@ -86,11 +109,14 @@ export function Numbers({ navigate }: { navigate: (path: string) => void }) {
     setStartedAt(null);
     setElapsed(0);
     recorded.current = false;
+    setResume(null);
+    clearNumbersRound();
     sfx.tap();
   }, [day, round]);
 
   const move = useCallback(
     (dir: NumDir) => {
+      if (resume) return;
       setBoard((current) => {
         const result = slide(current, dir);
         if (!result.moved) return current;
@@ -111,7 +137,7 @@ export function Numbers({ navigate }: { navigate: (path: string) => void }) {
         return withTile;
       });
     },
-    [day, moves, round],
+    [day, moves, resume, round],
   );
 
   useEffect(() => {
@@ -143,15 +169,18 @@ export function Numbers({ navigate }: { navigate: (path: string) => void }) {
   const seconds = Math.floor(elapsed / 1000);
   const status =
     phase === 'won'
-      ? `A ${NUM_GOAL} lantern is lit`
+      ? t('A {goal} lantern is lit', { goal: NUM_GOAL })
       : phase === 'lost'
-        ? 'The room is full and nothing doubles'
-        : `Next goal ${Math.min(NUM_GOAL, Math.max(4, max * 2))}`;
+        ? t('The room is full and nothing doubles')
+        : t('Next goal {n}', { n: Math.min(NUM_GOAL, Math.max(4, max * 2)) });
 
   return (
     <main className="main">
       <div className="wrap" style={{ maxWidth: 600 }}>
-        <ScreenHead eyebrow={`2048 · Night ${String(day).padStart(3, '0')}`} title="The doubling room">
+        <ScreenHead
+          eyebrow={t('2048 · Night {n}', { n: String(day).padStart(3, '0') })}
+          title={t('The doubling room')}
+        >
           Slide every lantern; equal neighbours fuse into the next power. The room is lit at a{' '}
           {NUM_GOAL} tile, and the night ends when nothing can move. Arrows, WASD or the pad below;
           Enter restarts, Escape leaves the table.
@@ -159,25 +188,45 @@ export function Numbers({ navigate }: { navigate: (path: string) => void }) {
 
         <div className="mini-hud">
           <span className="chip">
-            <span className="mono">{score}</span> points
+            <span className="mono">{score}</span> {t('points')}
           </span>
           <span className="chip">
-            <span className="mono">{moves}</span> moves
+            <span className="mono">{moves}</span> {t('moves')}
           </span>
-          <span className="chip">Max {max}</span>
+          <span className="chip">{t('Max {n}', { n: max })}</span>
           <span className="chip">
             <span className="mono">
               {String(Math.floor(seconds / 60)).padStart(2, '0')}:{String(seconds % 60).padStart(2, '0')}
             </span>
           </span>
-          <span className="chip">{best === null ? 'No best yet' : `Best ${best}`}</span>
-          <span className="chip">{bestTile === null ? 'Best tile —' : `Best tile ${bestTile}`}</span>
+          <span className="chip">{best === null ? t('No best yet') : t('Best {n}', { n: best })}</span>
+          <span className="chip">{bestTile === null ? t('Best tile —') : t('Best tile {n}', { n: bestTile })}</span>
         </div>
 
         <p className="par-note" aria-live="polite" style={{ margin: '0 0 10px' }}>
           {status}
         </p>
 
+        {resume ? (
+          <ResumeCard
+            title={t('A room is already open')}
+            body={t('You left this run mid-slide. Continue it, or start a fresh room for today.')}
+            meta={`${resume.score} points · ${resume.moves} moves`}
+            onContinue={() => {
+              setBoard(resume.board);
+              setScore(resume.score);
+              setMoves(resume.moves);
+              setStartedAt(Date.now());
+              setResume(null);
+              sfx.tap();
+            }}
+            onDiscard={() => {
+              clearNumbersRound();
+              setResume(null);
+              sfx.remove();
+            }}
+          />
+        ) : (
         <div
           className={`num-grid${phase === 'won' ? ' is-won' : ''}${phase === 'lost' ? ' is-lost' : ''}`}
           role="grid"
@@ -203,8 +252,9 @@ export function Numbers({ navigate }: { navigate: (path: string) => void }) {
             </div>
           ))}
         </div>
+        )}
 
-        <div className="snake-pad" role="group" aria-label="Slide the room">
+        <div className="snake-pad" role="group" aria-label="Slide the room" style={resume ? { display: 'none' } : undefined}>
           <button type="button" className="btn btn-sm btn-ghost" aria-label="Slide up" onClick={() => move('up')}>
             ↑
           </button>
@@ -223,7 +273,7 @@ export function Numbers({ navigate }: { navigate: (path: string) => void }) {
 
         <div className="mini-actions">
           <button className="btn btn-sm" onClick={reset}>
-            New room
+            {t('New room')}
           </button>
           <button
             className="btn btn-sm btn-ghost"
@@ -234,17 +284,17 @@ export function Numbers({ navigate }: { navigate: (path: string) => void }) {
               sfx.remove();
             }}
           >
-            Reset best
+            {t('Reset best')}
           </button>
           <button className="btn btn-sm btn-ghost" onClick={() => navigate('/')}>
-            Menu
+            {t('Menu')}
           </button>
         </div>
 
         <LeaveGame
           open={leaveOpen}
-          title="Leave the doubling room?"
-          body="The room is only kept while this page is open. Leaving ends this run."
+          title={t('Leave the doubling room?')}
+          body={t('Your run is saved for today. You can pick it up from this table, or discard it here.')}
           onStay={() => setLeaveOpen(false)}
           onLeave={() => navigate('/arcade')}
         />
@@ -252,10 +302,12 @@ export function Numbers({ navigate }: { navigate: (path: string) => void }) {
         {phase !== 'playing' ? (
           <div className="mini-banner" role="status">
             <strong>
-              {phase === 'won' ? `Room lit · ${score} points` : `No moves left · ${score} points`}
+              {phase === 'won'
+                ? t('Room lit · {score} points', { score })
+                : t('No moves left · {score} points', { score })}
             </strong>
             <button className="btn btn-sm btn-primary" onClick={reset}>
-              Play again
+              {t('Play again')}
             </button>
           </div>
         ) : null}

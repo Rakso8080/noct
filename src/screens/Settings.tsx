@@ -5,9 +5,12 @@ import { haptic, updateSettings, useSettings, type Theme } from '../lib/settings
 import { sfx } from '../lib/audio';
 import { clearSummary } from '../lib/results';
 import { clearGames } from '../lib/gamesStore';
+import { setLang, useLang, useT, type Lang } from '../lib/i18n';
 
 export function Settings({ navigate }: { navigate: (path: string) => void }) {
   const settings = useSettings();
+  const t = useT();
+  const lang = useLang();
   const [name, setName] = useState('');
   const [savedName, setSavedName] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -59,11 +62,27 @@ export function Settings({ navigate }: { navigate: (path: string) => void }) {
   return (
     <main className="main">
       <div className="wrap" style={{ maxWidth: 680 }}>
-        <ScreenHead eyebrow="Settings" title="Make it yours">
-          Nothing here is required. The game plays the same either way.
+        <ScreenHead eyebrow={t('Settings')} title={t('Make it yours')}>
+          {t('Nothing here is required. The game plays the same either way.')}
         </ScreenHead>
 
         <section className="card" style={{ marginBottom: 20 }}>
+          <div className="setting-row">
+            <div className="setting-copy">
+              <strong>{t('Language')}</strong>
+              <small>{t('The interface language. Saved on this device.')}</small>
+            </div>
+            <Segmented<Lang>
+              label={t('Language')}
+              value={lang}
+              onChange={(next) => setLang(next)}
+              options={[
+                { value: 'en', label: t('English') },
+                { value: 'nb', label: t('Norwegian') },
+              ]}
+            />
+          </div>
+
           <div className="setting-row">
             <div className="setting-copy">
               <strong>Theme</strong>

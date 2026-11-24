@@ -32,10 +32,69 @@ export interface LightsDay {
   moves: number;
 }
 
+export interface SnakeDay {
+  steps: number;
+  apples: number;
+  won: boolean;
+}
+
+export interface NumbersDay {
+  score: number;
+  tile: number;
+  won: boolean;
+}
+
+export interface ReversiDay {
+  margin: number;
+  discs: number;
+  moves: number;
+}
+
+export interface SavedSnakeRound {
+  day: number;
+  snake: number[];
+  food: number;
+  steps: number;
+  apples: number;
+  dir: 'up' | 'down' | 'left' | 'right';
+}
+
+export interface SavedNumbersRound {
+  day: number;
+  board: number[];
+  score: number;
+  moves: number;
+}
+
+export interface SavedReversiRound {
+  day: number;
+  board: number[];
+  turn: 1 | 2;
+  moves: number;
+}
+
 export interface GamesStore {
-  snake: { best: number | null; wins: number };
-  numbers: { bestScore: number | null; bestTile: number | null; wins: number };
-  reversi: { bestMargin: number | null; wins: number; losses: number; draws: number };
+  snake: {
+    best: number | null;
+    wins: number;
+    daily: Record<string, SnakeDay>;
+    saved: SavedSnakeRound | null;
+  };
+  numbers: {
+    bestScore: number | null;
+    bestTile: number | null;
+    wins: number;
+    daily: Record<string, NumbersDay>;
+    saved: SavedNumbersRound | null;
+  };
+  reversi: {
+    bestMargin: number | null;
+    wins: number;
+    losses: number;
+    draws: number;
+    daily: Record<string, ReversiDay>;
+    saved: SavedReversiRound | null;
+  };
   mines: { best: Record<string, number>; bestFree: number | null; daily: Record<string, MinesDay> };
   pairs: {
     bestMoves: number | null;
@@ -60,9 +119,9 @@ const KEY = 'noct.games.v1';
 
 function empty(): GamesStore {
   return {
-    snake: { best: null, wins: 0 },
-    numbers: { bestScore: null, bestTile: null, wins: 0 },
-    reversi: { bestMargin: null, wins: 0, losses: 0, draws: 0 },
+    snake: { best: null, wins: 0, daily: {}, saved: null },
+    numbers: { bestScore: null, bestTile: null, wins: 0, daily: {}, saved: null },
+    reversi: { bestMargin: null, wins: 0, losses: 0, draws: 0, daily: {}, saved: null },
     mines: { best: {}, bestFree: null, daily: {} },
     pairs: { bestMoves: null, bestMs: null, bestFreeMoves: null, bestFreeMs: null, daily: {} },
     lights: { bestMoves: null, bestFree: null, daily: {} },
@@ -78,9 +137,17 @@ export function readGames(): GamesStore {
     const parsed = JSON.parse(raw) as Partial<GamesStore>;
     if (!parsed || typeof parsed !== 'object') return base;
     return {
-      snake: { ...base.snake, ...parsed.snake },
-      numbers: { ...base.numbers, ...parsed.numbers },
-      reversi: { ...base.reversi, ...parsed.reversi },
+      snake: { ...base.snake, ...parsed.snake, daily: { ...base.snake.daily, ...parsed.snake?.daily } },
+      numbers: {
+        ...base.numbers,
+        ...parsed.numbers,
+        daily: { ...base.numbers.daily, ...parsed.numbers?.daily },
+      },
+      reversi: {
+        ...base.reversi,
+        ...parsed.reversi,
+        daily: { ...base.reversi.daily, ...parsed.reversi?.daily },
+      },
       mines: { ...base.mines, ...parsed.mines, best: { ...base.mines.best, ...parsed.mines?.best } },
       pairs: { ...base.pairs, ...parsed.pairs },
       lights: { ...base.lights, ...parsed.lights },
@@ -178,8 +245,12 @@ export function clearChessGame(): void {
   write(store);
 }
 
-export function recordSnake(steps: number, won: boolean): void {
+export function recordSnake(day: number, steps: number, apples: number, won: boolean): void {
   const store = readGames();
+  const key = String(day);
+  const prev = store.snake.daily[key];
+  const better = !prev || (won && !prev.won) || (won === prev.won && steps < prev.steps);
+  if (better) store.snake.daily[key] = { steps, apples, won };
   if (won) {
     store.snake.wins++;
     if (store.snake.best === null || steps < store.snake.best) store.snake.best = steps;
@@ -187,16 +258,34 @@ export function recordSnake(steps: number, won: boolean): void {
   write(store);
 }
 
-export function recordNumbers(score: number, tile: number, won: boolean): void {
+export function recordNumbers(day: number, score: number, tile: number, won: boolean): void {
   const store = readGames();
+  const key = String(day);
+  const prev = store.numbers.daily[key];
+  if (!prev || score > prev.score || (score === prev.score && tile > prev.tile)) {
+    store.numbers.daily[key] = { score, tile, won };
+  } else if (won && !prev.won) {
+    store.numbers.daily[key] = { ...prev, won };
+  }
   if (store.numbers.bestScore === null || score > store.numbers.bestScore) store.numbers.bestScore = score;
   if (store.numbers.bestTile === null || tile > store.numbers.bestTile) store.numbers.bestTile = tile;
   if (won) store.numbers.wins++;
   write(store);
 }
 
-export function recordReversi(result: 'win' | 'loss' | 'draw', margin: number): void {
+export function recordReversi(
+  day: number,
+  result: 'win' | 'loss' | 'draw',
+  margin: number,
+  discs = 0,
+  moves = 0,
+): void {
   const store = readGames();
+  const key = String(day);
+  const prev = store.reversi.daily[key];
+  if (!prev || (result === 'win' && margin > prev.margin)) {
+    store.reversi.daily[key] = { margin, discs, moves };
+  }
   if (result === 'win') {
     store.reversi.wins++;
     if (store.reversi.bestMargin === null || margin > store.reversi.bestMargin) {
@@ -210,22 +299,73 @@ export function recordReversi(result: 'win' | 'loss' | 'draw', margin: number): 
   write(store);
 }
 
+/* ------------------------------------------------------- unfinished rounds */
+
+export function saveSnakeRound(round: SavedSnakeRound): void {
+  const store = readGames();
+  store.snake.saved = round;
+  write(store);
+}
+
+export function clearSnakeRound(): void {
+  const store = readGames();
+  store.snake.saved = null;
+  write(store);
+}
+
+export function saveNumbersRound(round: SavedNumbersRound): void {
+  const store = readGames();
+  store.numbers.saved = round;
+  write(store);
+}
+
+export function clearNumbersRound(): void {
+  const store = readGames();
+  store.numbers.saved = null;
+  write(store);
+}
+
+export function saveReversiRound(round: SavedReversiRound): void {
+  const store = readGames();
+  store.reversi.saved = round;
+  write(store);
+}
+
+export function clearReversiRound(): void {
+  const store = readGames();
+  store.reversi.saved = null;
+  write(store);
+}
+
+/** Consecutive days that end today or yesterday, for the hub's streak chip. */
+export function dayStreak(days: readonly number[], today = dayNumber()): number {
+  if (!days.length) return 0;
+  const unique = [...new Set(days)].sort((a, b) => b - a);
+  if (unique[0] !== today && unique[0] !== today - 1) return 0;
+  let run = 1;
+  for (let i = 1; i < unique.length; i++) {
+    if (unique[i] === unique[i - 1] - 1) run++;
+    else break;
+  }
+  return run;
+}
+
 /** Per-game reset for the arcade records, so one game can start over alone. */
 export function resetSnake(): void {
   const store = readGames();
-  store.snake = { best: null, wins: 0 };
+  store.snake = { best: null, wins: 0, daily: {}, saved: null };
   write(store);
 }
 
 export function resetNumbers(): void {
   const store = readGames();
-  store.numbers = { bestScore: null, bestTile: null, wins: 0 };
+  store.numbers = { bestScore: null, bestTile: null, wins: 0, daily: {}, saved: null };
   write(store);
 }
 
 export function resetReversi(): void {
   const store = readGames();
-  store.reversi = { bestMargin: null, wins: 0, losses: 0, draws: 0 };
+  store.reversi = { bestMargin: null, wins: 0, losses: 0, draws: 0, daily: {}, saved: null };
   write(store);
 }
 

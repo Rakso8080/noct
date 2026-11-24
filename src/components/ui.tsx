@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { preferReducedMotion } from '../lib/settings';
+import { useT } from '../lib/i18n';
 
 export function Logo({ size = 22 }: { size?: number }) {
   return (
@@ -212,11 +213,16 @@ export function ScreenHead({
   title: string;
   children?: ReactNode;
 }) {
+  const t = useT();
   return (
     <header className="stack gap-10" style={{ marginBottom: 26 }}>
-      <div className="eyebrow">{eyebrow}</div>
-      <h1 style={{ fontSize: 'var(--step-3)' }}>{title}</h1>
-      {children ? <p className="lede" style={{ fontSize: 'var(--step-0)' }}>{children}</p> : null}
+      <div className="eyebrow">{t(eyebrow)}</div>
+      <h1 style={{ fontSize: 'var(--step-3)' }}>{t(title)}</h1>
+      {children ? (
+        <p className="lede" style={{ fontSize: 'var(--step-0)' }}>
+          {typeof children === 'string' ? t(children) : children}
+        </p>
+      ) : null}
     </header>
   );
 }

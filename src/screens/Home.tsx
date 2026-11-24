@@ -6,6 +6,7 @@ import { dailyRunFor, streakFor, type SurveyRun } from '../lib/surveyStore';
 import { dayNumber, nextResetAt } from '../../shared/dates';
 import { MAX_SCORE } from '../../shared/score';
 import { readGames, type GamesStore } from '../lib/gamesStore';
+import { useT } from '../lib/i18n';
 
 interface HomeProps {
   navigate: (path: string) => void;
@@ -59,29 +60,30 @@ interface TileProps {
 }
 
 function GameTile({ index, kind, name, line, meta, tone, shape, status, action, onPlay }: TileProps) {
+  const t = useT();
   return (
     <article className="game-card" data-tone={tone}>
       <div className="row" style={{ justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
         <span className="eyebrow">
-          {index} · {kind}
+          {index} · {t(kind)}
         </span>
-        <span className="game-status">{status}</span>
+        <span className="game-status">{t(status)}</span>
       </div>
       <div className="row gap-10" style={{ alignItems: 'center' }}>
         <span className="game-icon">
           <PixelIcon shape={shape} />
         </span>
-        <h2 className="game-name">{name}</h2>
+        <h2 className="game-name">{t(name)}</h2>
       </div>
       <p className="par-note" style={{ margin: 0, flex: 1 }}>
-        {line}
+        {t(line)}
       </p>
       <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', gap: 10, marginTop: 6 }}>
         <span className="par-note mono" style={{ margin: 0, fontSize: '0.9375rem' }}>
-          {meta}
+          {t(meta)}
         </span>
         <button className="btn btn-sm" onClick={onPlay}>
-          {action}
+          {t(action)}
         </button>
       </div>
     </article>
@@ -89,6 +91,7 @@ function GameTile({ index, kind, name, line, meta, tone, shape, status, action, 
 }
 
 export function Home({ navigate, onTutorial }: HomeProps) {
+  const t = useT();
   const [today, setToday] = useState<TodayResponse | null>(null);
   const [common, setCommon] = useState<SurveyRun | null>(null);
   const [rare, setRare] = useState<SurveyRun | null>(null);
@@ -152,34 +155,35 @@ export function Home({ navigate, onTutorial }: HomeProps) {
 
           <div className="home-hero-inner">
             <div className="hero-hud">
-              <span className="hud-pill">Night {String(day).padStart(3, '0')}</span>
+              <span className="hud-pill">{t('Night {n}', { n: String(day).padStart(3, '0') })}</span>
               <span className="hud-pill is-gold">
                 <span className="chip-dot" aria-hidden="true" />
-                {streak}-day streak
+                {t('{n}-day streak', { n: streak })}
               </span>
               <span className="hud-pill">
-                Next set <Countdown to={today ? today.nextResetAt : nextResetAt()} />
+                {t('Next set')} <Countdown to={today ? today.nextResetAt : nextResetAt()} />
               </span>
             </div>
 
             <h1 className="wordmark">Noct</h1>
             <p className="hero-line">
-              Seven boards for the night and three arcade tables behind them. Twenty-five seconds a
-              prompt, one attempt each.
+              {t(
+                'Seven boards for the night and three arcade tables behind them. Twenty-five seconds a prompt, one attempt each.',
+              )}
             </p>
 
             <div className="row gap-10" style={{ flexWrap: 'wrap', justifyContent: 'center', marginTop: 4 }}>
               <button className="btn btn-primary btn-lg" onClick={() => navigate('/common')}>
-                Play today
+                {t('Play today')}
               </button>
               <button className="btn btn-ghost" onClick={onTutorial}>
-                How to play
+                {t('How to play')}
               </button>
             </div>
           </div>
         </section>
 
-        <div className="menu-grid" style={{ marginTop: 20 }} aria-label="Choose a game">
+        <div className="menu-grid" style={{ marginTop: 20 }} aria-label={t('Choose a game')}>
           <GameTile
             index="01"
             kind="choir"

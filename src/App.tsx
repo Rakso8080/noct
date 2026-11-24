@@ -1,24 +1,29 @@
-import { useCallback, useEffect, useState, type ReactNode } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useState, type ReactNode } from 'react';
 import { Home } from './screens/Home';
-import { Play } from './screens/Play';
-import { Results } from './screens/Results';
-import { Archive } from './screens/Archive';
-import { Stats } from './screens/Stats';
-import { Leaderboard } from './screens/Leaderboard';
-import { Settings } from './screens/Settings';
-import { HowTo } from './screens/HowTo';
-import { Survey } from './screens/Survey';
-import { Chess } from './screens/Chess';
-import { Mines } from './screens/Mines';
-import { Pairs } from './screens/Pairs';
-import { Lights } from './screens/Lights';
-import { Snake } from './screens/Snake';
-import { Numbers } from './screens/Numbers';
-import { Reversi } from './screens/Reversi';
-import { Arcade } from './screens/Arcade';
+import { RouteBoundary } from './components/RouteBoundary';
+
+/* Every screen but the menu is its own chunk, so the first paint ships the
+   menu, not all fifteen boards. */
+const Play = lazy(() => import('./screens/Play').then((m) => ({ default: m.Play })));
+const Results = lazy(() => import('./screens/Results').then((m) => ({ default: m.Results })));
+const Archive = lazy(() => import('./screens/Archive').then((m) => ({ default: m.Archive })));
+const Stats = lazy(() => import('./screens/Stats').then((m) => ({ default: m.Stats })));
+const Leaderboard = lazy(() => import('./screens/Leaderboard').then((m) => ({ default: m.Leaderboard })));
+const Settings = lazy(() => import('./screens/Settings').then((m) => ({ default: m.Settings })));
+const HowTo = lazy(() => import('./screens/HowTo').then((m) => ({ default: m.HowTo })));
+const Survey = lazy(() => import('./screens/Survey').then((m) => ({ default: m.Survey })));
+const Chess = lazy(() => import('./screens/Chess').then((m) => ({ default: m.Chess })));
+const Mines = lazy(() => import('./screens/Mines').then((m) => ({ default: m.Mines })));
+const Pairs = lazy(() => import('./screens/Pairs').then((m) => ({ default: m.Pairs })));
+const Lights = lazy(() => import('./screens/Lights').then((m) => ({ default: m.Lights })));
+const Snake = lazy(() => import('./screens/Snake').then((m) => ({ default: m.Snake })));
+const Numbers = lazy(() => import('./screens/Numbers').then((m) => ({ default: m.Numbers })));
+const Reversi = lazy(() => import('./screens/Reversi').then((m) => ({ default: m.Reversi })));
+const Arcade = lazy(() => import('./screens/Arcade').then((m) => ({ default: m.Arcade })));
 import { Logo } from './components/ui';
 import { getSummary, setSummary } from './lib/results';
 import { dayNumber } from '../shared/dates';
+import { useT } from './lib/i18n';
 import { BRAND } from './brand';
 
 /** The site can be served from a subpath (GitHub Pages: /noct/), so routes carry the base. */
@@ -74,6 +79,7 @@ const NAV: NavItem[] = [
 
 export function App() {
   const [path, navigate] = useRoute();
+  const t = useT();
   const [moreOpen, setMoreOpen] = useState(false);
 
   useEffect(() => {
@@ -148,19 +154,21 @@ export function App() {
       <main className="main" key={`archive-miss-${segments[1]}`}>
         <div className="wrap" style={{ maxWidth: 480 }}>
           <div className="card stack gap-14">
-            <span className="eyebrow">Archive</span>
-            <h1 style={{ fontSize: 'var(--step-2)' }}>That board is not in the drawer</h1>
+            <span className="eyebrow">{t('Archive')}</span>
+            <h1 style={{ fontSize: 'var(--step-2)' }}>{t('That board is not in the drawer')}</h1>
             <p className="par-note" style={{ margin: 0 }}>
               {Number.isFinite(day) && day >= dayNumber()
-                ? 'Today’s board is still being played — it lives under Noct, not the archive. It joins the drawer tomorrow.'
-                : 'The archive keeps the last 365 nights. This address is outside it.'}
+                ? t(
+                    'Today’s board is still being played — it lives under Noct, not the archive. It joins the drawer tomorrow.',
+                  )
+                : t('The archive keeps the last 365 nights. This address is outside it.')}
             </p>
             <div className="row gap-10" style={{ flexWrap: 'wrap' }}>
               <button className="btn btn-primary" onClick={() => navigate('/play')}>
-                Play today’s board
+                {t('Play today’s board')}
               </button>
               <button className="btn btn-ghost" onClick={() => navigate('/archive')}>
-                Open the archive
+                {t('Open the archive')}
               </button>
             </div>
           </div>
@@ -200,10 +208,12 @@ export function App() {
       <main className="main">
         <div className="wrap" style={{ maxWidth: 480 }}>
           <div className="card stack gap-14">
-            <h1 style={{ fontSize: 'var(--step-2)' }}>Nothing here</h1>
-            <p className="par-note">That address does not match a board. The daily is at the front.</p>
+            <h1 style={{ fontSize: 'var(--step-2)' }}>{t('Nothing here')}</h1>
+            <p className="par-note">
+              {t('That address does not match a board. The daily is at the front.')}
+            </p>
             <button className="btn btn-primary" onClick={() => navigate('/')}>
-              Back to today
+              {t('Back to today')}
             </button>
           </div>
         </div>
@@ -228,7 +238,7 @@ export function App() {
             <span className="brand-word">{BRAND.name}</span>
           </a>
 
-          <nav className="nav" aria-label="Main">
+          <nav className="nav" aria-label={t('Main')}>
             {NAV.map((item) => (
               <a
                 key={item.path}
@@ -240,7 +250,7 @@ export function App() {
                   navigate(item.path);
                 }}
               >
-                {item.label}
+                {t(item.label)}
               </a>
             ))}
             <button
@@ -250,10 +260,10 @@ export function App() {
               aria-controls="nav-more"
               onClick={() => setMoreOpen((open) => !open)}
             >
-              More
+              {t('More')}
             </button>
             {moreOpen ? (
-              <div className="nav-more" id="nav-more" role="group" aria-label="All boards">
+              <div className="nav-more" id="nav-more" role="group" aria-label={t('All boards')}>
                 {NAV.filter((item) => !item.always).map((item) => (
                   <a
                     key={item.path}
@@ -266,12 +276,12 @@ export function App() {
                       navigate(item.path);
                     }}
                   >
-                    {item.label}
+                    {t(item.label)}
                   </a>
                 ))}
               </div>
             ) : null}
-            <button className="icon-btn" onClick={() => navigate('/settings')} aria-label="Settings">
+            <button className="icon-btn" onClick={() => navigate('/settings')} aria-label={t('Settings')}>
               <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none">
                 <circle cx="8" cy="8" r="2.4" stroke="currentColor" strokeWidth="1.4" />
                 <path
@@ -287,12 +297,30 @@ export function App() {
       </header>
 
       <div key={path} className="page-enter">
-        {page}
+        <RouteBoundary>
+          <Suspense
+            fallback={
+              <main className="main">
+                <div className="wrap" style={{ maxWidth: 640 }}>
+                  <span className="eyebrow">{t('Opening the table')}</span>
+                  <div className="route-loading" aria-hidden="true">
+                    <span />
+                    <span />
+                    <span />
+                  </div>
+                  <p className="par-note">{t('One moment — the board is on its way.')}</p>
+                </div>
+              </main>
+            }
+          >
+            {page}
+          </Suspense>
+        </RouteBoundary>
       </div>
 
       <footer className="site-foot">
         <div className="wrap">
-          <span>© {new Date().getFullYear()} {BRAND.name} — a new board every day at 00:00 UTC.</span>
+          <span>© {new Date().getFullYear()} {BRAND.name} — {t('A new board every day at 00:00 UTC.')}</span>
           <span className="row gap-14" style={{ flexWrap: 'wrap' }}>
             <a
               href={`${BASE}/how-to`}
@@ -301,7 +329,7 @@ export function App() {
                 navigate('/how-to');
               }}
             >
-              How to play
+              {t('How to play')}
             </a>
             <a
               href={`${BASE}/stats`}
@@ -310,7 +338,7 @@ export function App() {
                 navigate('/stats');
               }}
             >
-              Your data
+              {t('Your data')}
             </a>
             <a
               href={`${BASE}/settings`}

@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { dayNumber } from '../../shared/dates';
-import { readGames } from '../lib/gamesStore';
+import { dayStreak, readGames, type GamesStore } from '../lib/gamesStore';
 import { ScreenHead } from '../components/ui';
+import { useT } from '../lib/i18n';
 
 interface Entry {
   path: string;
@@ -9,7 +10,20 @@ interface Entry {
   kind: string;
   line: string;
   tone: string;
-  best: (store: ReturnType<typeof readGames>, day: number) => string;
+  best: (store: GamesStore, day: number) => string;
+  today: (store: GamesStore, day: number) => string | null;
+}
+
+function minutes(ms: number): string {
+  return `${(ms / 1000).toFixed(1)}s`;
+}
+
+function arcadeDays(store: GamesStore): number[] {
+  return [
+    ...Object.keys(store.snake.daily),
+    ...Object.keys(store.numbers.daily),
+    ...Object.keys(store.reversi.daily),
+  ].map(Number);
 }
 
 const GAMES: Entry[] = [
@@ -19,7 +33,15 @@ const GAMES: Entry[] = [
     kind: 'board',
     line: 'The quiet board: every rule, a material bar, threats and a bot on three levels.',
     tone: 'violet',
-    best: (s) => (s.chess.wins + s.chess.losses + s.chess.draws ? `${s.chess.wins}W · ${s.chess.losses}L · ${s.chess.draws}D` : 'Unplayed'),
+    best: (s) =>
+      s.chess.wins + s.chess.losses + s.chess.draws
+        ? `${s.chess.wins}W · ${s.chess.losses}L · ${s.chess.draws}D`
+        : 'Unplayed',
+    today: (s, day) => {
+      const entry = s.chess.daily[String(day)];
+      if (!entry) return null;
+      return entry.result === 'win' ? `Won in ${entry.plies} plies` : entry.result === 'loss' ? 'Lost today' : 'Drawn today';
+    },
   },
   {
     path: '/mines',
@@ -30,7 +52,12 @@ const GAMES: Entry[] = [
     best: (s, day) => {
       const today = s.mines.best[String(day)];
       const best = today ?? s.mines.bestFree;
-      return best == null ? 'Unplayed' : `Best ${(best / 1000).toFixed(1)}s`;
+      return best == null ? 'Unplayed' : `Best ${minutes(best)}`;
+    },
+    today: (s, day) => {
+      const entry = s.mines.daily[String(day)];
+      if (!entry) return null;
+      return entry.won ? `Cleared in ${minutes(entry.ms)}` : 'Lost today';
     },
   },
   {
@@ -40,6 +67,10 @@ const GAMES: Entry[] = [
     line: 'The keepsake table: twelve pairs, a shelf for every match, one honest peek.',
     tone: 'teal',
     best: (s) => (s.pairs.bestMoves == null ? 'Unplayed' : `Best ${s.pairs.bestMoves} moves`),
+    today: (s, day) => {
+      const entry = s.pairs.daily[String(day)];
+      return entry ? `${entry.moves} moves` : null;
+    },
   },
   {
     path: '/lights',
@@ -48,6 +79,10 @@ const GAMES: Entry[] = [
     line: 'The observatory windows: solve it, and the sky comes through. Shortest distance shown.',
     tone: 'sand',
     best: (s) => (s.lights.bestMoves == null ? 'Unplayed' : `Best ${s.lights.bestMoves} presses`),
+    today: (s, day) => {
+      const entry = s.lights.daily[String(day)];
+      return entry ? `${entry.moves} presses` : null;
+    },
   },
   {
     path: '/snake',
@@ -59,7 +94,11 @@ const GAMES: Entry[] = [
       s.snake.best == null && s.snake.wins === 0
         ? 'Unplayed'
         : `Best ${s.snake.best ?? '—'} steps · ${s.snake.wins}W`,
-
+    today: (s, day) => {
+      const entry = s.snake.daily[String(day)];
+      if (!entry) return null;
+      return entry.won ? `Cleared in ${entry.steps} steps` : `${entry.apples} apples · ${entry.steps} steps`;
+    },
   },
   {
     path: '/numbers',
@@ -71,7 +110,11 @@ const GAMES: Entry[] = [
       s.numbers.bestScore == null
         ? 'Unplayed'
         : `Best ${s.numbers.bestScore} · tile ${s.numbers.bestTile ?? 0} · ${s.numbers.wins}W`,
-
+    today: (s, day) => {
+      const entry = s.numbers.daily[String(day)];
+      if (!entry) return null;
+      return `${entry.score} points · tile ${entry.tile}`;
+    },
   },
   {
     path: '/reversi',
@@ -83,12 +126,20 @@ const GAMES: Entry[] = [
       s.reversi.wins + s.reversi.losses + s.reversi.draws
         ? `Best +${s.reversi.bestMargin ?? 0} · ${s.reversi.wins}W/${s.reversi.losses}L`
         : 'Unplayed',
+    today: (s, day) => {
+      const entry = s.reversi.daily[String(day)];
+      if (!entry) return null;
+      return `${entry.margin >= 0 ? '+' : ''}${entry.margin} · ${entry.discs} discs`;
+    },
   },
 ];
 
 export function Arcade({ navigate }: { navigate: (path: string) => void }) {
+  const t = useT();
   const day = dayNumber();
   const [store] = useState(() => readGames());
+  const streak = dayStreak(arcadeDays(store), day);
+  const played = GAMES.filter((game) => game.today(store, day) !== null).length;
 
   return (
     <main className="main">
@@ -98,22 +149,39 @@ export function Arcade({ navigate }: { navigate: (path: string) => void }) {
           browser; each arcade table can reset its own best without touching the others.
         </ScreenHead>
 
+        <div className="row gap-10" style={{ flexWrap: 'wrap', marginBottom: 16 }}>
+          <span className="chip chip-ember">
+            {streak > 0
+              ? t('{n}-day arcade streak', { n: streak })
+              : t('No arcade streak yet')}
+          </span>
+          <span className="chip">
+            {t('{n} of {total} played today', { n: played, total: GAMES.length })}
+          </span>
+          <span className="chip">{t('Today and all-time, side by side')}</span>
+        </div>
+
         <div className="menu-grid arcade-grid">
           {GAMES.map((game, i) => (
             <article className="game-card" data-tone={game.tone} key={game.path}>
               <div className="row" style={{ justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
                 <span className="eyebrow">
-                  {String(i + 1).padStart(2, '0')} · {game.kind}
+                  {String(i + 1).padStart(2, '0')} · {t(game.kind)}
                 </span>
-                <span className="game-status">{game.best(store, day)}</span>
+                <span className="game-status">{t(game.best(store, day))}</span>
               </div>
-              <h2 className="game-name">{game.name}</h2>
+              <h2 className="game-name">{t(game.name)}</h2>
               <p className="par-note" style={{ margin: 0, flex: 1 }}>
-                {game.line}
+                {t(game.line)}
+              </p>
+              <p className="par-note game-today" style={{ margin: 0 }}>
+                {game.today(store, day) ?? t('Not played today')}
               </p>
               <div className="row" style={{ justifyContent: 'flex-end', marginTop: 6 }}>
                 <button className="btn btn-sm" onClick={() => navigate(game.path)}>
-                  Play {game.name}
+                  {game.today(store, day)
+                    ? t('Play {name} again', { name: t(game.name) })
+                    : t('Play {name}', { name: t(game.name) })}
                 </button>
               </div>
             </article>

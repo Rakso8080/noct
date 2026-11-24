@@ -1,11 +1,20 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { dayNumber } from '../../shared/dates';
 import { SNAKE_H, SNAKE_TARGET, SNAKE_W, startSnake, stepSnake, type Dir, type SnakeState } from '../lib/snake';
-import { readGames, recordSnake, resetSnake } from '../lib/gamesStore';
+import {
+  clearSnakeRound,
+  readGames,
+  recordSnake,
+  resetSnake,
+  saveSnakeRound,
+  type SavedSnakeRound,
+} from '../lib/gamesStore';
+import { ResumeCard } from '../components/ResumeCard';
 import { hashSeed, mulberry32 } from '../lib/rng';
 import { sfx } from '../lib/audio';
 import { haptic } from '../lib/settings';
 import { ScreenHead } from '../components/ui';
+import { useT } from '../lib/i18n';
 import { LeaveGame } from '../components/LeaveGame';
 
 const KEY_DIR: Record<string, Dir> = {
@@ -24,6 +33,7 @@ const KEY_DIR: Record<string, Dir> = {
 };
 
 export function Snake({ navigate }: { navigate: (path: string) => void }) {
+  const t = useT();
   const day = dayNumber();
   const [round, setRound] = useState(0);
   const [state, setState] = useState<SnakeState>(() => startSnake(mulberry32(hashSeed('snake', day, 0))));
@@ -31,6 +41,10 @@ export function Snake({ navigate }: { navigate: (path: string) => void }) {
   const [startedAt, setStartedAt] = useState<number | null>(null);
   const [elapsed, setElapsed] = useState(0);
   const [leaveOpen, setLeaveOpen] = useState(false);
+  const [resume, setResume] = useState<SavedSnakeRound | null>(() => {
+    const saved = readGames().snake.saved;
+    return saved && saved.day === day ? saved : null;
+  });
   const recorded = useRef(false);
 
   useEffect(() => {
@@ -52,7 +66,7 @@ export function Snake({ navigate }: { navigate: (path: string) => void }) {
   useEffect(() => {
     if ((!state.won && state.alive) || recorded.current) return;
     recorded.current = true;
-    recordSnake(state.steps, state.won);
+    recordSnake(day, state.steps, state.apples, state.won);
     setBest(readGames().snake.best);
     if (state.won) {
       sfx.moonrise();
@@ -61,7 +75,23 @@ export function Snake({ navigate }: { navigate: (path: string) => void }) {
       sfx.blocked();
       haptic(12);
     }
-  }, [state.won, state.alive, state.steps]);
+  }, [day, state.won, state.alive, state.steps, state.apples]);
+
+  useEffect(() => {
+    if (state.steps === 0) return;
+    if (state.alive && !state.won) {
+      saveSnakeRound({
+        day,
+        snake: state.snake,
+        food: state.food,
+        steps: state.steps,
+        apples: state.apples,
+        dir: state.dir,
+      });
+    } else {
+      clearSnakeRound();
+    }
+  }, [day, state]);
 
   const reset = useCallback(() => {
     const nextRound = round + 1;
@@ -70,11 +100,14 @@ export function Snake({ navigate }: { navigate: (path: string) => void }) {
     setStartedAt(null);
     setElapsed(0);
     recorded.current = false;
+    setResume(null);
+    clearSnakeRound();
     sfx.tap();
   }, [day, round]);
 
   const step = useCallback(
     (dir: Dir) => {
+      if (resume) return;
       setState((current) => {
         if (!current.alive || current.won) return current;
         const rnd = mulberry32(hashSeed('snake-food', day, round, current.steps));
@@ -91,7 +124,7 @@ export function Snake({ navigate }: { navigate: (path: string) => void }) {
       });
       setStartedAt((start) => start ?? Date.now());
     },
-    [day, round],
+    [day, resume, round],
   );
 
   useEffect(() => {
@@ -127,10 +160,13 @@ export function Snake({ navigate }: { navigate: (path: string) => void }) {
   const foodRow = Math.floor(state.food / SNAKE_W) + 1;
   const foodCol = (state.food % SNAKE_W) + 1;
   const status = state.won
-    ? `Garden full in ${state.steps} steps`
+    ? t('Garden full in {steps} steps', { steps: state.steps })
     : !state.alive
-      ? 'Caught in the glass'
-      : `${applesLeft} apples left · ${state.steps} steps · head row ${headRow}, column ${headCol} · apple row ${foodRow}, column ${foodCol}`;
+      ? t('Caught in the glass')
+      : t(
+          '{left} apples left · {steps} steps · head row {hr}, column {hc} · apple row {ar}, column {ac}',
+          { left: applesLeft, steps: state.steps, hr: headRow, hc: headCol, ar: foodRow, ac: foodCol },
+        );
 
   const cellLabel = (i: number): string => {
     const parts = [`row ${Math.floor(i / SNAKE_W) + 1}, column ${(i % SNAKE_W) + 1}`];
@@ -143,7 +179,10 @@ export function Snake({ navigate }: { navigate: (path: string) => void }) {
   return (
     <main className="main">
       <div className="wrap" style={{ maxWidth: 640 }}>
-        <ScreenHead eyebrow={`Snake · Night ${String(day).padStart(3, '0')}`} title="The glass orchard">
+        <ScreenHead
+          eyebrow={t('Snake · Night {n}', { n: String(day).padStart(3, '0') })}
+          title={t('The glass orchard')}
+        >
           One press, one step: the snake moves only when you do, so every apple is a decision.
           Collect {SNAKE_TARGET} and the orchard is yours; a wall or your own tail ends the night.
           Arrows or WASD step, Enter restarts, Escape leaves the table.
@@ -151,27 +190,53 @@ export function Snake({ navigate }: { navigate: (path: string) => void }) {
 
         <div className="mini-hud">
           <span className="chip">
-            <span className="mono">{state.apples}</span> / {SNAKE_TARGET} apples
+            <span className="mono">{state.apples}</span> / {SNAKE_TARGET} {t('apples')}
           </span>
           <span className="chip">
-            <span className="mono">{state.steps}</span> steps
+            <span className="mono">{state.steps}</span> {t('steps')}
           </span>
           <span className="chip">
-            <span className="mono">{state.snake.length}</span> long
+            <span className="mono">{state.snake.length}</span> {t('long')}
           </span>
           <span className="chip">
             <span className="mono">
               {String(Math.floor(seconds / 60)).padStart(2, '0')}:{String(seconds % 60).padStart(2, '0')}
             </span>
           </span>
-          <span className="chip">{best === null ? 'No best yet' : `Best ${best} steps`}</span>
-          <span className="chip">{state.won ? 'Won' : state.alive ? 'Alive' : 'Lost'}</span>
+          <span className="chip">{best === null ? t('No best yet') : t('Best {n} steps', { n: best })}</span>
+          <span className="chip">{state.won ? t('Won') : state.alive ? t('Alive') : t('Lost')}</span>
         </div>
 
         <p className="par-note snake-status" aria-live="polite" style={{ margin: '0 0 10px' }}>
           {status}
         </p>
 
+        {resume ? (
+          <ResumeCard
+            title={t('An orchard is already open')}
+            body={t('You left this run mid-step. Continue it, or start a fresh orchard for today.')}
+            meta={`${resume.apples} / ${SNAKE_TARGET} apples · ${resume.steps} steps`}
+            onContinue={() => {
+              setState({
+                snake: resume.snake,
+                food: resume.food,
+                steps: resume.steps,
+                apples: resume.apples,
+                alive: true,
+                won: false,
+                dir: resume.dir,
+              });
+              setStartedAt(Date.now());
+              setResume(null);
+              sfx.tap();
+            }}
+            onDiscard={() => {
+              clearSnakeRound();
+              setResume(null);
+              sfx.remove();
+            }}
+          />
+        ) : (
         <div
           className={`snake-board${state.won ? ' is-won' : ''}${!state.alive ? ' is-lost' : ''}`}
           style={{ gridTemplateColumns: `repeat(${SNAKE_W}, 1fr)` }}
@@ -194,8 +259,9 @@ export function Snake({ navigate }: { navigate: (path: string) => void }) {
             </div>
           ))}
         </div>
+        )}
 
-        <div className="snake-pad" role="group" aria-label="Step the snake">
+        <div className="snake-pad" role="group" aria-label="Step the snake" style={resume ? { display: 'none' } : undefined}>
           <button type="button" className="btn btn-sm btn-ghost" aria-label="Step up" onClick={() => step('up')}>
             ↑
           </button>
@@ -214,7 +280,7 @@ export function Snake({ navigate }: { navigate: (path: string) => void }) {
 
         <div className="mini-actions">
           <button className="btn btn-sm" onClick={reset}>
-            New orchard
+            {t('New orchard')}
           </button>
           <button
             className="btn btn-sm btn-ghost"
@@ -224,17 +290,17 @@ export function Snake({ navigate }: { navigate: (path: string) => void }) {
               sfx.remove();
             }}
           >
-            Reset best
+            {t('Reset best')}
           </button>
           <button className="btn btn-sm btn-ghost" onClick={() => navigate('/')}>
-            Menu
+            {t('Menu')}
           </button>
         </div>
 
         <LeaveGame
           open={leaveOpen}
-          title="Leave the orchard?"
-          body="The snake stays where it is only while this page is open. Leaving ends the run."
+          title={t('Leave the orchard?')}
+          body={t('Your run is saved for today. You can pick it up from this table, or discard it here.')}
           onStay={() => setLeaveOpen(false)}
           onLeave={() => navigate('/arcade')}
         />
@@ -243,11 +309,11 @@ export function Snake({ navigate }: { navigate: (path: string) => void }) {
           <div className="mini-banner" role="status">
             <strong>
               {state.won
-                ? `Orchard cleared in ${state.steps} steps`
-                : `Caught after ${state.apples} apples · ${state.steps} steps`}
+                ? t('Orchard cleared in {steps} steps', { steps: state.steps })
+                : t('Caught after {apples} apples · {steps} steps', { apples: state.apples, steps: state.steps })}
             </strong>
             <button className="btn btn-sm btn-primary" onClick={reset}>
-              Play again
+              {t('Play again')}
             </button>
           </div>
         ) : null}

@@ -9,11 +9,20 @@ import {
   startReversi,
   type Disc,
 } from '../lib/reversi';
-import { readGames, recordReversi, resetReversi } from '../lib/gamesStore';
+import {
+  clearReversiRound,
+  readGames,
+  recordReversi,
+  resetReversi,
+  saveReversiRound,
+  type SavedReversiRound,
+} from '../lib/gamesStore';
+import { ResumeCard } from '../components/ResumeCard';
 import { hashSeed, mulberry32 } from '../lib/rng';
 import { sfx } from '../lib/audio';
 import { haptic } from '../lib/settings';
 import { ScreenHead } from '../components/ui';
+import { useT } from '../lib/i18n';
 import { LeaveGame } from '../components/LeaveGame';
 
 const FILES = 'abcdefgh';
@@ -23,6 +32,7 @@ function squareName(i: number): string {
 }
 
 export function Reversi({ navigate }: { navigate: (path: string) => void }) {
+  const t = useT();
   const day = dayNumber();
   const [board, setBoard] = useState<Disc[]>(startReversi);
   const [turn, setTurn] = useState<Disc>(1);
@@ -32,6 +42,10 @@ export function Reversi({ navigate }: { navigate: (path: string) => void }) {
   const [bestMargin, setBestMargin] = useState<number | null>(() => readGames().reversi.bestMargin);
   const [thinking, setThinking] = useState(false);
   const [leaveOpen, setLeaveOpen] = useState(false);
+  const [resume, setResume] = useState<SavedReversiRound | null>(() => {
+    const saved = readGames().reversi.saved;
+    return saved && saved.day === day ? saved : null;
+  });
   const recorded = useRef(false);
 
   const whiteLegal = useMemo(() => legalMoves(board, 1), [board]);
@@ -50,7 +64,13 @@ export function Reversi({ navigate }: { navigate: (path: string) => void }) {
       recorded.current = true;
       const tally = scores(final);
       const margin = tally.white - tally.black;
-      recordReversi(margin > 0 ? 'win' : margin < 0 ? 'loss' : 'draw', margin);
+      recordReversi(
+        day,
+        margin > 0 ? 'win' : margin < 0 ? 'loss' : 'draw',
+        margin,
+        tally.white + tally.black,
+        finalMoves,
+      );
       setBestMargin(readGames().reversi.bestMargin);
       if (margin > 0) {
         sfx.moonrise();
@@ -60,9 +80,15 @@ export function Reversi({ navigate }: { navigate: (path: string) => void }) {
         haptic(12);
       }
       setMoves(finalMoves);
+      clearReversiRound();
     },
-    [],
+    [day],
   );
+
+  useEffect(() => {
+    if (moves === 0 || over) return;
+    saveReversiRound({ day, board, turn: turn === 2 ? 2 : 1, moves });
+  }, [board, day, moves, over, turn]);
 
   /* After your move: black answers, or passes when it has no legal move. */
   useEffect(() => {
@@ -111,7 +137,7 @@ export function Reversi({ navigate }: { navigate: (path: string) => void }) {
 
   const play = useCallback(
     (index: number) => {
-      if (over || turn !== 1) return;
+      if (resume || over || turn !== 1) return;
       const next = place(board, index, 1);
       if (!next) return;
       const nextBoard = next as Disc[];
@@ -125,7 +151,7 @@ export function Reversi({ navigate }: { navigate: (path: string) => void }) {
         setTurn(2);
       }
     },
-    [board, finish, moves, over, turn],
+    [board, finish, moves, over, resume, turn],
   );
 
   const newGame = useCallback(() => {
@@ -135,6 +161,8 @@ export function Reversi({ navigate }: { navigate: (path: string) => void }) {
     setOver(false);
     setCursor(27);
     recorded.current = false;
+    setResume(null);
+    clearReversiRound();
     sfx.tap();
   }, []);
 
@@ -184,20 +212,23 @@ export function Reversi({ navigate }: { navigate: (path: string) => void }) {
   const margin = counts.white - counts.black;
   const status = over
     ? margin > 0
-      ? `You win ${counts.white}–${counts.black}`
+      ? t('You win {white}–{black}', { white: counts.white, black: counts.black })
       : margin < 0
-        ? `The bot wins ${counts.black}–${counts.white}`
-        : `Drawn ${counts.white}–${counts.black}`
+        ? t('The bot wins {black}–{white}', { black: counts.black, white: counts.white })
+        : t('Drawn {white}–{black}', { white: counts.white, black: counts.black })
     : turn === 1
-      ? 'Your turn · white'
+      ? t('Your turn · white')
       : thinking
-        ? 'The bot is turning discs'
-        : 'The bot passes';
+        ? t('The bot is turning discs')
+        : t('The bot passes');
 
   return (
     <main className="main">
       <div className="wrap" style={{ maxWidth: 640 }}>
-        <ScreenHead eyebrow={`Reversi · Night ${String(day).padStart(3, '0')}`} title="The turning table">
+        <ScreenHead
+          eyebrow={t('Reversi · Night {n}', { n: String(day).padStart(3, '0') })}
+          title={t('The turning table')}
+        >
           Trap a line of the bot’s discs to turn them white. You are white; the table ends when neither
           side can move, and the most discs wins. Arrows move the cursor, Enter places, Escape leaves
           the table without touching the board.
@@ -205,25 +236,50 @@ export function Reversi({ navigate }: { navigate: (path: string) => void }) {
 
         <div className="mini-hud">
           <span className="chip">
-            <span className="mono">{counts.white}</span> white
+            <span className="mono">{counts.white}</span> {t('white')}
           </span>
           <span className="chip">
-            <span className="mono">{counts.black}</span> black
+            <span className="mono">{counts.black}</span> {t('black')}
           </span>
           <span className="chip">
-            <span className="mono">{moves}</span> moves
+            <span className="mono">{moves}</span> {t('moves')}
           </span>
           <span className="chip">
-            {turn === 1 || over ? 'You' : 'Bot'} turn
+            {turn === 1 || over ? t('You') : t('Bot')} {t('turn')}
           </span>
-          <span className="chip">{bestMargin === null ? 'No best yet' : `Best margin +${bestMargin}`}</span>
-          <span className="chip">{over ? (margin > 0 ? 'Won' : margin < 0 ? 'Lost' : 'Draw') : 'Playing'}</span>
+          <span className="chip">
+            {bestMargin === null ? t('No best yet') : t('Best margin +{n}', { n: bestMargin })}
+          </span>
+          <span className="chip">
+            {over ? (margin > 0 ? t('Won') : margin < 0 ? t('Lost') : t('Draw')) : t('Playing')}
+          </span>
         </div>
 
         <p className="par-note" aria-live="polite" style={{ margin: '0 0 10px' }}>
           {status}
         </p>
 
+        {resume ? (
+          <ResumeCard
+            title={t('A table is already set')}
+            body={t('You left this game mid-turn. Continue it, or start a fresh table for today.')}
+            meta={`${resume.moves} moves · ${resume.turn === 1 ? 'your turn' : 'bot to move'}`}
+            onContinue={() => {
+              setBoard(resume.board as Disc[]);
+              setTurn(resume.turn);
+              setMoves(resume.moves);
+              setOver(false);
+              recorded.current = false;
+              setResume(null);
+              sfx.tap();
+            }}
+            onDiscard={() => {
+              clearReversiRound();
+              setResume(null);
+              sfx.remove();
+            }}
+          />
+        ) : (
         <div className={`rev-board${over ? ' is-over' : ''}`} role="group" aria-label="Reversi board, 8 by 8">
           {board.map((disc, i) => {
             const legal = !over && turn === 1 && whiteLegal.includes(i);
@@ -249,10 +305,11 @@ export function Reversi({ navigate }: { navigate: (path: string) => void }) {
             );
           })}
         </div>
+        )}
 
         <div className="mini-actions">
           <button className="btn btn-sm" onClick={newGame}>
-            New game
+            {t('New game')}
           </button>
           <button
             className="btn btn-sm btn-ghost"
@@ -262,26 +319,28 @@ export function Reversi({ navigate }: { navigate: (path: string) => void }) {
               sfx.remove();
             }}
           >
-            Reset best
+            {t('Reset best')}
           </button>
           <button className="btn btn-sm btn-ghost" onClick={() => navigate('/')}>
-            Menu
+            {t('Menu')}
           </button>
         </div>
 
         <LeaveGame
           open={leaveOpen}
-          title="Leave the turning table?"
-          body="The game is not saved between visits. Leaving ends this one."
+          title={t('Leave the turning table?')}
+          body={t('Your run is saved for today. You can pick it up from this table, or discard it here.')}
           onStay={() => setLeaveOpen(false)}
           onLeave={() => navigate('/arcade')}
         />
 
         {over ? (
           <div className="mini-banner" role="status">
-            <strong>{status} · {moves} moves</strong>
+            <strong>
+              {status} · {t('{n} moves', { n: moves })}
+            </strong>
             <button className="btn btn-sm btn-primary" onClick={newGame}>
-              Play again
+              {t('Play again')}
             </button>
           </div>
         ) : null}
