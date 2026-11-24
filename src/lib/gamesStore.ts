@@ -33,6 +33,9 @@ export interface LightsDay {
 }
 
 export interface GamesStore {
+  snake: { best: number | null; wins: number };
+  numbers: { bestScore: number | null; bestTile: number | null; wins: number };
+  reversi: { bestMargin: number | null; wins: number; losses: number; draws: number };
   mines: { best: Record<string, number>; bestFree: number | null; daily: Record<string, MinesDay> };
   pairs: {
     bestMoves: number | null;
@@ -57,6 +60,9 @@ const KEY = 'noct.games.v1';
 
 function empty(): GamesStore {
   return {
+    snake: { best: null, wins: 0 },
+    numbers: { bestScore: null, bestTile: null, wins: 0 },
+    reversi: { bestMargin: null, wins: 0, losses: 0, draws: 0 },
     mines: { best: {}, bestFree: null, daily: {} },
     pairs: { bestMoves: null, bestMs: null, bestFreeMoves: null, bestFreeMs: null, daily: {} },
     lights: { bestMoves: null, bestFree: null, daily: {} },
@@ -72,6 +78,9 @@ export function readGames(): GamesStore {
     const parsed = JSON.parse(raw) as Partial<GamesStore>;
     if (!parsed || typeof parsed !== 'object') return base;
     return {
+      snake: { ...base.snake, ...parsed.snake },
+      numbers: { ...base.numbers, ...parsed.numbers },
+      reversi: { ...base.reversi, ...parsed.reversi },
       mines: { ...base.mines, ...parsed.mines, best: { ...base.mines.best, ...parsed.mines?.best } },
       pairs: { ...base.pairs, ...parsed.pairs },
       lights: { ...base.lights, ...parsed.lights },
@@ -166,6 +175,57 @@ export function saveChessGame(saved: SavedChess): void {
 export function clearChessGame(): void {
   const store = readGames();
   store.chess.saved = null;
+  write(store);
+}
+
+export function recordSnake(steps: number, won: boolean): void {
+  const store = readGames();
+  if (won) {
+    store.snake.wins++;
+    if (store.snake.best === null || steps < store.snake.best) store.snake.best = steps;
+  }
+  write(store);
+}
+
+export function recordNumbers(score: number, tile: number, won: boolean): void {
+  const store = readGames();
+  if (store.numbers.bestScore === null || score > store.numbers.bestScore) store.numbers.bestScore = score;
+  if (store.numbers.bestTile === null || tile > store.numbers.bestTile) store.numbers.bestTile = tile;
+  if (won) store.numbers.wins++;
+  write(store);
+}
+
+export function recordReversi(result: 'win' | 'loss' | 'draw', margin: number): void {
+  const store = readGames();
+  if (result === 'win') {
+    store.reversi.wins++;
+    if (store.reversi.bestMargin === null || margin > store.reversi.bestMargin) {
+      store.reversi.bestMargin = margin;
+    }
+  } else if (result === 'loss') {
+    store.reversi.losses++;
+  } else {
+    store.reversi.draws++;
+  }
+  write(store);
+}
+
+/** Per-game reset for the arcade records, so one game can start over alone. */
+export function resetSnake(): void {
+  const store = readGames();
+  store.snake = { best: null, wins: 0 };
+  write(store);
+}
+
+export function resetNumbers(): void {
+  const store = readGames();
+  store.numbers = { bestScore: null, bestTile: null, wins: 0 };
+  write(store);
+}
+
+export function resetReversi(): void {
+  const store = readGames();
+  store.reversi = { bestMargin: null, wins: 0, losses: 0, draws: 0 };
   write(store);
 }
 

@@ -12,6 +12,10 @@ import { Chess } from './screens/Chess';
 import { Mines } from './screens/Mines';
 import { Pairs } from './screens/Pairs';
 import { Lights } from './screens/Lights';
+import { Snake } from './screens/Snake';
+import { Numbers } from './screens/Numbers';
+import { Reversi } from './screens/Reversi';
+import { Arcade } from './screens/Arcade';
 import { Logo } from './components/ui';
 import { getSummary, setSummary } from './lib/results';
 import { BRAND } from './brand';
@@ -55,6 +59,7 @@ const NAV = [
     match: (s: string[]) => s[0] === 'play' || s[0] === 'practice' || s[0] === 'archive',
   },
   { path: '/chess', label: 'Chess', match: (s: string[]) => s[0] === 'chess' },
+  { path: '/arcade', label: 'Arcade', match: (s: string[]) => s[0] === 'arcade' },
   { path: '/stats', label: 'Stats', match: (s: string[]) => s[0] === 'stats' },
 ];
 
@@ -127,6 +132,14 @@ export function App() {
     page = <Pairs key="pairs" navigate={navigate} />;
   } else if (section === 'lights') {
     page = <Lights key="lights" navigate={navigate} />;
+  } else if (section === 'snake') {
+    page = <Snake key="snake" navigate={navigate} />;
+  } else if (section === 'numbers') {
+    page = <Numbers key="numbers" navigate={navigate} />;
+  } else if (section === 'reversi') {
+    page = <Reversi key="reversi" navigate={navigate} />;
+  } else if (section === 'arcade') {
+    page = <Arcade key="arcade" navigate={navigate} />;
   } else if (section === 'stats') {
     page = <Stats key="stats" navigate={navigate} />;
   } else if (section === 'leaderboard') {

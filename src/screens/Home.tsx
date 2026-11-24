@@ -51,7 +51,7 @@ interface TileProps {
   name: string;
   line: string;
   meta: string;
-  tone: 'ember' | 'moss' | 'slate' | 'violet' | 'rust' | 'teal' | 'sand';
+  tone: 'ember' | 'moss' | 'slate' | 'violet' | 'rust' | 'teal' | 'sand' | 'orchard' | 'amber' | 'stone';
   shape: Shape;
   status: string;
   action: string;
@@ -137,6 +137,12 @@ export function Home({ navigate, onTutorial }: HomeProps) {
   const minesStatus = minesDay ? (minesDay.won ? `${(minesDay.ms / 1000).toFixed(1)}s` : 'Lost today') : 'Unplayed';
   const pairsStatus = pairsDay ? `${pairsDay.moves} moves` : 'Unplayed';
   const lightsStatus = lightsDay ? `${lightsDay.moves} presses` : 'Unplayed';
+  const snakeStatus = games.snake.best === null ? 'Unplayed' : `Best ${games.snake.best} steps`;
+  const numbersStatus = games.numbers.bestScore === null ? 'Unplayed' : `Best ${games.numbers.bestScore}`;
+  const reversiStatus =
+    games.reversi.wins + games.reversi.losses + games.reversi.draws
+      ? `${games.reversi.wins}W · ${games.reversi.losses}L`
+      : 'Unplayed';
 
   return (
     <main className="main">
@@ -158,8 +164,8 @@ export function Home({ navigate, onTutorial }: HomeProps) {
 
             <h1 className="wordmark">Noct</h1>
             <p className="hero-line">
-              Seven small games, the same for everyone. Twenty-five seconds a prompt, one attempt
-              each.
+              Seven boards for the night and three arcade tables behind them. Twenty-five seconds a
+              prompt, one attempt each.
             </p>
 
             <div className="row gap-10" style={{ flexWrap: 'wrap', justifyContent: 'center', marginTop: 4 }}>
@@ -257,6 +263,42 @@ export function Home({ navigate, onTutorial }: HomeProps) {
             status={lightsStatus}
             action={lightsDay ? 'Play again' : 'Play'}
             onPlay={() => navigate('/lights')}
+          />
+          <GameTile
+            index="08"
+            kind="orchard"
+            name="Snake"
+            line="The glass orchard: one press, one step. Twelve apples before the walls or your tail."
+            meta="15×11 · 12 apples"
+            tone="orchard"
+            shape="up"
+            status={snakeStatus}
+            action="Play"
+            onPlay={() => navigate('/snake')}
+          />
+          <GameTile
+            index="09"
+            kind="room"
+            name="2048"
+            line="The doubling room: slide the lanterns, fuse equals, light a 512 tile."
+            meta="4×4 · goal 512"
+            tone="amber"
+            shape="diamond"
+            status={numbersStatus}
+            action="Play"
+            onPlay={() => navigate('/numbers')}
+          />
+          <GameTile
+            index="10"
+            kind="table"
+            name="Reversi"
+            line="The turning table: trap the bot’s lines, flip the discs, own the most stones."
+            meta="8×8 · you are white"
+            tone="stone"
+            shape="ring"
+            status={reversiStatus}
+            action="Play"
+            onPlay={() => navigate('/reversi')}
           />
         </div>
 

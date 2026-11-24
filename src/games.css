@@ -2,6 +2,180 @@
 
 /* ---------------------------------------------------------- menu tile tones */
 
+.game-card[data-tone='orchard'] {
+  --tile-bg: #31543a;
+  --tile-fg: #eef4e2;
+  --glow: #8fd08a;
+}
+
+.game-card[data-tone='amber'] {
+  --tile-bg: #7a4c1e;
+  --tile-fg: #fdf0d8;
+  --glow: #f2b33d;
+}
+
+.game-card[data-tone='stone'] {
+  --tile-bg: #d8d2c2;
+  --tile-fg: #241d33;
+  --glow: #b9b09a;
+}
+
+.game-card[data-tone='stone'] .btn {
+  background: #241d33;
+  color: #f4ecd8;
+}
+
+.game-card[data-tone='stone'] .btn:hover {
+  background: #33284a;
+  color: #f4ecd8;
+}
+
+/* ---------------------------------------------------------- snake: orchard */
+
+.snake-board {
+  display: grid;
+  gap: 2px;
+  padding: 6px;
+  background: #0b0913;
+  border: 2px solid var(--outline);
+}
+
+.snake-cell {
+  aspect-ratio: 1;
+  background: #171326;
+  border-radius: 1px;
+}
+
+.snake-cell.is-body {
+  background: #4d7a45;
+}
+
+.snake-cell.is-head {
+  background: #a8e596;
+  box-shadow: 0 0 8px rgba(168, 229, 150, 0.6);
+}
+
+.snake-cell.is-food {
+  background: #f2b33d;
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(242, 179, 61, 0.7);
+}
+
+.snake-board.is-won {
+  box-shadow: 0 0 30px rgba(168, 229, 150, 0.35);
+}
+
+.snake-board.is-lost {
+  filter: saturate(0.55);
+}
+
+.snake-status {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+
+.snake-pad {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  margin: 14px 0 4px;
+}
+
+/* -------------------------------------------------------- numbers: 2048 */
+
+.num-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  padding: 6px;
+  background: #12101c;
+  border: 2px solid var(--outline);
+}
+
+.num-cell {
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  background: #1b1730;
+  color: #f4ecd8;
+  font-family: var(--font-mono);
+  font-size: clamp(1rem, 4.2vw, 1.75rem);
+  line-height: 1;
+  transition: background 0.15s var(--ease), color 0.15s var(--ease);
+}
+
+.num-2 { background: #282244; }
+.num-4 { background: #332a55; }
+.num-8 { background: #4a3a6e; }
+.num-16 { background: #63477f; }
+.num-32 { background: #85507f; }
+.num-64 { background: #b05a6b; }
+.num-128 { background: #c9764a; }
+.num-256 { background: #d99b3f; }
+.num-512 { background: #f2b33d; color: #241d33; }
+.num-1024 { background: #f7cf72; color: #241d33; }
+.num-2048 { background: #fff0b8; color: #241d33; }
+
+.num-grid.is-won {
+  box-shadow: 0 0 30px rgba(242, 179, 61, 0.4);
+}
+
+.num-grid.is-lost {
+  filter: saturate(0.55);
+}
+
+/* ------------------------------------------------------- reversi: table */
+
+.rev-board {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 2px;
+  padding: 4px;
+  background: #0a1f1a;
+  border: 2px solid #0a1f1a;
+}
+
+.rev-cell {
+  position: relative;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  background: #1f5246;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+.rev-cell.is-cursor {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.rev-disc {
+  width: 76%;
+  height: 76%;
+  border-radius: 50%;
+  background: #f4ecd8;
+  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.25);
+}
+
+.rev-cell.is-black .rev-disc {
+  background: #1b1626;
+  box-shadow: inset 0 -3px 0 rgba(255, 255, 255, 0.12);
+}
+
+.rev-hint {
+  width: 22%;
+  height: 22%;
+  border-radius: 50%;
+  background: rgba(244, 236, 216, 0.55);
+}
+
+.rev-board.is-over {
+  filter: saturate(0.8);
+}
+
 .game-card[data-tone='violet'] {
   --tile-bg: #3a2b56;
   --tile-fg: #f4ecd8;
@@ -1136,6 +1310,10 @@
   .lights-cell.is-hint::after {
     animation: none;
   }
+
+  .num-cell {
+    transition: none;
+  }
 }
 
 [data-motion='reduced'] .chess-sq.is-check::before,
@@ -1156,4 +1334,8 @@
 
 [data-motion='reduced'] .lights-cell.is-hint::after {
   animation: none;
+}
+
+[data-motion='reduced'] .num-cell {
+  transition: none;
 }
