@@ -33,6 +33,9 @@ jobs:
       - name: Game logic tests
         run: npm test
 
+      - name: Prompt bank check
+        run: npm run verify:prompts
+
       # VITE_STATIC swaps the HTTP client for the in-tab engine, since Pages
       # cannot run the Node/sqlite API.
       - name: Build static site
