@@ -761,6 +761,32 @@ a {
   border-radius: 0;
 }
 
+/* flat glow off, dashed ring off: the spark should read as pixels, not neon */
+.spark-glow {
+  display: none;
+}
+
+.spark svg {
+  shape-rendering: crispEdges;
+}
+
+.cell.is-given::before {
+  inset: 5%;
+  border: 2px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  border-radius: 0;
+}
+
+:root,
+[data-theme='dark'] {
+  --tone-0: #38305f;
+  --tone-1: #443059;
+  --tone-2: #2b4a48;
+  --tone-3: #5a3d33;
+  --tone-4: #5c5628;
+  --tone-5: #323a5c;
+  --tone-6: #4a2f48;
+}
+
 .round-banner-inner {
   border-radius: 0;
   border: 3px solid var(--line-strong);

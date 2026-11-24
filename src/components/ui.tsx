@@ -18,25 +18,16 @@ export function Logo({ size = 22 }: { size?: number }) {
   );
 }
 
+/** A chunky 8×8 spark, drawn on the pixel grid so it matches the UI. */
 export function SparkGlyph({ className }: { className?: string }) {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className={className}>
-      <defs>
-        <radialGradient id="sparkFill" cx="50%" cy="45%" r="60%">
-          <stop offset="0%" stopColor="#ffe9b8" />
-          <stop offset="60%" stopColor="var(--accent)" />
-          <stop offset="100%" stopColor="var(--accent)" stopOpacity="0.86" />
-        </radialGradient>
-      </defs>
-      <path
-        d="M12 1.6c.55 4.9 2.6 6.95 7.5 7.5l1.1.15-1.1.15c-4.9.55-6.95 2.6-7.5 7.5L12 22.4l-.15-5.5c-.55-4.9-2.6-6.95-7.5-7.5L.8 9.25l3.55-.15c4.9-.55 6.95-2.6 7.5-7.5Z"
-        fill="url(#sparkFill)"
-      />
-      <path
-        d="M12 4.4c.4 3.6 1.9 5.1 5.5 5.5-3.6.4-5.1 1.9-5.5 5.5-.4-3.6-1.9-5.1-5.5-5.5 3.6-.4 5.1-1.9 5.5-5.5Z"
-        fill="#fff6e0"
-        opacity="0.55"
-      />
+    <svg viewBox="0 0 8 8" aria-hidden="true" className={className} shapeRendering="crispEdges">
+      <rect x="3" y="0" width="2" height="2" fill="var(--accent)" />
+      <rect x="2" y="2" width="4" height="1" fill="var(--accent)" />
+      <rect x="1" y="3" width="6" height="2" fill="var(--accent)" />
+      <rect x="2" y="5" width="4" height="1" fill="var(--accent)" />
+      <rect x="3" y="6" width="2" height="2" fill="var(--accent)" />
+      <rect x="3" y="3" width="2" height="2" fill="#fff1c9" />
     </svg>
   );
 }
