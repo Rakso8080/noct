@@ -11,7 +11,7 @@ interface SpriteProps {
   className?: string;
 }
 
-function Sprite({ grid, className }: SpriteProps) {
+export function Sprite({ grid, className }: SpriteProps) {
   const rows = grid.length;
   const cols = Math.max(...grid.map((row) => row.length));
   const rects: ReactNode[] = [];

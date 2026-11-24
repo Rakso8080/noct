@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Countdown } from '../components/ui';
+import { Journey } from '../components/Journey';
 import { dayNumber, dayToISO, nextResetAt } from '../../shared/dates';
 import {
   SECONDS_PER_PROMPT,
@@ -126,7 +127,11 @@ function SurveyIntro({
         </h1>
         <p className="lede">{game.tagline}</p>
 
-        <div className="card stack gap-14" style={{ marginTop: 22 }}>
+        <div style={{ marginTop: 20 }}>
+          <Journey progress={0} />
+        </div>
+
+        <div className="card stack gap-14">
           <p className="par-note" style={{ margin: 0 }}>
             {game.rule}
           </p>
@@ -252,10 +257,15 @@ function SurveyRunner({
 
   const last = index + 1 >= prompts.length;
   const pct = Math.max(0, Math.min(100, (leftMs / (SECONDS_PER_PROMPT * 1000)) * 100));
+  const maxTotal = prompts.reduce((sum, p) => sum + maxPointsFor(mode, p), 0);
+  const earned = log.reduce((sum, a) => sum + a.points, 0);
+  const progress = maxTotal > 0 ? earned / maxTotal : 0;
 
   return (
     <main className="main">
       <div className="wrap survey-wrap">
+        <Journey progress={progress} moving={Boolean(reveal && reveal.points > 0)} />
+
         <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
           <span className="eyebrow">
             {GAMES[mode].name} · prompt {index + 1} of {prompts.length}
@@ -381,7 +391,11 @@ function SurveyResult({ run, navigate }: { run: SurveyRun; navigate: (path: stri
           <span className="chip">{run.answers.length} prompts</span>
         </div>
 
-        <section className="card stack gap-14" style={{ marginTop: 22 }}>
+        <div style={{ marginTop: 18 }}>
+          <Journey progress={run.max > 0 ? run.score / run.max : 0} />
+        </div>
+
+        <section className="card stack gap-14">
           <div className="row" style={{ justifyContent: 'space-between' }}>
             <span className="eyebrow">Your answers</span>
             <span className="eyebrow">points</span>

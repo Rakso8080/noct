@@ -1,0 +1,203 @@
+/* =========================================================================
+   The journey: a side-scrolling country the player crosses by answering.
+   Palettes switch per biome; movement is one seamless prop track plus a walk.
+   ========================================================================= */
+
+.journey {
+  position: relative;
+  height: 164px;
+  margin: 0 0 22px;
+  overflow: hidden;
+  border: 3px solid var(--outline);
+  background: var(--sky-a);
+  box-shadow: var(--hard-shadow);
+  --sky-a: #101a2e;
+  --sky-b: #2c5c48;
+  --far: #173a30;
+  --mid: #0f2a22;
+  --ground: #08160f;
+  --prop: #0b221a;
+  --traveller: #f5c95c;
+  --sun: #f8ecc4;
+}
+
+.journey[data-biome='desert'] {
+  --sky-a: #2a1730;
+  --sky-b: #a8681f;
+  --far: #6e4620;
+  --mid: #4a2e18;
+  --ground: #1c130b;
+  --prop: #2a1c0e;
+  --traveller: #f4ecd8;
+  --sun: #ffd89a;
+}
+
+.journey[data-biome='tundra'] {
+  --sky-a: #0d1730;
+  --sky-b: #4d7ba4;
+  --far: #2a4a68;
+  --mid: #1c3550;
+  --ground: #0b1926;
+  --prop: #16293c;
+  --traveller: #d9ecff;
+  --sun: #eaf4ff;
+}
+
+.journey[data-biome='volcano'] {
+  --sky-a: #180d18;
+  --sky-b: #8c3b2a;
+  --far: #4e2019;
+  --mid: #2e1411;
+  --ground: #120a0b;
+  --prop: #1d0f0f;
+  --traveller: #ffd27a;
+  --sun: #ff8a5c;
+}
+
+.journey-sky {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, var(--sky-a) 0%, var(--sky-b) 100%);
+}
+
+.journey-sun {
+  position: absolute;
+  top: 18%;
+  right: 14%;
+  width: 26px;
+  height: 26px;
+  background: var(--sun);
+  clip-path: polygon(30% 0, 70% 0, 70% 12%, 88% 12%, 88% 30%, 100% 30%, 100% 70%, 88% 70%, 88% 88%, 70% 88%, 70% 100%, 30% 100%, 30% 88%, 12% 88%, 12% 70%, 0 70%, 0 30%, 12% 30%, 12% 12%, 30% 12%);
+  opacity: 0.9;
+}
+
+.journey-far {
+  position: absolute;
+  left: -4%;
+  right: -4%;
+  bottom: 30%;
+  height: 48%;
+  background: var(--far);
+  clip-path: polygon(0 66%, 6% 46%, 13% 60%, 21% 38%, 30% 56%, 39% 44%, 48% 62%, 57% 46%, 66% 60%, 75% 40%, 84% 58%, 93% 48%, 100% 64%, 100% 100%, 0 100%);
+}
+
+.journey-mid {
+  position: absolute;
+  left: -4%;
+  right: -4%;
+  bottom: 20%;
+  height: 30%;
+  background: var(--mid);
+  clip-path: polygon(0 62%, 8% 44%, 17% 60%, 26% 42%, 36% 58%, 46% 40%, 56% 58%, 66% 44%, 76% 60%, 86% 46%, 95% 60%, 100% 48%, 100% 100%, 0 100%);
+}
+
+.journey-ground {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 24%;
+  background: var(--ground);
+}
+
+.journey-track {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 14%;
+  height: 40px;
+  animation: prop-drift 24s linear infinite;
+}
+
+.journey-prop {
+  position: absolute;
+  bottom: 0;
+  width: 22px;
+  height: 34px;
+  color: var(--prop);
+}
+
+.journey-prop .sprite {
+  width: 100%;
+  height: 100%;
+}
+
+.journey-traveller {
+  position: absolute;
+  left: 46%;
+  bottom: 16%;
+  width: 44px;
+  height: 34px;
+  color: var(--traveller);
+  animation: walk-bob 0.9s steps(2) infinite;
+}
+
+.journey-traveller.is-moving {
+  animation: walk-bob 0.9s steps(2) infinite, hop 0.7s steps(6) 2;
+}
+
+.journey-hud {
+  position: absolute;
+  top: 8px;
+  left: 10px;
+  right: 10px;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-family: var(--font-display);
+  font-size: 0.5rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #f7efdb;
+  text-shadow: 2px 2px 0 rgba(6, 4, 14, 0.8);
+}
+
+.journey-km {
+  font-family: var(--font-mono);
+  font-size: 0.9375rem;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+@keyframes prop-drift {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-14%);
+  }
+}
+
+@keyframes walk-bob {
+  0%,
+  100% {
+    margin-bottom: 0;
+  }
+  50% {
+    margin-bottom: 2px;
+  }
+}
+
+@keyframes hop {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-8px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .journey-track,
+  .journey-traveller,
+  .journey-traveller.is-moving {
+    animation: none;
+  }
+}
+
+[data-motion='reduced'] .journey-track,
+[data-motion='reduced'] .journey-traveller,
+[data-motion='reduced'] .journey-traveller.is-moving {
+  animation: none;
+}
