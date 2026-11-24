@@ -4,6 +4,7 @@ import { applyTheme, watchSystemTheme } from './lib/settings';
 import './styles.css';
 import './survey.css';
 import './pixel.css';
+import './world.css';
 
 applyTheme();
 watchSystemTheme();

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api, type TodayResponse } from '../lib/api';
 import { Countdown } from '../components/ui';
+import { HeroWorld, WorldStrip } from '../components/World';
 import { runFor, streakFor, type SurveyRun } from '../lib/surveyStore';
 import { dayNumber, nextResetAt } from '../../shared/dates';
 import { MAX_SCORE } from '../../shared/score';
@@ -105,14 +106,7 @@ export function Home({ navigate, onTutorial }: HomeProps) {
     <main className="main">
       <div className="wrap">
         <section className="home-hero">
-          <div className="hero-art" aria-hidden="true">
-            <span className="hero-stars" />
-            <span className="hero-moon" />
-            <span className="hero-fireflies" />
-            <span className="hero-hill hero-hill-back" />
-            <span className="hero-hill hero-hill-front" />
-            <span className="hero-houses" />
-          </div>
+          <HeroWorld />
 
           <div className="home-hero-inner">
             <div className="hero-hud">
@@ -198,6 +192,8 @@ export function Home({ navigate, onTutorial }: HomeProps) {
             Settings
           </button>
         </div>
+
+        <WorldStrip />
       </div>
     </main>
   );

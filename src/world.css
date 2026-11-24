@@ -1,0 +1,481 @@
+/* =========================================================================
+   The world: night sky, village, water, wildlife and a meadow under the menu.
+   All motion is transform/opacity only, and every animation is opted out
+   under reduced-motion.
+   ========================================================================= */
+
+.sprite {
+  display: block;
+  width: 100%;
+  height: 100%;
+  shape-rendering: crispEdges;
+}
+
+/* ------------------------------------------------------------------- sky */
+
+.hero-stars-twinkle {
+  animation: twinkle 5s steps(4) infinite;
+}
+
+.hero-cloud {
+  position: absolute;
+  width: 96px;
+  height: 34px;
+  color: rgba(214, 205, 240, 0.16);
+}
+
+.hero-cloud-1 {
+  top: 14%;
+  left: -12%;
+  animation: drift-cloud 78s linear infinite;
+}
+
+.hero-cloud-2 {
+  top: 27%;
+  left: -18%;
+  width: 68px;
+  height: 24px;
+  opacity: 0.7;
+  animation: drift-cloud 112s linear infinite 14s;
+}
+
+.hero-bird {
+  position: absolute;
+  left: 0;
+  color: rgba(240, 232, 255, 0.5);
+}
+
+.hero-bird-1 {
+  top: 9%;
+  width: 27px;
+  height: 12px;
+  color: rgba(240, 232, 255, 0.75);
+  animation: fly-across 34s linear infinite;
+}
+
+.hero-bird-2 {
+  top: 15%;
+  width: 18px;
+  height: 8px;
+  color: rgba(240, 232, 255, 0.55);
+  animation: fly-across 48s linear infinite -14s;
+}
+
+/* ------------------------------------------------------------ ground/water */
+
+/* thin dashed ripples, not a fence: dashes along x, gaps masked along y */
+.hero-water {
+  position: absolute;
+  left: 6%;
+  right: 8%;
+  bottom: 25%;
+  height: 46px;
+  background-image: repeating-linear-gradient(
+    90deg,
+    rgba(245, 201, 92, 0.34) 0,
+    rgba(245, 201, 92, 0.34) 9px,
+    transparent 9px,
+    transparent 24px
+  );
+  -webkit-mask-image: repeating-linear-gradient(0deg, #000 0 2px, transparent 2px 14px);
+  mask-image: repeating-linear-gradient(0deg, #000 0 2px, transparent 2px 14px);
+  opacity: 0.45;
+  animation: ripple 14s linear infinite;
+}
+
+.hero-fish {
+  position: absolute;
+  left: 22%;
+  bottom: 30%;
+  width: 24px;
+  height: 11px;
+  color: #0a0817;
+  opacity: 0;
+  animation: jump 9s linear infinite 2.4s;
+}
+
+.hero-houses {
+  animation: windows 7s steps(1) infinite;
+}
+
+.hero-fireflies {
+  animation: wander 6s steps(12) infinite alternate, twinkle 3.4s steps(6) infinite;
+}
+
+.hero-fireflies-2 {
+  left: 58%;
+  bottom: 33%;
+  animation-delay: -2.6s, -1.2s;
+  opacity: 0.8;
+}
+
+.hero-grass {
+  position: absolute;
+  bottom: 1%;
+  width: 84px;
+  height: 18px;
+  color: #332a5e;
+  transform-origin: bottom left;
+  animation: sway 6s steps(6) infinite alternate;
+}
+
+.hero-grass-1 {
+  left: 6%;
+}
+
+.hero-grass-2 {
+  left: 62%;
+  width: 60px;
+  height: 13px;
+  animation-delay: -2s;
+  animation-duration: 7.5s;
+}
+
+.hero-deer {
+  position: absolute;
+  bottom: 3%;
+  left: 8%;
+  width: 58px;
+  height: 37px;
+  color: #3a3168;
+  animation: patrol 52s ease-in-out infinite, breathe 3.6s steps(2) infinite;
+}
+
+/* a star that drops across the sky every so often */
+.hero-shooting-star {
+  position: absolute;
+  top: 6%;
+  left: 6%;
+  width: 3px;
+  height: 3px;
+  background: #fff6d8;
+  box-shadow:
+    -12px -4px 0 rgba(255, 246, 216, 0.55),
+    -24px -8px 0 rgba(255, 246, 216, 0.28),
+    -36px -12px 0 rgba(255, 246, 216, 0.12);
+  opacity: 0;
+  animation: shoot 15s linear infinite 4s;
+}
+
+/* ---------------------------------------------------------------- meadow */
+
+.world-strip {
+  position: relative;
+  margin-top: 20px;
+  height: 104px;
+  overflow: hidden;
+  border: 3px solid var(--outline);
+  background: linear-gradient(180deg, #171233 0%, #201a46 54%, #0d0a1c 100%);
+  box-shadow: var(--hard-shadow);
+}
+
+.strip-sky::before,
+.strip-sky::after {
+  content: '';
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: #fdf6e3;
+  opacity: 0.8;
+  animation: twinkle 4.6s steps(3) infinite;
+}
+
+.strip-sky::before {
+  top: 16px;
+  left: 12%;
+  box-shadow: 120px 10px 0 #fdf6e3, 260px -4px 0 rgba(253, 246, 227, 0.7), 420px 12px 0 #fdf6e3;
+}
+
+.strip-sky::after {
+  top: 34px;
+  left: 22%;
+  animation-delay: -1.8s;
+  box-shadow: 180px 8px 0 rgba(253, 246, 227, 0.6), 340px 2px 0 #fdf6e3, 520px -6px 0 rgba(253, 246, 227, 0.8);
+}
+
+.strip-ground {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 42px;
+  background: #0a0817;
+  clip-path: polygon(0 34%, 8% 22%, 17% 30%, 26% 18%, 36% 28%, 47% 16%, 58% 26%, 69% 18%, 80% 28%, 90% 20%, 100% 30%, 100% 100%, 0 100%);
+}
+
+.strip-grass {
+  position: absolute;
+  bottom: 8px;
+  width: 56px;
+  height: 12px;
+  color: #3b3168;
+  animation: sway 7s steps(6) infinite alternate;
+  transform-origin: bottom center;
+}
+
+.strip-grass-1 {
+  left: 8%;
+}
+
+.strip-grass-2 {
+  right: 12%;
+  width: 44px;
+  animation-delay: -3s;
+}
+
+.strip-mushroom {
+  position: absolute;
+  bottom: 8px;
+  width: 15px;
+  height: 12px;
+  color: #b1523f;
+}
+
+.strip-mushroom-1 {
+  left: 26%;
+}
+
+.strip-mushroom-2 {
+  left: 31%;
+  bottom: 6px;
+  width: 11px;
+  height: 9px;
+  color: #a8452f;
+}
+
+.strip-cat {
+  position: absolute;
+  bottom: 26px;
+  left: 58%;
+  width: 30px;
+  height: 26px;
+  color: #4a3f7d;
+  animation: tail-flick 5.5s steps(3) infinite;
+}
+
+.strip-snail {
+  position: absolute;
+  bottom: 9px;
+  left: -6%;
+  width: 20px;
+  height: 11px;
+  color: #4a3f7d;
+  animation: crawl 38s linear infinite;
+}
+
+/* -------------------------------------------------------------- keyframes */
+
+@keyframes twinkle {
+  0%,
+  100% {
+    opacity: 0.9;
+  }
+  40% {
+    opacity: 0.25;
+  }
+  70% {
+    opacity: 0.65;
+  }
+}
+
+@keyframes drift-cloud {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(130vw);
+  }
+}
+
+@keyframes fly-across {
+  0% {
+    transform: translateX(-8vw) translateY(0);
+  }
+  25% {
+    transform: translateX(26vw) translateY(-7px);
+  }
+  50% {
+    transform: translateX(58vw) translateY(2px);
+  }
+  75% {
+    transform: translateX(88vw) translateY(-5px);
+  }
+  100% {
+    transform: translateX(118vw) translateY(0);
+  }
+}
+
+@keyframes ripple {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 52px 0;
+  }
+}
+
+@keyframes jump {
+  0%,
+  82%,
+  100% {
+    opacity: 0;
+    transform: translateY(0) rotate(0deg);
+  }
+  84% {
+    opacity: 1;
+    transform: translateY(-2px) rotate(-8deg);
+  }
+  90% {
+    opacity: 1;
+    transform: translateY(-18px) rotate(-16deg);
+  }
+  95% {
+    opacity: 1;
+    transform: translateY(-2px) rotate(4deg);
+  }
+  97% {
+    opacity: 0;
+  }
+}
+
+@keyframes windows {
+  0%,
+  100% {
+    opacity: 0.95;
+  }
+  38% {
+    opacity: 0.55;
+  }
+  40% {
+    opacity: 0.95;
+  }
+  72% {
+    opacity: 0.7;
+  }
+  74% {
+    opacity: 0.95;
+  }
+}
+
+@keyframes wander {
+  from {
+    transform: translate(0, 0);
+  }
+  to {
+    transform: translate(10px, 12px);
+  }
+}
+
+@keyframes sway {
+  from {
+    transform: skewX(0deg) scaleY(1);
+  }
+  to {
+    transform: skewX(-4deg) scaleY(1.06);
+  }
+}
+
+@keyframes patrol {
+  0% {
+    transform: translateX(0) scaleX(1);
+  }
+  48% {
+    transform: translateX(22vw) scaleX(1);
+  }
+  52% {
+    transform: translateX(22vw) scaleX(-1);
+  }
+  100% {
+    transform: translateX(0) scaleX(-1);
+  }
+}
+
+@keyframes breathe {
+  0%,
+  100% {
+    margin-bottom: 0;
+  }
+  50% {
+    margin-bottom: 1px;
+  }
+}
+
+@keyframes tail-flick {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  33% {
+    transform: rotate(-2deg);
+  }
+  66% {
+    transform: rotate(1deg);
+  }
+}
+
+@keyframes shoot {
+  0%,
+  84% {
+    opacity: 0;
+    transform: translate(0, 0);
+  }
+  85% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+    transform: translate(110px, 62px);
+  }
+  91%,
+  100% {
+    opacity: 0;
+    transform: translate(130px, 74px);
+  }
+}
+
+@keyframes crawl {
+  from {
+    left: -6%;
+  }
+  to {
+    left: 104%;
+  }
+}
+
+/* ------------------------------------------------------------- calm modes */
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-stars-twinkle,
+  .hero-cloud,
+  .hero-bird,
+  .hero-water,
+  .hero-fish,
+  .hero-houses,
+  .hero-fireflies,
+  .hero-grass,
+  .hero-deer,
+  .hero-shooting-star,
+  .strip-grass,
+  .strip-cat,
+  .strip-snail,
+  .strip-sky::before,
+  .strip-sky::after {
+    animation: none;
+  }
+}
+
+[data-motion='reduced'] .hero-stars-twinkle,
+[data-motion='reduced'] .hero-cloud,
+[data-motion='reduced'] .hero-bird,
+[data-motion='reduced'] .hero-water,
+[data-motion='reduced'] .hero-fish,
+[data-motion='reduced'] .hero-houses,
+[data-motion='reduced'] .hero-fireflies,
+[data-motion='reduced'] .hero-grass,
+[data-motion='reduced'] .hero-deer,
+[data-motion='reduced'] .hero-shooting-star,
+[data-motion='reduced'] .strip-grass,
+[data-motion='reduced'] .strip-cat,
+[data-motion='reduced'] .strip-snail {
+  animation: none;
+}
