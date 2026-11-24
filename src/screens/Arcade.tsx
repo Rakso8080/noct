@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { dayNumber } from '../../shared/dates';
 import { dayStreak, readGames, type GamesStore } from '../lib/gamesStore';
 import { ScreenHead } from '../components/ui';
-import { useT } from '../lib/i18n';
+import { translate, useT } from '../lib/i18n';
 
 interface Entry {
   path: string;
@@ -35,12 +35,18 @@ const GAMES: Entry[] = [
     tone: 'violet',
     best: (s) =>
       s.chess.wins + s.chess.losses + s.chess.draws
-        ? `${s.chess.wins}W · ${s.chess.losses}L · ${s.chess.draws}D`
-        : 'Unplayed',
+        ? translate('{wins}W · {losses}L · {draws}D', {
+            wins: s.chess.wins,
+            losses: s.chess.losses,
+            draws: s.chess.draws,
+          })
+        : translate('Unplayed'),
     today: (s, day) => {
       const entry = s.chess.daily[String(day)];
       if (!entry) return null;
-      return entry.result === 'win' ? `Won in ${entry.plies} plies` : entry.result === 'loss' ? 'Lost today' : 'Drawn today';
+      return entry.result === 'win'
+        ? translate('Won in {plies} plies', { plies: entry.plies })
+        : translate(entry.result === 'loss' ? 'Lost today' : 'Drawn today');
     },
   },
   {
@@ -52,12 +58,14 @@ const GAMES: Entry[] = [
     best: (s, day) => {
       const today = s.mines.best[String(day)];
       const best = today ?? s.mines.bestFree;
-      return best == null ? 'Unplayed' : `Best ${minutes(best)}`;
+      return best == null ? translate('Unplayed') : translate('Best {n}', { n: minutes(best) });
     },
     today: (s, day) => {
       const entry = s.mines.daily[String(day)];
       if (!entry) return null;
-      return entry.won ? `Cleared in ${minutes(entry.ms)}` : 'Lost today';
+      return entry.won
+        ? translate('Cleared in {time}', { time: minutes(entry.ms) })
+        : translate('Lost today');
     },
   },
   {
@@ -66,10 +74,13 @@ const GAMES: Entry[] = [
     kind: 'keepsakes',
     line: 'The keepsake table: twelve pairs, a shelf for every match, one honest peek.',
     tone: 'teal',
-    best: (s) => (s.pairs.bestMoves == null ? 'Unplayed' : `Best ${s.pairs.bestMoves} moves`),
+    best: (s) =>
+      s.pairs.bestMoves == null
+        ? translate('Unplayed')
+        : translate('Best {n} moves', { n: s.pairs.bestMoves }),
     today: (s, day) => {
       const entry = s.pairs.daily[String(day)];
-      return entry ? `${entry.moves} moves` : null;
+      return entry ? translate('{n} moves', { n: entry.moves }) : null;
     },
   },
   {
@@ -78,10 +89,13 @@ const GAMES: Entry[] = [
     kind: 'windows',
     line: 'The observatory windows: solve it, and the sky comes through. Shortest distance shown.',
     tone: 'sand',
-    best: (s) => (s.lights.bestMoves == null ? 'Unplayed' : `Best ${s.lights.bestMoves} presses`),
+    best: (s) =>
+      s.lights.bestMoves == null
+        ? translate('Unplayed')
+        : translate('Best {n} presses', { n: s.lights.bestMoves }),
     today: (s, day) => {
       const entry = s.lights.daily[String(day)];
-      return entry ? `${entry.moves} presses` : null;
+      return entry ? translate('{n} presses', { n: entry.moves }) : null;
     },
   },
   {
@@ -92,12 +106,17 @@ const GAMES: Entry[] = [
     tone: 'orchard',
     best: (s) =>
       s.snake.best == null && s.snake.wins === 0
-        ? 'Unplayed'
-        : `Best ${s.snake.best ?? '—'} steps · ${s.snake.wins}W`,
+        ? translate('Unplayed')
+        : translate('Best {steps} steps · {wins}W', {
+            steps: s.snake.best ?? '—',
+            wins: s.snake.wins,
+          }),
     today: (s, day) => {
       const entry = s.snake.daily[String(day)];
       if (!entry) return null;
-      return entry.won ? `Cleared in ${entry.steps} steps` : `${entry.apples} apples · ${entry.steps} steps`;
+      return entry.won
+        ? translate('Cleared in {steps} steps', { steps: entry.steps })
+        : translate('{apples} apples · {steps} steps', { apples: entry.apples, steps: entry.steps });
     },
   },
   {
@@ -108,12 +127,16 @@ const GAMES: Entry[] = [
     tone: 'amber',
     best: (s) =>
       s.numbers.bestScore == null
-        ? 'Unplayed'
-        : `Best ${s.numbers.bestScore} · tile ${s.numbers.bestTile ?? 0} · ${s.numbers.wins}W`,
+        ? translate('Unplayed')
+        : translate('Best {score} · tile {tile} · {wins}W', {
+            score: s.numbers.bestScore,
+            tile: s.numbers.bestTile ?? 0,
+            wins: s.numbers.wins,
+          }),
     today: (s, day) => {
       const entry = s.numbers.daily[String(day)];
       if (!entry) return null;
-      return `${entry.score} points · tile ${entry.tile}`;
+      return translate('{score} points · tile {tile}', { score: entry.score, tile: entry.tile });
     },
   },
   {
@@ -124,12 +147,19 @@ const GAMES: Entry[] = [
     tone: 'stone',
     best: (s) =>
       s.reversi.wins + s.reversi.losses + s.reversi.draws
-        ? `Best +${s.reversi.bestMargin ?? 0} · ${s.reversi.wins}W/${s.reversi.losses}L`
-        : 'Unplayed',
+        ? translate('Best +{margin} · {wins}W/{losses}L', {
+            margin: s.reversi.bestMargin ?? 0,
+            wins: s.reversi.wins,
+            losses: s.reversi.losses,
+          })
+        : translate('Unplayed'),
     today: (s, day) => {
       const entry = s.reversi.daily[String(day)];
       if (!entry) return null;
-      return `${entry.margin >= 0 ? '+' : ''}${entry.margin} · ${entry.discs} discs`;
+      return translate('{margin} · {discs} discs', {
+        margin: `${entry.margin >= 0 ? '+' : ''}${entry.margin}`,
+        discs: entry.discs,
+      });
     },
   },
 ];

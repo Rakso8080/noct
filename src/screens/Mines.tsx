@@ -5,6 +5,7 @@ import { minesToday, readGames, recordMines, type GameMode } from '../lib/gamesS
 import { sfx } from '../lib/audio';
 import { haptic } from '../lib/settings';
 import { ScreenHead, Segmented } from '../components/ui';
+import { useT } from '../lib/i18n';
 
 const SIZE = 9;
 const MINES = 10;
@@ -66,6 +67,7 @@ function floodOpen(cells: Cell[], start: number): void {
 }
 
 export function Mines({ navigate }: { navigate: (path: string) => void }) {
+  const t = useT();
   const day = dayNumber();
   const [mode, setMode] = useState<GameMode>('daily');
   const seed = useMemo(() => hashSeed('mines', mode, day), [mode, day]);
@@ -259,9 +261,13 @@ export function Mines({ navigate }: { navigate: (path: string) => void }) {
   return (
     <main className="main">
       <div className="wrap" style={{ maxWidth: 640 }}>
-        <ScreenHead eyebrow={`Mines · Night ${String(day).padStart(3, '0')}`} title="The buried sky">
-          Ten fallen stars are buried under the field. Clear every other square; the first tap is
-          always safe, so a blind start never costs you. Long-press (or right-click) plants a lantern.
+        <ScreenHead
+          eyebrow={t('Mines · Night {n}', { n: String(day).padStart(3, '0') })}
+          title={t('The buried sky')}
+        >
+          {t(
+            'Ten fallen stars are buried under the field. Clear every other square; the first tap is always safe, so a blind start never costs you. Long-press (or right-click) plants a lantern.',
+          )}
         </ScreenHead>
 
         <div className="mini-modes">
@@ -279,13 +285,16 @@ export function Mines({ navigate }: { navigate: (path: string) => void }) {
             }}
           />
           <span className="chess-note">
-            {mode === 'daily' ? 'The same board for everyone today' : 'Fresh board every reset'}
+            {mode === 'daily'
+              ? t('The same board for everyone today')
+              : t('Fresh board every reset')}
           </span>
         </div>
 
         <div className="mini-hud">
           <span className="chip">
-            <span className="mono">{String(MINES - flags).padStart(2, '0')}</span> stars unmarked
+            <span className="mono">{String(MINES - flags).padStart(2, '0')}</span>{' '}
+            {t('stars unmarked')}
           </span>
           <span className="chip">
             <span className="mono">{String(Math.floor(seconds / 60)).padStart(2, '0')}:{String(seconds % 60).padStart(2, '0')}</span>
@@ -294,16 +303,20 @@ export function Mines({ navigate }: { navigate: (path: string) => void }) {
             {mode === 'daily'
               ? today
                 ? today.won
-                  ? `Today ${(today.ms / 1000).toFixed(1)}s`
-                  : 'Today lost'
-                : 'Unplayed today'
-              : 'Free play'}
+                  ? t('Today {n}s', { n: (today.ms / 1000).toFixed(1) })
+                  : t('Today lost')
+                : t('Unplayed today')
+              : t('Free play')}
           </span>
-          <span className="chip">{best === null ? 'No best yet' : `Best ${(best / 1000).toFixed(1)}s`}</span>
           <span className="chip">
-            Cleared <span className="mono">{opened}</span> / {EMPTY}
+            {best === null ? t('No best yet') : t('Best {n}s', { n: (best / 1000).toFixed(1) })}
           </span>
-          {cascade ? <span className="chip is-flash">Cascade +{cascade}</span> : null}
+          <span className="chip">
+            {t('Cleared')} <span className="mono">{opened}</span> / {EMPTY}
+          </span>
+          {cascade ? (
+            <span className="chip is-flash">{t('Cascade +{n}', { n: cascade })}</span>
+          ) : null}
         </div>
 
         <div className="mines-progress" aria-hidden="true">
@@ -311,7 +324,7 @@ export function Mines({ navigate }: { navigate: (path: string) => void }) {
         </div>
 
         <div className={`mines-board${status === 'lost' ? ' is-lost' : ''}${status === 'won' ? ' is-won' : ''}`}>
-          <div className="mines-grid" role="group" aria-label="Minesweeper board, 9 by 9">
+          <div className="mines-grid" role="group" aria-label={t('Minesweeper board, 9 by 9')}>
             {cells.map((cell, i) => {
               const label = cell.open
                 ? cell.mine
@@ -333,7 +346,18 @@ export function Mines({ navigate }: { navigate: (path: string) => void }) {
                     .filter(Boolean)
                     .join(' ')}
                   data-n={cell.open && !cell.mine ? cell.near : undefined}
-                  aria-label={`Row ${Math.floor(i / SIZE) + 1}, column ${(i % SIZE) + 1}: ${label}`}
+                  aria-label={t('Row {r}, column {c}: {state}', {
+                    r: Math.floor(i / SIZE) + 1,
+                    c: (i % SIZE) + 1,
+                    state:
+                      label === 'mine'
+                        ? t('mine')
+                        : label === 'flagged'
+                          ? t('flagged')
+                          : label === 'hidden'
+                            ? t('hidden')
+                            : t('{n} nearby', { n: cell.near }),
+                  })}
                   onClick={() => {
                     if (suppressClick.current) {
                       suppressClick.current = false;
@@ -366,24 +390,28 @@ export function Mines({ navigate }: { navigate: (path: string) => void }) {
               sfx.tap();
             }}
           >
-            {flagMode ? 'Flagging' : 'Flag mode'}
+            {flagMode ? t('Flagging') : t('Flag mode')}
           </button>
           <button className="btn btn-sm btn-ghost" onClick={undo} disabled={!history.length}>
-            Undo
+            {t('Undo')}
           </button>
           <button className="btn btn-sm btn-ghost" onClick={reset}>
-            New board
+            {t('New board')}
           </button>
           <button className="btn btn-sm btn-ghost" onClick={() => navigate('/')}>
-            Menu
+            {t('Menu')}
           </button>
         </div>
 
         {status === 'won' || status === 'lost' ? (
           <div className="mini-banner" role="status">
-            <strong>{status === 'won' ? `Cleared in ${(elapsed / 1000).toFixed(1)}s` : 'A mine. Try again.'}</strong>
+            <strong>
+              {status === 'won'
+                ? t('Cleared in {n}s', { n: (elapsed / 1000).toFixed(1) })
+                : t('A mine. Try again.')}
+            </strong>
             <button className="btn btn-sm btn-primary" onClick={reset}>
-              Play again
+              {t('Play again')}
             </button>
           </div>
         ) : null}

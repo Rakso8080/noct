@@ -4,6 +4,7 @@ import { updateSettings, useSettings } from '../lib/settings';
 import { sfx } from '../lib/audio';
 import { loadToday } from '../lib/crowd';
 import { PROMPTS_PER_DAY, SECONDS_PER_PROMPT, heightFor, type RunMode, type SurveyMode } from '../../shared/survey';
+import { useT } from '../lib/i18n';
 
 const MODES: { id: RunMode; name: string; line: string }[] = [
   { id: 'daily', name: 'Daily', line: 'Seven prompts, one try. Everybody gets the same ones today.' },
@@ -39,6 +40,7 @@ export function StartScreen({
   onResume,
   onBack,
 }: StartScreenProps) {
+  const t = useT();
   const settings = useSettings();
   const [picked, setPicked] = useState<RunMode>(dailyDone ? 'classic' : 'daily');
   const [today, setToday] = useState<{ climbs: number; avgHeight: number } | null>(null);
@@ -59,8 +61,8 @@ export function StartScreen({
   const bestKm = (heightFor(best) / 1000).toFixed(1);
   const bestLine =
     best > 0
-      ? `Your best ${best} pts · ${bestKm} km`
-      : `${PROMPTS_PER_DAY} prompts · ${SECONDS_PER_PROMPT}s each`;
+      ? t('Your best {points} pts · {km} km', { points: best, km: bestKm })
+      : t('{n} prompts · {s}s each', { n: PROMPTS_PER_DAY, s: SECONDS_PER_PROMPT });
 
   return (
     <main className="start">
@@ -69,11 +71,11 @@ export function StartScreen({
       <div className="start-top">
         <span className="start-pill">
           <em>Noct</em>
-          <b>{game.name}</b>
+          <b>{t(game.name)}</b>
         </span>
         <span className="start-pill">
-          <em>Streak</em>
-          <b>{streak} days</b>
+          <em>{t('Streak')}</em>
+          <b>{t('{n} days', { n: streak })}</b>
         </span>
         <button
           className="start-pill start-sound"
@@ -88,16 +90,16 @@ export function StartScreen({
           }}
           aria-pressed={settings.sound}
         >
-          <em>Sound</em>
-          <b>{settings.sound ? 'on' : 'off'}</b>
+          <em>{t('Sound')}</em>
+          <b>{settings.sound ? t('on') : t('off')}</b>
         </button>
       </div>
 
       <div className="start-inner">
         <h1 className="start-logo">Noct</h1>
-        <p className="start-sub">{game.line}</p>
+        <p className="start-sub">{t(game.line)}</p>
 
-        <div className="start-modes" role="tablist" aria-label="Choose a mode">
+        <div className="start-modes" role="tablist" aria-label={t('Choose a mode')}>
           {MODES.map((m) => {
             const disabled = m.id === 'daily' && dailyDone;
             return (
@@ -111,15 +113,15 @@ export function StartScreen({
                   setPicked(m.id);
                 }}
                 disabled={disabled}
-                title={disabled ? 'Today’s Daily is already done' : m.line}
+                title={disabled ? t('Today’s Daily is already done') : t(m.line)}
               >
-                {m.name}
+                {t(m.name)}
               </button>
             );
           })}
         </div>
 
-        <p className="start-mode-line">{MODES.find((m) => m.id === picked)?.line}</p>
+        <p className="start-mode-line">{t(MODES.find((m) => m.id === picked)?.line ?? '')}</p>
 
         <button
           className="start-begin"
@@ -128,15 +130,17 @@ export function StartScreen({
             onBegin(picked);
           }}
         >
-          <span aria-hidden="true">▲</span> Begin the climb <span aria-hidden="true">▲</span>
+          <span aria-hidden="true">▲</span> {t('Begin the climb')} <span aria-hidden="true">▲</span>
         </button>
 
         <p className="start-best">{bestLine}</p>
         {today ? (
           <p className="start-crowd">
             <span className="start-crowd-dot" aria-hidden="true" />
-            {today.climbs.toLocaleString('en-GB')} {today.climbs === 1 ? 'climb' : 'climbs'} today · avg{' '}
-            {Math.round(today.avgHeight).toLocaleString('en-GB')} m
+            {t('{n} climbs today · avg {m} m', {
+              n: today.climbs.toLocaleString('en-GB'),
+              m: Math.round(today.avgHeight).toLocaleString('en-GB'),
+            })}
           </p>
         ) : null}
 
@@ -148,7 +152,7 @@ export function StartScreen({
               onResume();
             }}
           >
-            See today’s result
+            {t('See today’s result')}
           </button>
         ) : null}
 
@@ -159,7 +163,7 @@ export function StartScreen({
             onBack();
           }}
         >
-          Back to menu
+          {t('Back to menu')}
         </button>
       </div>
     </main>

@@ -5,6 +5,7 @@ import { pairsToday, readGames, recordPairs, type GameMode } from '../lib/gamesS
 import { sfx } from '../lib/audio';
 import { haptic } from '../lib/settings';
 import { ScreenHead, Segmented } from '../components/ui';
+import { useT } from '../lib/i18n';
 
 const SYMBOLS = ['☾', '✦', '✧', '❄', '♠', '♣', '♥', '♦', '✿', '☂', '⚑', '◈'];
 
@@ -22,6 +23,7 @@ function buildDeck(seed: number): Card[] {
 }
 
 export function Pairs({ navigate }: { navigate: (path: string) => void }) {
+  const t = useT();
   const day = dayNumber();
   const [mode, setMode] = useState<GameMode>('daily');
 
@@ -138,9 +140,13 @@ export function Pairs({ navigate }: { navigate: (path: string) => void }) {
   return (
     <main className="main">
       <div className="wrap" style={{ maxWidth: 760 }}>
-        <ScreenHead eyebrow={`Pairs · Night ${String(day).padStart(3, '0')}`} title="The keepsake table">
-          Twelve keepsakes lie face down. Turn two; a match goes on the shelf, a miss turns back.
-          Same layout for everyone today.
+        <ScreenHead
+          eyebrow={t('Pairs · Night {n}', { n: String(day).padStart(3, '0') })}
+          title={t('The keepsake table')}
+        >
+          {t(
+            'Twelve keepsakes lie face down. Turn two; a match goes on the shelf, a miss turns back. Same layout for everyone today.',
+          )}
         </ScreenHead>
 
         <div className="mini-modes">
@@ -158,12 +164,14 @@ export function Pairs({ navigate }: { navigate: (path: string) => void }) {
             }}
           />
           <span className="chess-note">
-            {mode === 'daily' ? 'The same layout for everyone today' : 'Fresh shuffle every reset'}
+            {mode === 'daily'
+              ? t('The same layout for everyone today')
+              : t('Fresh shuffle every reset')}
           </span>
         </div>
 
-        <div className="pairs-shelf" aria-label={`Keepsakes ${keepsakes.length} of ${SYMBOLS.length}`}>
-          <span className="pairs-shelf-label">Keepsakes</span>
+        <div className="pairs-shelf" aria-label={t('Keepsakes {n} of {total}', { n: keepsakes.length, total: SYMBOLS.length })}>
+          <span className="pairs-shelf-label">{t('Keepsakes')}</span>
           {SYMBOLS.map((symbol, i) => {
             const found = keepsakes.includes(symbol);
             return (
@@ -180,7 +188,7 @@ export function Pairs({ navigate }: { navigate: (path: string) => void }) {
 
         <div className="mini-hud">
           <span className="chip">
-            <span className="mono">{moves}</span> moves
+            <span className="mono">{moves}</span> {t('moves')}
           </span>
           <span className="chip">
             <span className="mono">
@@ -188,13 +196,25 @@ export function Pairs({ navigate }: { navigate: (path: string) => void }) {
             </span>
           </span>
           <span className="chip">
-            {mode === 'daily' ? (today ? `Today ${today.moves} moves` : 'Unplayed today') : 'Free play'}
+            {mode === 'daily'
+              ? today
+                ? t('Today {n} moves', { n: today.moves })
+                : t('Unplayed today')
+              : t('Free play')}
           </span>
-          <span className="chip">{matched.size / 2} / {SYMBOLS.length} on the shelf</span>
-          <span className="chip">{best === null ? 'No best yet' : `Best ${best} moves`}</span>
-          {bestMs !== null ? <span className="chip">Best time {(bestMs / 1000).toFixed(1)}s</span> : null}
-          <span className="chip">Perfect is {SYMBOLS.length} moves</span>
-          {peeks > 0 ? <span className="chip">Peek used</span> : null}
+          <span className="chip">
+            {matched.size / 2} / {SYMBOLS.length} {t('on the shelf')}
+          </span>
+          <span className="chip">
+            {best === null ? t('No best yet') : t('Best {n} moves', { n: best })}
+          </span>
+          {bestMs !== null ? (
+            <span className="chip">
+              {t('Best time {n}s', { n: (bestMs / 1000).toFixed(1) })}
+            </span>
+          ) : null}
+          <span className="chip">{t('Perfect is {n} moves', { n: SYMBOLS.length })}</span>
+          {peeks > 0 ? <span className="chip">{t('Peek used')}</span> : null}
         </div>
 
         <div className="pairs-grid">
@@ -206,7 +226,7 @@ export function Pairs({ navigate }: { navigate: (path: string) => void }) {
                 type="button"
                 className={`pairs-card${isUp ? ' is-up' : ''}${matched.has(index) ? ' is-matched' : ''}`}
                 onClick={() => flip(index)}
-                aria-label={isUp ? `Card shows ${card.symbol}` : 'Hidden card'}
+                aria-label={isUp ? t('Card shows {symbol}', { symbol: card.symbol }) : t('Hidden card')}
                 aria-pressed={isUp}
               >
                 <span className="pairs-face is-back" aria-hidden="true">
@@ -222,23 +242,23 @@ export function Pairs({ navigate }: { navigate: (path: string) => void }) {
 
         <div className="mini-actions">
           <button className="btn btn-sm" onClick={peek} disabled={won || peeks > 0}>
-            Peek <span className="par-note" style={{ margin: 0 }}>−2 moves</span>
+            {t('Peek')} <span className="par-note" style={{ margin: 0 }}>{t('−2 moves')}</span>
           </button>
           <button className="btn btn-sm btn-ghost" onClick={() => reset()}>
-            New shuffle
+            {t('New shuffle')}
           </button>
           <button className="btn btn-sm btn-ghost" onClick={() => navigate('/')}>
-            Menu
+            {t('Menu')}
           </button>
         </div>
 
         {won ? (
           <div className="mini-banner" role="status">
             <strong>
-              Cleared in {moves} moves · {(elapsed / 1000).toFixed(1)}s
+              {t('Cleared in {n} moves · {time}s', { n: moves, time: (elapsed / 1000).toFixed(1) })}
             </strong>
             <button className="btn btn-sm btn-primary" onClick={() => reset()}>
-              Play again
+              {t('Play again')}
             </button>
           </div>
         ) : null}

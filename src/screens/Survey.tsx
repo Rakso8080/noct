@@ -45,6 +45,7 @@ import { sfx } from '../lib/audio';
 import { haptic, preferReducedMotion, updateSettings, useSettings } from '../lib/settings';
 import { liveCrowd, loadShares, recordAnswer, recordRun, shareOf, type CrowdPrompt } from '../lib/crowd';
 import { shareRunCard } from '../lib/shareCard';
+import { translate, useT } from '../lib/i18n';
 
 const GAMES: Record<
   SurveyMode,
@@ -299,6 +300,7 @@ interface ClimbRunProps {
 }
 
 function ClimbRun({ mode, runMode, day, seed, resume, drawn, onQuit, onDone }: ClimbRunProps) {
+  const t = useT();
   const settings = useSettings();
   const [index, setIndex] = useState(resume?.index ?? 0);
   const [input, setInput] = useState('');
@@ -546,11 +548,11 @@ function ClimbRun({ mode, runMode, day, seed, resume, drawn, onQuit, onDone }: C
 
       <div className="play-hud">
         <span className="play-pill">
-          <em>Altitude</em>
+          <em>{t('Altitude')}</em>
           <b>{metres(Math.round(shownHeight))}</b>
         </span>
         <span className="play-pill">
-          <em>Prompt</em>
+          <em>{t('Prompt')}</em>
           <b>
             {index + 1}
             {total ? ` / ${total}` : ''}
@@ -559,7 +561,7 @@ function ClimbRun({ mode, runMode, day, seed, resume, drawn, onQuit, onDone }: C
         <span className="play-hud-right">
           {runMode === 'endless' ? (
             <span className="play-pill play-lift">
-              <em>Lift</em>
+              <em>{t('Lift')}</em>
               <span className="play-balloons">
                 {Array.from({ length: BALLOONS }, (_, i) => (
                   <i key={i} className={i < balloons ? 'is-full' : ''} />
@@ -578,7 +580,7 @@ function ClimbRun({ mode, runMode, day, seed, resume, drawn, onQuit, onDone }: C
               if (next) sfx.tap();
             }}
             aria-pressed={settings.sound}
-            title="Sound"
+            title={t('Sound')}
           >
             {settings.sound ? '♪' : '×'}
           </button>
@@ -590,16 +592,16 @@ function ClimbRun({ mode, runMode, day, seed, resume, drawn, onQuit, onDone }: C
               onQuit();
             }}
           >
-            Quit
+            {t('Quit')}
           </button>
         </span>
       </div>
 
-      <section className={`survey-ident is-${mode}`} aria-label={game.world}>
+      <section className={`survey-ident is-${mode}`} aria-label={t(game.world)}>
         <div className="survey-ident-head">
-          <span className="eyebrow">{game.world}</span>
+          <span className="eyebrow">{t(game.world)}</span>
           <span className="mono survey-ident-num">
-            {hasShare ? `${metre}% ${mode === 'common' ? 'chorus' : 'solitude'}` : '—'}
+            {hasShare ? `${metre}% ${t(mode === 'common' ? 'chorus' : 'solitude')}` : '—'}
           </span>
         </div>
         <div className="survey-meter" aria-hidden="true">
@@ -621,10 +623,20 @@ function ClimbRun({ mode, runMode, day, seed, resume, drawn, onQuit, onDone }: C
           </span>
           <span className="survey-ident-line">
             {mode === 'common'
-              ? `Echo ${answered}/${steps} · ${
-                  hasShare ? `${echoShare}% sang it` : answered ? 'off the board' : 'listening'
-                }`
-              : `${answered}/${steps} answered · ${alone} alone`}
+              ? t('Echo {n}/{total} · {state}', {
+                  n: answered,
+                  total: steps,
+                  state: hasShare
+                    ? t('{n}% sang it', { n: echoShare })
+                    : answered
+                      ? t('off the board')
+                      : t('listening'),
+                })
+              : t('{n}/{total} answered · {alone} alone', {
+                  n: answered,
+                  total: steps,
+                  alone,
+                })}
           </span>
         </div>
       </section>
@@ -637,7 +649,7 @@ function ClimbRun({ mode, runMode, day, seed, resume, drawn, onQuit, onDone }: C
 
       <section className={`play-card${shake ? ' is-shaking' : ''}`}>
         <div className="play-card-head">
-          <span className="play-level">{difficultyFor(prompt)}</span>
+          <span className="play-level">{t(difficultyFor(prompt))}</span>
         </div>
 
         <h1 className="play-prompt">{prompt.prompt}</h1>
@@ -646,7 +658,7 @@ function ClimbRun({ mode, runMode, day, seed, resume, drawn, onQuit, onDone }: C
           <div className="play-result">
             <div className="play-result-top">
               <span className="play-tier" data-tier={reveal.tier}>
-                {TIERS[reveal.tier].name}
+                {t(TIERS[reveal.tier].name)}
               </span>
               <span className="play-result-answer">
                 {reveal.matched ? `“${reveal.matched}”` : reveal.given ? `“${reveal.given}”` : '—'}
@@ -657,17 +669,23 @@ function ClimbRun({ mode, runMode, day, seed, resume, drawn, onQuit, onDone }: C
                 be read out on every frame. */}
             <p className="play-result-line" aria-live="polite">
               {reveal.matched
-                ? `${reveal.weight}% of the crowd said ${reveal.matched}. You are ${metres(reveal.height)} up.`
+                ? t('{share}% of the crowd said {answer}. You are {height} up.', {
+                    share: reveal.weight ?? 0,
+                    answer: reveal.matched,
+                    height: metres(reveal.height),
+                  })
                 : reveal.miss
-                  ? 'Nothing accepted on that one. It costs you a balloon in Endless.'
-                  : `Off the board, but it counted. You are ${metres(reveal.height)} up.`}
+                  ? t('Nothing accepted on that one. It costs you a balloon in Endless.')
+                  : t('Off the board, but it counted. You are {height} up.', {
+                      height: metres(reveal.height),
+                    })}
             </p>
 
             <div className="play-board">
               <div className="play-board-head">
-                <span className="eyebrow">The board</span>
+                <span className="eyebrow">{t('The board')}</span>
                 <span className="eyebrow">
-                  crowd share
+                  {t('crowd share')}
                   {cohort ? <span className="play-crowd-n"> · n={cohort.total.toLocaleString('en-GB')}</span> : null}
                 </span>
               </div>
@@ -691,13 +709,15 @@ function ClimbRun({ mode, runMode, day, seed, resume, drawn, onQuit, onDone }: C
                     setShowBoard((v) => !v);
                   }}
                 >
-                  {showBoard ? 'Show less' : `See all ${Math.min(9, board.length)}`}
+                  {showBoard
+                    ? t('Show less')
+                    : t('See all {n}', { n: Math.min(9, board.length) })}
                 </button>
               ) : null}
             </div>
           </div>
         ) : (
-          <p className="play-hint">▲ common answers climb higher ▲</p>
+          <p className="play-hint">{t('▲ common answers climb higher ▲')}</p>
         )}
       </section>
 
@@ -707,20 +727,20 @@ function ClimbRun({ mode, runMode, day, seed, resume, drawn, onQuit, onDone }: C
             <span className="play-bar-note">
               {runMode === 'endless'
                 ? balloons > 0
-                  ? `${balloons} balloon${balloons === 1 ? '' : 's'} left`
-                  : 'Out of balloons'
-                : `${index + 1} of ${total}`}
+                  ? t('{n} balloons left', { n: balloons })
+                  : t('Out of balloons')
+                : t('{n} of {total}', { n: index + 1, total })}
             </span>
             <button className="btn btn-primary play-next" onClick={next}>
               {runMode === 'endless' && balloons <= 0
-                ? 'See the climb'
+                ? t('See the climb')
                 : runMode !== 'endless' && index + 1 >= prompts.length
-                  ? 'See the climb'
-                  : 'Next'}
+                  ? t('See the climb')
+                  : t('Next')}
             </button>
           </>
         ) : countIn > 0 ? (
-          <span className="play-count">Clock starting in {countIn}</span>
+          <span className="play-count">{t('Clock starting in {n}', { n: countIn })}</span>
         ) : (
           <form
             className="play-form"
@@ -744,18 +764,18 @@ function ClimbRun({ mode, runMode, day, seed, resume, drawn, onQuit, onDone }: C
               autoCapitalize="off"
               spellCheck={false}
               maxLength={40}
-              aria-label="Your answer"
-              placeholder={mode === 'common' ? 'Type one answer…' : 'Type one answer…'}
+              aria-label={t('Your answer')}
+              placeholder={t('Type one answer…')}
             />
             <button className="play-pass" type="button" onClick={() => commit('', false)}>
-              Pass
+              {t('Pass')}
             </button>
             <button className="play-climb" type="submit" disabled={!input.trim()}>
-              Climb
+              {t('Climb')}
             </button>
           </form>
         )}
-        {error ? <p className="play-error">{error}</p> : null}
+        {error ? <p className="play-error">{t(error)}</p> : null}
       </div>
     </main>
   );
@@ -765,10 +785,15 @@ function ClimbRun({ mode, runMode, day, seed, resume, drawn, onQuit, onDone }: C
 
 function shareText(run: SurveyRun): string {
   const bars = run.answers.map((a) => glyph(a.points)).join('');
-  const label = GAMES[run.mode].name;
-  const modeLabel = run.runMode === 'daily' ? ` #${pad(run.day)}` : run.runMode === 'classic' ? ' Classic' : ' Endless';
+  const label = translate(GAMES[run.mode].name);
+  const modeLabel =
+    run.runMode === 'daily'
+      ? ` #${pad(run.day)}`
+      : run.runMode === 'classic'
+        ? ` ${translate('Classic')}`
+        : ` ${translate('Endless')}`;
   const km = (run.height / 1000).toFixed(1);
-  return `Noct ${label}${modeLabel}\n${bars}  ${km} km · ${run.score} pts\n${verdict(run.score, run.max)}\nnoct.game`;
+  return `Noct ${label}${modeLabel}\n${bars}  ${km} km · ${run.score} ${translate('points')}\n${translate(verdict(run.score, run.max))}\nnoct.game`;
 }
 
 function SurveyResult({
@@ -780,6 +805,7 @@ function SurveyResult({
   navigate: (path: string) => void;
   onAgain: () => void;
 }) {
+  const t = useT();
   const [copied, setCopied] = useState(false);
   const game = GAMES[run.mode];
   const other: SurveyMode = run.mode === 'common' ? 'rare' : 'common';
@@ -787,7 +813,8 @@ function SurveyResult({
   const km = (run.height / 1000).toFixed(1);
   const share = run.max > 0 ? run.score / run.max : 0;
   const best = Math.max(bestFor(run.mode), run.score);
-  const modeLabel = run.runMode === 'daily' ? 'Daily' : run.runMode === 'classic' ? 'Classic' : 'Endless';
+  const modeLabel =
+    run.runMode === 'daily' ? t('Daily') : run.runMode === 'classic' ? t('Classic') : t('Endless');
   const shownHeight = useRising(run.height, 900);
   const [cardState, setCardState] = useState<'idle' | 'working' | 'shared' | 'saved' | 'failed'>('idle');
   const moonrises = run.answers.filter((a) => a.tier === 'moonrise').length;
@@ -810,13 +837,13 @@ function SurveyResult({
     setCardState('working');
     const outcome = await shareRunCard(
       {
-        game: game.name,
+        game: t(game.name),
         modeLabel,
         dayLabel: run.runMode === 'daily' ? `#${pad(run.day)}` : '',
         height: metres(run.height),
         routeKm: ROUTE_KM,
         score: run.score,
-        verdict: verdict(run.score, run.max),
+        verdict: t(verdict(run.score, run.max)),
         streak: streak.current,
         answers: run.answers.map((a) => ({ tier: a.tier ?? 'lost', points: a.points })),
       },
@@ -827,14 +854,14 @@ function SurveyResult({
 
   const cardLabel =
     cardState === 'working'
-      ? 'Making card…'
+      ? t('Making card…')
       : cardState === 'shared'
-        ? 'Shared'
+        ? t('Shared')
         : cardState === 'saved'
-          ? 'Saved png'
+          ? t('Saved png')
           : cardState === 'failed'
-            ? 'Could not share'
-            : 'Share card';
+            ? t('Could not share')
+            : t('Share card');
 
   return (
     <main className="main">
@@ -847,7 +874,7 @@ function SurveyResult({
       ) : null}
       <div className="wrap survey-wrap">
         <div className="eyebrow">
-          {game.world} · {modeLabel}
+          {t(game.world)} · {modeLabel}
           {run.runMode === 'daily' ? ` #${pad(run.day)} · ${dayToISO(run.day)}` : ''}
         </div>
 
@@ -855,15 +882,17 @@ function SurveyResult({
           <span className="result-height-num">{metres(Math.round(shownHeight))}</span>
           <span className="result-height-km">/ {ROUTE_KM} km</span>
         </div>
-        <div className="rating-word is-stamping">{verdict(run.score, run.max)}</div>
+        <div className="rating-word is-stamping">{t(verdict(run.score, run.max))}</div>
 
         <div className="row gap-6" style={{ flexWrap: 'wrap' }}>
-          <span className="chip chip-ember">{run.score} points</span>
-          <span className="chip">Best {best}</span>
-          {run.runMode === 'endless' ? <span className="chip">{run.answers.length} prompts</span> : null}
+          <span className="chip chip-ember">{t('{n} points', { n: run.score })}</span>
+          <span className="chip">{t('Best {n}', { n: best })}</span>
+          {run.runMode === 'endless' ? (
+            <span className="chip">{t('{n} prompts', { n: run.answers.length })}</span>
+          ) : null}
           <span className={`chip${streak.current > 0 ? ' chip-ember' : ''}`}>
             <span className="chip-dot" aria-hidden="true" />
-            {streak.current}-day streak
+            {t('{n}-day streak', { n: streak.current })}
           </span>
         </div>
 
@@ -873,7 +902,7 @@ function SurveyResult({
 
         <section className="route-map">
           <div className="route-map-head">
-            <span className="eyebrow">The climb</span>
+            <span className="eyebrow">{t('The climb')}</span>
             <span className="eyebrow">
               {km} / {ROUTE_KM} km
             </span>
@@ -890,8 +919,10 @@ function SurveyResult({
                 data-tier={a.tier ?? 'lost'}
                 style={{ animationDelay: `${i * 70}ms` }}
               >
-                <span className="route-stop-num">STOP {i + 1}</span>
-                <span className="route-stop-tier">{a.tier ? TIERS[a.tier].name : 'Lost'}</span>
+                <span className="route-stop-num">{t('STOP {n}', { n: i + 1 })}</span>
+                <span className="route-stop-tier">
+                  {a.tier ? t(TIERS[a.tier].name) : t('Lost')}
+                </span>
                 <span className="route-stop-points">+{a.points}</span>
               </div>
             ))}
@@ -900,8 +931,8 @@ function SurveyResult({
 
         <section className="card stack gap-14">
           <div className="row" style={{ justifyContent: 'space-between' }}>
-            <span className="eyebrow">Your answers</span>
-            <span className="eyebrow">points</span>
+            <span className="eyebrow">{t('Your answers')}</span>
+            <span className="eyebrow">{t('points')}</span>
           </div>
           <div className="score-rows">
             {run.answers.map((a, i) => (
@@ -911,16 +942,20 @@ function SurveyResult({
                     {a.asked}
                   </span>
                   <span className="mono" style={{ fontSize: '0.8125rem', color: 'var(--muted)' }}>
-                    {a.given ? `“${a.given}”` : 'no answer'}
+                    {a.given ? `“${a.given}”` : t('no answer')}
                     {a.given
-                      ? ` · ${a.weight === null ? 'off the board' : `${a.weight}% said ${a.matched}`}`
+                      ? ` · ${
+                          a.weight === null
+                            ? t('off the board')
+                            : t('{share}% said {answer}', { share: a.weight, answer: a.matched ?? '' })
+                        }`
                       : ''}
                   </span>
                 </div>
                 <div className="stack gap-6" style={{ alignItems: 'flex-end' }}>
                   <span className="mono">+{a.points}</span>
                   <span className="stage-tier is-small" data-tier={a.tier ?? 'lost'}>
-                    {a.tier ? TIERS[a.tier].name : 'Lost'}
+                    {a.tier ? t(TIERS[a.tier].name) : t('Lost')}
                   </span>
                 </div>
               </div>
@@ -933,7 +968,7 @@ function SurveyResult({
             {cardLabel}
           </button>
           <button className="btn" onClick={() => void copy()}>
-            {copied ? 'Copied' : 'Copy result'}
+            {copied ? t('Copied') : t('Copy result')}
           </button>
           {run.runMode !== 'daily' ? (
             <button
@@ -943,7 +978,7 @@ function SurveyResult({
                 onAgain();
               }}
             >
-              Climb again
+              {t('Climb again')}
             </button>
           ) : null}
           <button
@@ -953,7 +988,7 @@ function SurveyResult({
               navigate(`/${other}`);
             }}
           >
-            Play {GAMES[other].name}
+            {t('Play {name}', { name: t(GAMES[other].name) })}
           </button>
           <button
             className="btn btn-ghost"
@@ -962,17 +997,17 @@ function SurveyResult({
               navigate('/');
             }}
           >
-            Back to menu
+            {t('Back to menu')}
           </button>
         </div>
 
         <p className="par-note" style={{ marginTop: 14 }}>
           {run.runMode === 'daily' ? (
             <>
-              Next {game.name} in <Countdown to={nextResetAt()} />
+              {t('Next {name} in', { name: t(game.name) })} <Countdown to={nextResetAt()} />
             </>
           ) : (
-            <>A perfect seven-prompt climb is 700 points and 14 km.</>
+            <>{t('A perfect seven-prompt climb is 700 points and 14 km.')}</>
           )}
         </p>
       </div>

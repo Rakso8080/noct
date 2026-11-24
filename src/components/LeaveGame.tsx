@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { useT } from '../lib/i18n';
 
 interface LeaveGameProps {
   open: boolean;
@@ -13,6 +14,7 @@ interface LeaveGameProps {
  * keeps playing (the safe answer); leaving is always an explicit click.
  */
 export function LeaveGame({ open, title, body, onStay, onLeave }: LeaveGameProps) {
+  const t = useT();
   useEffect(() => {
     if (!open) return;
     const onKey = (event: KeyboardEvent) => {
@@ -43,10 +45,10 @@ export function LeaveGame({ open, title, body, onStay, onLeave }: LeaveGameProps
           </p>
           <div className="row gap-10" style={{ flexWrap: 'wrap' }}>
             <button className="btn btn-primary" onClick={onStay}>
-              Keep playing
+              {t('Keep playing')}
             </button>
             <button className="btn btn-ghost" onClick={onLeave}>
-              Leave the table
+              {t('Leave the table')}
             </button>
           </div>
         </div>

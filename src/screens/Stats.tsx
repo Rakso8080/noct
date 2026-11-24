@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { api, type StatsResponse } from '../lib/api';
 import { ScreenHead, StatBox, formatDay } from '../components/ui';
 import { MAX_SCORE } from '../../shared/score';
+import { useT } from '../lib/i18n';
 
 function calendarLevel(score: number | null): '0' | '1' | '2' | '3' {
   if (score === null) return '0';
@@ -12,6 +13,7 @@ function calendarLevel(score: number | null): '0' | '1' | '2' | '3' {
 }
 
 export function Stats({ navigate }: { navigate: (path: string) => void }) {
+  const t = useT();
   const [stats, setStats] = useState<StatsResponse | null>(null);
   const [failed, setFailed] = useState(false);
 
@@ -35,10 +37,10 @@ export function Stats({ navigate }: { navigate: (path: string) => void }) {
       <main className="main">
         <div className="wrap">
           <ScreenHead eyebrow="Statistics" title="Statistics">
-            Your numbers live on the server. They could not be loaded just now.
+            {t('Your numbers live on the server. They could not be loaded just now.')}
           </ScreenHead>
           <button className="btn" onClick={() => window.location.reload()}>
-            Try again
+            {t('Try again')}
           </button>
         </div>
       </main>
@@ -50,7 +52,7 @@ export function Stats({ navigate }: { navigate: (path: string) => void }) {
       <main className="main">
         <div className="wrap">
           <ScreenHead eyebrow="Statistics" title="Statistics">
-            Counting your sparks…
+            {t('Counting your sparks…')}
           </ScreenHead>
         </div>
       </main>
@@ -62,11 +64,12 @@ export function Stats({ navigate }: { navigate: (path: string) => void }) {
       <main className="main">
         <div className="wrap">
           <ScreenHead eyebrow="Statistics" title="Nothing to count yet">
-            Finish a daily board and this page starts filling in: streak, average, best, and every
-            board you have ever solved.
+            {t(
+              'Finish a daily board and this page starts filling in: streak, average, best, and every board you have ever solved.',
+            )}
           </ScreenHead>
           <button className="btn btn-primary" onClick={() => navigate('/play')}>
-            Play today’s board
+            {t('Play today’s board')}
           </button>
         </div>
       </main>
@@ -79,55 +82,65 @@ export function Stats({ navigate }: { navigate: (path: string) => void }) {
     <main className="main">
       <div className="wrap">
         <ScreenHead eyebrow="Statistics" title="Your quiet record">
-          Everything here is yours alone. Nothing is shared unless you put a name on the standings.
+          {t('Everything here is yours alone. Nothing is shared unless you put a name on the standings.')}
         </ScreenHead>
 
         <div className="stat-grid" style={{ marginBottom: 20 }}>
           <StatBox label="Current streak" value={stats.currentStreak} note="days in a row" />
           <StatBox label="Best streak" value={stats.bestStreak} note="personal record" />
-          <StatBox label="Boards finished" value={stats.dailyCompleted} note={`${stats.played} sessions total`} />
-          <StatBox label="Average score" value={stats.avgScore} note={`of ${MAX_SCORE} possible`} />
+          <StatBox
+            label="Boards finished"
+            value={stats.dailyCompleted}
+            note={t('{n} sessions total', { n: stats.played })}
+          />
+          <StatBox label="Average score" value={stats.avgScore} note={t('of {n} possible', { n: MAX_SCORE })} />
         </div>
 
         <div className="stat-grid" style={{ marginBottom: 28 }}>
           <StatBox label="Highest score" value={stats.bestScore} />
           <StatBox label="Total points" value={stats.totalScore} />
           <StatBox label="Perfect days" value={stats.perfectDays} note="87%+ of max" />
-          <StatBox label="Archive boards" value={stats.archivePlayed} note={`${stats.practiceRounds} practice rounds`} />
+          <StatBox
+            label="Archive boards"
+            value={stats.archivePlayed}
+            note={t('{n} practice rounds', { n: stats.practiceRounds })}
+          />
         </div>
 
         <section className="card stack gap-14" style={{ marginBottom: 20 }}>
           <div className="row" style={{ justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
-            <span className="eyebrow">Last 70 days</span>
+            <span className="eyebrow">{t('Last 70 days')}</span>
             <div className="heat-legend">
-              <span>less</span>
+              <span>{t('less')}</span>
               <span className="cal-cell" data-level="1" style={{ width: 11, height: 11 }} />
               <span className="cal-cell" data-level="2" style={{ width: 11, height: 11 }} />
               <span className="cal-cell" data-level="3" style={{ width: 11, height: 11 }} />
-              <span>more</span>
+              <span>{t('more')}</span>
             </div>
           </div>
-          <div className="calendar" role="img" aria-label="Daily completion calendar for the last 70 days">
+          <div className="calendar" role="img" aria-label={t('Daily completion calendar for the last 70 days')}>
             {stats.calendar.map((c) => (
               <span
                 key={c.day}
                 className="cal-cell"
                 data-level={calendarLevel(c.score)}
                 data-today={c.day === stats.calendar[stats.calendar.length - 1]?.day ? 'true' : 'false'}
-                title={`${c.date}${c.score !== null ? ` · ${c.score}` : ' · not played'}`}
+                title={`${c.date}${c.score !== null ? ` · ${c.score}` : ` · ${t('not played')}`}`}
               />
             ))}
           </div>
           <p className="par-note" style={{ margin: 0 }}>
-            {stats.calendar.filter((c) => c.score !== null).length} of the last 70 days played. Missing
-            a day resets the streak, never the record.
+            {t(
+              '{n} of the last 70 days played. Missing a day resets the streak, never the record.',
+              { n: stats.calendar.filter((c) => c.score !== null).length },
+            )}
           </p>
         </section>
 
         <div style={{ display: 'grid', gap: 20, gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))' }}>
           <section className="card stack gap-14">
-            <span className="eyebrow">Score distribution</span>
-            <div className="dist" aria-label="Score distribution">
+            <span className="eyebrow">{t('Score distribution')}</span>
+            <div className="dist" aria-label={t('Score distribution')}>
               {stats.distribution.map((d) => (
                 <div
                   key={d.from}
@@ -144,12 +157,12 @@ export function Stats({ navigate }: { navigate: (path: string) => void }) {
               <span className="par-note">{MAX_SCORE}</span>
             </div>
             <p className="par-note" style={{ margin: 0 }}>
-              {stats.hintsUsed} hint{stats.hintsUsed === 1 ? '' : 's'} used in total.
+              {t('{n} hints used in total.', { n: stats.hintsUsed })}
             </p>
           </section>
 
           <section className="card stack gap-14">
-            <span className="eyebrow">Recent boards</span>
+            <span className="eyebrow">{t('Recent boards')}</span>
             <div className="stack">
               {stats.recent.map((r) => (
                 <div

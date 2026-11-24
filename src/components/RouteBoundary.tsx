@@ -1,4 +1,5 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
+import { translate } from '../lib/i18n';
 
 interface Props {
   children: ReactNode;
@@ -26,17 +27,17 @@ export class RouteBoundary extends Component<Props, State> {
       <main className="main">
         <div className="wrap" style={{ maxWidth: 480 }}>
           <div className="card stack gap-14">
-            <span className="eyebrow">Slow night</span>
-            <h1 style={{ fontSize: 'var(--step-2)' }}>That table did not load</h1>
+            <span className="eyebrow">{translate('Slow night')}</span>
+            <h1 style={{ fontSize: 'var(--step-2)' }}>{translate('That table did not load')}</h1>
             <p className="par-note" style={{ margin: 0 }}>
-              A piece of the app failed to arrive. Reloading usually brings it back.
+              {translate('A piece of the app failed to arrive. Reloading usually brings it back.')}
             </p>
             <div className="row gap-10" style={{ flexWrap: 'wrap' }}>
               <button className="btn btn-primary" onClick={() => window.location.reload()}>
-                Reload
+                {translate('Reload')}
               </button>
               <button className="btn btn-ghost" onClick={() => window.location.assign(import.meta.env.BASE_URL)}>
-                Back to the menu
+                {translate('Back to the menu')}
               </button>
             </div>
           </div>

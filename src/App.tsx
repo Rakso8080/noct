@@ -347,7 +347,7 @@ export function App() {
                 navigate('/settings');
               }}
             >
-              Privacy
+              {t('Privacy')}
             </a>
           </span>
         </div>

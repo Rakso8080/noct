@@ -6,6 +6,7 @@ import { Toast } from '../components/ui';
 import { sfx } from '../lib/audio';
 import { haptic } from '../lib/settings';
 import { HINT_COST, parMs } from '../../shared/score';
+import { useT } from '../lib/i18n';
 
 interface PlayProps {
   mode: 'daily' | 'practice' | 'archive';
@@ -25,6 +26,7 @@ function clock(ms: number): string {
 }
 
 export function Play({ mode, level, day, onFinish, onExit, onTutorial, onToday }: PlayProps) {
+  const t = useT();
   const [session, setSession] = useState<StartResponse | null>(null);
   const [phase, setPhase] = useState<'loading' | 'playing' | 'solving' | 'error'>('loading');
   const [error, setError] = useState('');
@@ -89,10 +91,12 @@ export function Play({ mode, level, day, onFinish, onExit, onTutorial, onToday }
         );
         setError(
           archiveMiss
-            ? `Board #${day ?? 1} is not in the archive. The drawer keeps the last 365 nights.`
+            ? t('Board #{n} is not in the archive. The drawer keeps the last 365 nights.', {
+                n: day ?? 1,
+              })
             : err instanceof ApiError && err.status === 0
-              ? 'You appear to be offline. The daily board needs a connection.'
-              : 'That board could not be opened. Try again.',
+              ? t('You appear to be offline. The daily board needs a connection.')
+              : t('That board could not be opened. Try again.'),
         );
         setPhase('error');
       });
@@ -124,7 +128,7 @@ export function Play({ mode, level, day, onFinish, onExit, onTutorial, onToday }
       if (!res.ok) {
         busy.current = false;
         setAttempts((a) => a + 1);
-        flash('Those sparks don’t fit the rules yet — nothing lost, keep going.');
+        flash(t('Those sparks don’t fit the rules yet — nothing lost, keep going.'));
         return;
       }
       setScore(res.score ?? score);
@@ -149,17 +153,17 @@ export function Play({ mode, level, day, onFinish, onExit, onTutorial, onToday }
         busy.current = false;
         roundStart.current = Date.now();
         setElapsed(0);
-        setBanner(`Round ${next + 1}`);
+        setBanner(t('Round {n}', { n: next + 1 }));
         setTimeout(() => setBanner(null), 820);
       }, 700);
     } catch (err) {
       busy.current = false;
       if (err instanceof ApiError && err.status === 429) {
-        flash('One moment…');
+        flash(t('One moment…'));
         setTimeout(() => void submit(cells), 700);
         return;
       }
-      flash('Connection hiccup. Your board is still here — tap a spark to retry.');
+      flash(t('Connection hiccup. Your board is still here — tap a spark to retry.'));
     }
   }
 
@@ -174,7 +178,7 @@ export function Play({ mode, level, day, onFinish, onExit, onTutorial, onToday }
     if (!puzzle || phase !== 'playing') return;
     if (puzzle.givens.includes(cell) || hinted.includes(cell)) {
       sfx.blocked();
-      flash('That spark came pre-lit — it is part of the answer.');
+      flash(t('That spark came pre-lit — it is part of the answer.'));
       return;
     }
     if (sparks.includes(cell)) {
@@ -199,7 +203,7 @@ export function Play({ mode, level, day, onFinish, onExit, onTutorial, onToday }
   async function takeHint(): Promise<void> {
     if (!session || !puzzle) return;
     if (hintsLeft <= 0) {
-      flash('No hints left today. The boards are fair — trust your eliminations.');
+      flash(t('No hints left today. The boards are fair — trust your eliminations.'));
       setHintOpen(false);
       return;
     }
@@ -214,9 +218,9 @@ export function Play({ mode, level, day, onFinish, onExit, onTutorial, onToday }
       setSparks((s) => [...new Set([...s, res.cell])]);
       sfx.hint();
       setHintOpen(false);
-      flash(`A spark is revealed. −${HINT_COST} points.`);
+      flash(t('A spark is revealed. −{cost} points.', { cost: HINT_COST }));
     } catch {
-      flash('Hints are unavailable right now.');
+      flash(t('Hints are unavailable right now.'));
       setHintOpen(false);
     }
   }
@@ -225,9 +229,9 @@ export function Play({ mode, level, day, onFinish, onExit, onTutorial, onToday }
     return (
       <main className="main">
         <div className="wrap" style={{ textAlign: 'center', paddingTop: 60 }}>
-          <div className="eyebrow">Preparing the board</div>
+          <div className="eyebrow">{t('Preparing the board')}</div>
           <p className="lede" style={{ margin: '10px auto 0' }}>
-            Checking the solution is still unique…
+            {t('Checking the solution is still unique…')}
           </p>
         </div>
       </main>
@@ -240,28 +244,28 @@ export function Play({ mode, level, day, onFinish, onExit, onTutorial, onToday }
         <div className="wrap" style={{ maxWidth: 480 }}>
           <div className="card stack gap-14">
             <h1 style={{ fontSize: 'var(--step-2)' }}>
-              {errorKind === 'archive' ? 'Not in the archive' : 'Board unavailable'}
+              {errorKind === 'archive' ? t('Not in the archive') : t('Board unavailable')}
             </h1>
             <p className="par-note">{error}</p>
             <div className="row gap-10" style={{ flexWrap: 'wrap' }}>
               {errorKind === 'archive' ? (
                 <>
                   <button className="btn btn-primary" onClick={onExit}>
-                    Open the archive
+                    {t('Open the archive')}
                   </button>
                   {onToday ? (
                     <button className="btn btn-ghost" onClick={onToday}>
-                      Play today’s board
+                      {t('Play today’s board')}
                     </button>
                   ) : null}
                 </>
               ) : (
                 <>
                   <button className="btn btn-primary" onClick={() => window.location.reload()}>
-                    Try again
+                    {t('Try again')}
                   </button>
                   <button className="btn btn-ghost" onClick={onExit}>
-                    Back home
+                    {t('Back home')}
                   </button>
                 </>
               )}
@@ -272,7 +276,12 @@ export function Play({ mode, level, day, onFinish, onExit, onTutorial, onToday }
     );
   }
 
-  const modeLabel = mode === 'daily' ? 'Daily' : mode === 'practice' ? 'Practice' : `Archive #${day}`;
+  const modeLabel =
+    mode === 'daily'
+      ? t('Daily')
+      : mode === 'practice'
+        ? t('Practice')
+        : t('Archive #{n}', { n: day ?? 1 });
   const par = parMs(puzzle.size);
   const elapsedRatio = Math.min(1.6, elapsed / par);
 
@@ -283,15 +292,18 @@ export function Play({ mode, level, day, onFinish, onExit, onTutorial, onToday }
           <div className="play-main">
             <div className="play-head">
               <div className="row gap-10">
-                <button className="icon-btn" onClick={onExit} aria-label="Leave this board">
+                <button className="icon-btn" onClick={onExit} aria-label={t('Leave this board')}>
                   <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
                     <path d="M9.5 2 4 7l5.5 5" stroke="currentColor" strokeWidth="1.6" fill="none" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </button>
                 <div className="stack">
-                  <span className="eyebrow">{modeLabel} · The lantern grid</span>
+                  <span className="eyebrow">
+                    {modeLabel} · {t('The lantern grid')}
+                  </span>
                   <span className="mono" style={{ fontSize: '0.8125rem' }}>
-                    Board {index + 1} of {session.rounds.length} · {puzzle.size}×{puzzle.size}
+                    {t('Board {n} of {total}', { n: index + 1, total: session.rounds.length })} ·{' '}
+                    {puzzle.size}×{puzzle.size}
                   </span>
                 </div>
               </div>
@@ -305,7 +317,7 @@ export function Play({ mode, level, day, onFinish, onExit, onTutorial, onToday }
                     />
                   ))}
                 </div>
-                <span className={`timer${elapsedRatio > 1 ? ' is-over' : ''}`} aria-label="Time on this board">
+                <span className={`timer${elapsedRatio > 1 ? ' is-over' : ''}`} aria-label={t('Time on this board')}>
                   {clock(elapsed)}
                 </span>
               </div>
@@ -325,7 +337,11 @@ export function Play({ mode, level, day, onFinish, onExit, onTutorial, onToday }
               hinted={hinted}
               solved={complete || phase === 'solving'}
               locked={phase === 'solving'}
-              label={`Board ${index + 1}, ${puzzle.size} by ${puzzle.size}. ${sparks.length} of ${puzzle.size} sparks placed.`}
+              label={t('Board {n}, {size} by {size}. {placed} of {size} sparks placed.', {
+                n: index + 1,
+                size: puzzle.size,
+                placed: sparks.length,
+              })}
               onToggle={toggle}
               onExclude={exclude}
             />
@@ -337,7 +353,7 @@ export function Play({ mode, level, day, onFinish, onExit, onTutorial, onToday }
                 onClick={() => setHintOpen(true)}
                 disabled={phase !== 'playing' || hintsLeft <= 0 || hinted.length > 0}
               >
-                Hint
+                {t('Hint')}
                 <span className="hint-cost">−{HINT_COST}</span>
                 <span className="chip" style={{ padding: '1px 7px', fontSize: '0.6875rem' }}>
                   {hintsLeft}
@@ -352,29 +368,29 @@ export function Play({ mode, level, day, onFinish, onExit, onTutorial, onToday }
                 }}
                 disabled={phase !== 'playing'}
               >
-                Clear
+                {t('Clear')}
               </button>
               <button className="btn btn-sm btn-ghost" onClick={onTutorial}>
-                Rules
+                {t('Rules')}
               </button>
             </div>
 
             <p className="par-note" style={{ textAlign: 'center', maxWidth: '40ch' }}>
               {conflicts.size > 0
-                ? 'Two sparks are touching or sharing a line. Move one.'
+                ? t('Two sparks are touching or sharing a line. Move one.')
                 : sparks.length === puzzle.size
-                  ? 'Checking…'
-                  : `${puzzle.size - sparks.length} spark${puzzle.size - sparks.length === 1 ? '' : 's'} to place`}
-              {hinted.length > 0 ? ' · hint used on this board' : ''}
+                  ? t('Checking…')
+                  : t('{n} sparks to place', { n: puzzle.size - sparks.length })}
+              {hinted.length > 0 ? ` · ${t('hint used on this board')}` : ''}
             </p>
           </div>
 
           <aside className="play-side">
             <div className="card stack gap-14">
               <div className="row" style={{ justifyContent: 'space-between' }}>
-                <span className="eyebrow">Score</span>
+                <span className="eyebrow">{t('Score')}</span>
                 <span className="mono" style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>
-                  par {Math.round(par / 1000)}s
+                  {t('par {n}s', { n: Math.round(par / 1000) })}
                 </span>
               </div>
               <div className="score-big" style={{ fontSize: '2.25rem' }}>
@@ -391,7 +407,7 @@ export function Play({ mode, level, day, onFinish, onExit, onTutorial, onToday }
                       {String(i + 1).padStart(2, '0')} · {r.size}×{r.size}
                     </span>
                     <span className="mono">
-                      {i < index ? 'done' : i === index ? 'now' : '—'}
+                      {i < index ? t('done') : i === index ? t('now') : '—'}
                     </span>
                   </div>
                 ))}
@@ -400,9 +416,9 @@ export function Play({ mode, level, day, onFinish, onExit, onTutorial, onToday }
 
             <div className="card-flat stack gap-10">
               <div className="row" style={{ justifyContent: 'space-between' }}>
-                <span className="eyebrow">The lanterns</span>
+                <span className="eyebrow">{t('The lanterns')}</span>
                 <span className="mono" style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>
-                  {sparks.length}/{puzzle.size} sparks
+                  {sparks.length}/{puzzle.size} {t('sparks')}
                 </span>
               </div>
               <div className="lantern-strip" aria-hidden="true">
@@ -416,29 +432,36 @@ export function Play({ mode, level, day, onFinish, onExit, onTutorial, onToday }
                 ))}
               </div>
               <p className="par-note" style={{ margin: 0 }}>
-                Board {index + 1} of {session.rounds.length}: {sparks.length} of {puzzle.size} sparks
-                placed. Each board you finish lights its lantern.
+                {t(
+                  'Board {n} of {total}: {placed} of {size} sparks placed. Each board you finish lights its lantern.',
+                  { n: index + 1, total: session.rounds.length, placed: sparks.length, size: puzzle.size },
+                )}
               </p>
             </div>
 
             <div className="card-flat stack gap-10">
-              <span className="eyebrow">The rule</span>
+              <span className="eyebrow">{t('The rule')}</span>
               <p className="par-note" style={{ margin: 0 }}>
-                One spark per row, column and tone. No two sparks touch — including diagonally.
-                Locked sparks are part of the answer.
+                {t(
+                  'One spark per row, column and tone. No two sparks touch — including diagonally. Locked sparks are part of the answer.',
+                )}
               </p>
               <div className="board-legend" style={{ justifyContent: 'flex-start' }}>
                 <span className="legend-item">
-                  <span className="legend-swatch" style={{ background: 'var(--accent)' }} /> spark
+                  <span className="legend-swatch" style={{ background: 'var(--accent)' }} />{' '}
+                  {t('spark')}
                 </span>
                 <span className="legend-item">
-                  <span className="legend-swatch" style={{ background: 'var(--surface-2)' }} /> ✕ ruled out
+                  <span className="legend-swatch" style={{ background: 'var(--surface-2)' }} /> ✕{' '}
+                  {t('ruled out')}
                 </span>
               </div>
             </div>
 
             {attempts > 0 ? (
-              <p className="par-note">Rejected placements: {attempts}. They cost time, never points.</p>
+              <p className="par-note">
+                {t('Rejected placements: {n}. They cost time, never points.', { n: attempts })}
+              </p>
             ) : null}
           </aside>
         </div>
@@ -457,10 +480,10 @@ export function Play({ mode, level, day, onFinish, onExit, onTutorial, onToday }
 
       {hintOpen ? (
         <div className="modal-backdrop" role="presentation" onClick={() => setHintOpen(false)}>
-          <div className="modal" role="dialog" aria-modal="true" aria-label="Use a hint" onClick={(e) => e.stopPropagation()}>
+          <div className="modal" role="dialog" aria-modal="true" aria-label={t('Use a hint')} onClick={(e) => e.stopPropagation()}>
             <div className="modal-head">
-              <h2 className="modal-title">Reveal a spark?</h2>
-              <button className="icon-btn" onClick={() => setHintOpen(false)} aria-label="Close">
+              <h2 className="modal-title">{t('Reveal a spark?')}</h2>
+              <button className="icon-btn" onClick={() => setHintOpen(false)} aria-label={t('Close')}>
                 <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
                   <path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
                 </svg>
@@ -468,17 +491,17 @@ export function Play({ mode, level, day, onFinish, onExit, onTutorial, onToday }
             </div>
             <div className="stack gap-14">
               <p className="par-note" style={{ margin: 0 }}>
-                One correct spark is lit for you on this board, and you lose the clean-board bonus.
-                It costs <strong style={{ color: 'var(--text)' }}>{HINT_COST} points</strong> plus the{' '}
-                <strong style={{ color: 'var(--text)' }}>25-point</strong> clean bonus. You have{' '}
-                {hintsLeft} hint{hintsLeft === 1 ? '' : 's'} left today.
+                {t(
+                  'One correct spark is lit for you on this board, and you lose the clean-board bonus. It costs {cost} points plus the 25-point clean bonus. You have {left} hints left today.',
+                  { cost: HINT_COST, left: hintsLeft },
+                )}
               </p>
               <div className="row gap-10">
                 <button className="btn btn-primary" onClick={() => void takeHint()}>
-                  Reveal it (−{HINT_COST})
+                  {t('Reveal it (−{cost})', { cost: HINT_COST })}
                 </button>
                 <button className="btn btn-ghost" onClick={() => setHintOpen(false)}>
-                  Keep thinking
+                  {t('Keep thinking')}
                 </button>
               </div>
             </div>

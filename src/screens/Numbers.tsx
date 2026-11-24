@@ -181,9 +181,10 @@ export function Numbers({ navigate }: { navigate: (path: string) => void }) {
           eyebrow={t('2048 · Night {n}', { n: String(day).padStart(3, '0') })}
           title={t('The doubling room')}
         >
-          Slide every lantern; equal neighbours fuse into the next power. The room is lit at a{' '}
-          {NUM_GOAL} tile, and the night ends when nothing can move. Arrows, WASD or the pad below;
-          Enter restarts, Escape leaves the table.
+          {t(
+            'Slide every lantern; equal neighbours fuse into the next power. The room is lit at a {goal} tile, and the night ends when nothing can move. Arrows, WASD or the pad below; {keys}',
+            { goal: NUM_GOAL, keys: t('Enter restarts, Escape leaves the table.') },
+          )}
         </ScreenHead>
 
         <div className="mini-hud">
@@ -211,7 +212,10 @@ export function Numbers({ navigate }: { navigate: (path: string) => void }) {
           <ResumeCard
             title={t('A room is already open')}
             body={t('You left this run mid-slide. Continue it, or start a fresh room for today.')}
-            meta={`${resume.score} points · ${resume.moves} moves`}
+            meta={t('{score} points · {moves} moves', {
+              score: resume.score,
+              moves: resume.moves,
+            })}
             onContinue={() => {
               setBoard(resume.board);
               setScore(resume.score);
@@ -230,7 +234,11 @@ export function Numbers({ navigate }: { navigate: (path: string) => void }) {
         <div
           className={`num-grid${phase === 'won' ? ' is-won' : ''}${phase === 'lost' ? ' is-lost' : ''}`}
           role="grid"
-          aria-label={`2048 board, 4 by 4. ${score} points, ${moves} moves, largest tile ${max}.`}
+          aria-label={t('2048 board, 4 by 4. {score} points, {moves} moves, largest tile {max}.', {
+            score,
+            moves,
+            max,
+          })}
         >
           {Array.from({ length: NUM_SIZE }, (_, row) => (
             <div role="row" key={row} style={{ display: 'contents' }}>
@@ -243,7 +251,11 @@ export function Numbers({ navigate }: { navigate: (path: string) => void }) {
                     role="gridcell"
                     aria-readonly="true"
                     className={`num-cell${value ? ` num-${Math.min(value, 2048)}` : ''}`}
-                    aria-label={`Row ${row + 1}, column ${col + 1}: ${value || 'empty'}`}
+                    aria-label={t('Row {r}, column {c}: {state}', {
+                      r: row + 1,
+                      c: col + 1,
+                      state: value || t('empty'),
+                    })}
                   >
                     {value || ''}
                   </div>
@@ -254,18 +266,18 @@ export function Numbers({ navigate }: { navigate: (path: string) => void }) {
         </div>
         )}
 
-        <div className="snake-pad" role="group" aria-label="Slide the room" style={resume ? { display: 'none' } : undefined}>
-          <button type="button" className="btn btn-sm btn-ghost" aria-label="Slide up" onClick={() => move('up')}>
+        <div className="snake-pad" role="group" aria-label={t('Slide the room')} style={resume ? { display: 'none' } : undefined}>
+          <button type="button" className="btn btn-sm btn-ghost" aria-label={t('Slide up')} onClick={() => move('up')}>
             ↑
           </button>
           <div className="row gap-6">
-            <button type="button" className="btn btn-sm btn-ghost" aria-label="Slide left" onClick={() => move('left')}>
+            <button type="button" className="btn btn-sm btn-ghost" aria-label={t('Slide left')} onClick={() => move('left')}>
               ←
             </button>
-            <button type="button" className="btn btn-sm btn-ghost" aria-label="Slide down" onClick={() => move('down')}>
+            <button type="button" className="btn btn-sm btn-ghost" aria-label={t('Slide down')} onClick={() => move('down')}>
               ↓
             </button>
-            <button type="button" className="btn btn-sm btn-ghost" aria-label="Slide right" onClick={() => move('right')}>
+            <button type="button" className="btn btn-sm btn-ghost" aria-label={t('Slide right')} onClick={() => move('right')}>
               →
             </button>
           </div>

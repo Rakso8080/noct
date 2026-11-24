@@ -169,10 +169,10 @@ export function Snake({ navigate }: { navigate: (path: string) => void }) {
         );
 
   const cellLabel = (i: number): string => {
-    const parts = [`row ${Math.floor(i / SNAKE_W) + 1}, column ${(i % SNAKE_W) + 1}`];
-    if (i === head) parts.push('head');
-    else if (body.has(i)) parts.push('body');
-    if (i === state.food) parts.push('apple');
+    const parts = [t('row {r}, column {c}', { r: Math.floor(i / SNAKE_W) + 1, c: (i % SNAKE_W) + 1 })];
+    if (i === head) parts.push(t('head'));
+    else if (body.has(i)) parts.push(t('body'));
+    if (i === state.food) parts.push(t('apple'));
     return parts.join(', ');
   };
 
@@ -183,9 +183,13 @@ export function Snake({ navigate }: { navigate: (path: string) => void }) {
           eyebrow={t('Snake · Night {n}', { n: String(day).padStart(3, '0') })}
           title={t('The glass orchard')}
         >
-          One press, one step: the snake moves only when you do, so every apple is a decision.
-          Collect {SNAKE_TARGET} and the orchard is yours; a wall or your own tail ends the night.
-          Arrows or WASD step, Enter restarts, Escape leaves the table.
+          {t(
+            'One press, one step: the snake moves only when you do, so every apple is a decision. Collect {target} and the orchard is yours; a wall or your own tail ends the night. {keys}',
+            {
+              target: SNAKE_TARGET,
+              keys: t('Arrows or WASD step, Enter restarts, Escape leaves the table.'),
+            },
+          )}
         </ScreenHead>
 
         <div className="mini-hud">
@@ -215,7 +219,11 @@ export function Snake({ navigate }: { navigate: (path: string) => void }) {
           <ResumeCard
             title={t('An orchard is already open')}
             body={t('You left this run mid-step. Continue it, or start a fresh orchard for today.')}
-            meta={`${resume.apples} / ${SNAKE_TARGET} apples · ${resume.steps} steps`}
+            meta={t('{apples} / {target} apples · {steps} steps', {
+              apples: resume.apples,
+              target: SNAKE_TARGET,
+              steps: resume.steps,
+            })}
             onContinue={() => {
               setState({
                 snake: resume.snake,
@@ -241,7 +249,13 @@ export function Snake({ navigate }: { navigate: (path: string) => void }) {
           className={`snake-board${state.won ? ' is-won' : ''}${!state.alive ? ' is-lost' : ''}`}
           style={{ gridTemplateColumns: `repeat(${SNAKE_W}, 1fr)` }}
           role="grid"
-          aria-label={`Snake board, ${SNAKE_W} by ${SNAKE_H}. ${state.apples} of ${SNAKE_TARGET} apples eaten, ${state.steps} steps.`}
+          aria-label={t('Snake board, {w} by {h}. {apples} of {target} apples eaten, {steps} steps.', {
+            w: SNAKE_W,
+            h: SNAKE_H,
+            apples: state.apples,
+            target: SNAKE_TARGET,
+            steps: state.steps,
+          })}
         >
           {Array.from({ length: SNAKE_H }, (_, row) => (
             <div role="row" key={row} style={{ display: 'contents' }}>
@@ -261,18 +275,18 @@ export function Snake({ navigate }: { navigate: (path: string) => void }) {
         </div>
         )}
 
-        <div className="snake-pad" role="group" aria-label="Step the snake" style={resume ? { display: 'none' } : undefined}>
-          <button type="button" className="btn btn-sm btn-ghost" aria-label="Step up" onClick={() => step('up')}>
+        <div className="snake-pad" role="group" aria-label={t('Step the snake')} style={resume ? { display: 'none' } : undefined}>
+          <button type="button" className="btn btn-sm btn-ghost" aria-label={t('Step up')} onClick={() => step('up')}>
             ↑
           </button>
           <div className="row gap-6">
-            <button type="button" className="btn btn-sm btn-ghost" aria-label="Step left" onClick={() => step('left')}>
+            <button type="button" className="btn btn-sm btn-ghost" aria-label={t('Step left')} onClick={() => step('left')}>
               ←
             </button>
-            <button type="button" className="btn btn-sm btn-ghost" aria-label="Step down" onClick={() => step('down')}>
+            <button type="button" className="btn btn-sm btn-ghost" aria-label={t('Step down')} onClick={() => step('down')}>
               ↓
             </button>
-            <button type="button" className="btn btn-sm btn-ghost" aria-label="Step right" onClick={() => step('right')}>
+            <button type="button" className="btn btn-sm btn-ghost" aria-label={t('Step right')} onClick={() => step('right')}>
               →
             </button>
           </div>

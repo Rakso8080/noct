@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { LOCAL_MODE, api, type LeaderboardResponse } from '../lib/api';
 import { ScreenHead } from '../components/ui';
+import { useT } from '../lib/i18n';
 
 type Scope = 'today' | 'week' | 'all';
 
@@ -26,6 +27,7 @@ const EMPTY: Record<Scope, { title: string; body: string }> = {
 };
 
 export function Leaderboard({ navigate }: { navigate: (path: string) => void }) {
+  const t = useT();
   const [scope, setScope] = useState<Scope>('today');
   const [data, setData] = useState<LeaderboardResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -61,13 +63,14 @@ export function Leaderboard({ navigate }: { navigate: (path: string) => void }) 
     <main className="main">
       <div className="wrap" style={{ maxWidth: 760 }}>
         <ScreenHead eyebrow="Standings" title="One attempt, one place">
-          Ranked on score, then on speed. No retries, so the table means something.
+          {t('Ranked on score, then on speed. No retries, so the table means something.')}
         </ScreenHead>
 
         {LOCAL_MODE ? (
           <p className="par-note" style={{ marginBottom: 16 }}>
-            This copy of Noct runs entirely in your browser, so there is no shared table — the row
-            below is your own result on this device.
+            {t(
+              'This copy of Noct runs entirely in your browser, so there is no shared table — the row below is your own result on this device.',
+            )}
           </p>
         ) : null}
 
@@ -80,7 +83,7 @@ export function Leaderboard({ navigate }: { navigate: (path: string) => void }) 
               role="tab"
               onClick={() => setScope(s.value)}
             >
-              {s.label}
+              {t(s.label)}
             </button>
           ))}
         </div>
@@ -88,22 +91,22 @@ export function Leaderboard({ navigate }: { navigate: (path: string) => void }) 
         <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
           {loading ? (
             <div className="empty">
-              <span className="eyebrow">Reading the ledger…</span>
+              <span className="eyebrow">{t('Reading the ledger…')}</span>
             </div>
           ) : failed ? (
             <div className="empty">
-              <span className="eyebrow">Standings unavailable</span>
-              <p>The leaderboard could not be reached. Your own result is safe.</p>
+              <span className="eyebrow">{t('Standings unavailable')}</span>
+              <p>{t('The leaderboard could not be reached. Your own result is safe.')}</p>
               <button className="btn btn-sm" onClick={() => setScope(scope)}>
-                Try again
+                {t('Try again')}
               </button>
             </div>
           ) : rows.length === 0 ? (
             <div className="empty">
-              <span className="eyebrow">{EMPTY[scope].title}</span>
-              <p style={{ maxWidth: '36ch' }}>{EMPTY[scope].body}</p>
+              <span className="eyebrow">{t(EMPTY[scope].title)}</span>
+              <p style={{ maxWidth: '36ch' }}>{t(EMPTY[scope].body)}</p>
               <button className="btn btn-primary" onClick={() => navigate('/play')}>
-                Play today’s board
+                {t('Play today’s board')}
               </button>
             </div>
           ) : (
@@ -113,7 +116,7 @@ export function Leaderboard({ navigate }: { navigate: (path: string) => void }) 
                   <span className="lb-rank">{String(r.rank).padStart(2, '0')}</span>
                   <span className="lb-name">
                     {r.name}
-                    {r.me ? <span className="chip" style={{ marginLeft: 8, padding: '1px 8px', fontSize: '0.6875rem' }}>you</span> : null}
+                    {r.me ? <span className="chip" style={{ marginLeft: 8, padding: '1px 8px', fontSize: '0.6875rem' }}>{t('you')}</span> : null}
                   </span>
                   <span className="lb-score">{r.score}</span>
                 </div>
@@ -121,7 +124,7 @@ export function Leaderboard({ navigate }: { navigate: (path: string) => void }) 
               {data?.me && !meInRows ? (
                 <div className="lb-row is-me" style={{ borderTop: '1px solid var(--line)' }}>
                   <span className="lb-rank">{String(data.me.rank).padStart(2, '0')}</span>
-                  <span className="lb-name">You · {data.me.streak}-day streak</span>
+                  <span className="lb-name">{t('You · {n}-day streak', { n: data.me.streak })}</span>
                   <span className="lb-score">{data.me.score}</span>
                 </div>
               ) : null}
@@ -131,8 +134,16 @@ export function Leaderboard({ navigate }: { navigate: (path: string) => void }) 
 
         {data && data.totalPlayers > 0 ? (
           <p className="par-note" style={{ marginTop: 14 }}>
-            {data.totalPlayers} player{data.totalPlayers === 1 ? '' : 's'} on the {scope === 'today' ? 'daily' : scope === 'week' ? 'weekly' : 'all-time'} table.
-            Guests show a player number until they choose a name in Settings.
+            {t('{n} players on the {scope} table.', {
+              n: data.totalPlayers,
+              scope:
+                scope === 'today'
+                  ? t('daily')
+                  : scope === 'week'
+                    ? t('weekly')
+                    : t('all-time'),
+            })}{' '}
+            {t('Guests show a player number until they choose a name in Settings.')}
           </p>
         ) : null}
       </div>

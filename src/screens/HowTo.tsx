@@ -3,6 +3,7 @@ import { Board, findConflicts } from '../components/Board';
 import { ScreenHead } from '../components/ui';
 import { sfx } from '../lib/audio';
 import { haptic } from '../lib/settings';
+import { useT } from '../lib/i18n';
 
 const SIZE = 4;
 const REGION = [0, 0, 1, 1, 0, 0, 1, 1, 2, 2, 3, 3, 2, 2, 3, 3];
@@ -19,6 +20,7 @@ function isComplete(sparks: number[]): boolean {
 }
 
 export function HowTo({ navigate }: { navigate: (path: string) => void }) {
+  const t = useT();
   const [sparks, setSparks] = useState<number[]>(GIVEN);
   const [excluded, setExcluded] = useState<number[]>([]);
 
@@ -28,29 +30,37 @@ export function HowTo({ navigate }: { navigate: (path: string) => void }) {
 
   const caption = solved
     ? {
-        title: 'That is the whole game',
-        body: 'One spark per row, column and tone, none touching. Bigger boards ask the same question, just with more places to look.',
+        title: t('That is the whole game'),
+        body: t(
+          'One spark per row, column and tone, none touching. Bigger boards ask the same question, just with more places to look.',
+        ),
       }
     : conflicts.size > 0
       ? {
-          title: 'They repel',
-          body: 'Those two share a row, a column or a tone — or they touch. That red outline is the only thing to fix.',
+          title: t('They repel'),
+          body: t(
+            'Those two share a row, a column or a tone — or they touch. That red outline is the only thing to fix.',
+          ),
         }
       : placed === 0
         ? {
-            title: 'Tap a tile',
-            body: 'Light a spark anywhere. The dashed ring marks a pre-lit spark: it is part of the answer and cannot move.',
+            title: t('Tap a tile'),
+            body: t(
+              'Light a spark anywhere. The dashed ring marks a pre-lit spark: it is part of the answer and cannot move.',
+            ),
           }
         : {
-            title: `${placed + GIVEN.length} of ${SIZE} placed`,
-            body: 'Keep going. Each shaded tone needs exactly one spark, and each row and column too.',
+            title: t('{n} of {size} placed', { n: placed + GIVEN.length, size: SIZE }),
+            body: t(
+              'Keep going. Each shaded tone needs exactly one spark, and each row and column too.',
+            ),
           };
 
   return (
     <main className="main">
       <div className="wrap" style={{ maxWidth: 560 }}>
         <ScreenHead eyebrow="How to play · 30 seconds" title="Three rules, then you know it">
-          This board is small on purpose. Solve it once and every daily board makes sense.
+          {t('This board is small on purpose. Solve it once and every daily board makes sense.')}
         </ScreenHead>
 
         <div className="card stack gap-14">
@@ -62,7 +72,7 @@ export function HowTo({ navigate }: { navigate: (path: string) => void }) {
             excluded={excluded}
             hinted={[]}
             solved={solved}
-            label="Tutorial board, 4 by 4"
+            label={t('Tutorial board, 4 by 4')}
             onToggle={(cell) => {
               if (GIVEN.includes(cell)) {
                 sfx.blocked();
@@ -93,119 +103,134 @@ export function HowTo({ navigate }: { navigate: (path: string) => void }) {
                 setExcluded([]);
               }}
             >
-              Reset board
+              {t('Reset board')}
             </button>
             <div className="row gap-10">
               <button className="btn btn-sm btn-ghost" onClick={() => navigate('/')}>
-                Skip
+                {t('Skip')}
               </button>
               <button className={`btn btn-sm${solved ? ' btn-primary' : ''}`} onClick={() => navigate('/play')}>
-                Play today’s board
+                {t('Play today’s board')}
               </button>
             </div>
           </div>
         </div>
 
         <div className="card-flat stack gap-14" style={{ marginTop: 20 }}>
-          <span className="eyebrow">Scoring, quickly</span>
+          <span className="eyebrow">{t('Scoring, quickly')}</span>
           <p className="par-note" style={{ margin: 0 }}>
-            Every board gives a base score plus a time bonus that fades to zero at par. Finish a board
-            without a hint for 25 extra. A hint costs 80 and forfeits that bonus — the price is always
-            shown before you take it.
+            {t(
+              'Every board gives a base score plus a time bonus that fades to zero at par. Finish a board without a hint for 25 extra. A hint costs 80 and forfeits that bonus — the price is always shown before you take it.',
+            )}
           </p>
           <p className="par-note" style={{ margin: 0 }}>
-            Wrong placements cost nothing but seconds. Only the clock and your own patience decide the
-            score, and the clock is measured by the server, not your browser.
+            {t(
+              'Wrong placements cost nothing but seconds. Only the clock and your own patience decide the score, and the clock is measured by the server, not your browser.',
+            )}
           </p>
           <div className="row gap-10" style={{ flexWrap: 'wrap' }}>
-            <span className="chip">4 boards daily</span>
-            <span className="chip">5×5 → 7×7</span>
-            <span className="chip">3 hints a day</span>
-            <span className="chip">Reset 00:00 UTC</span>
+            <span className="chip">{t('4 boards daily')}</span>
+            <span className="chip">{t('5×5 → 7×7')}</span>
+            <span className="chip">{t('3 hints a day')}</span>
+            <span className="chip">{t('Reset 00:00 UTC')}</span>
           </div>
         </div>
 
         <div className="card-flat stack gap-14" style={{ marginTop: 20 }}>
-          <span className="eyebrow">The seven boards</span>
+          <span className="eyebrow">{t('The seven boards')}</span>
           <p className="par-note" style={{ margin: 0 }}>
-            One night, seven boards, each with its own weather. They share the dark, not the score —
-            no account, no server, just a board waiting on the menu.
+            {t(
+              'One night, seven boards, each with its own weather. They share the dark, not the score — no account, no server, just a board waiting on the menu.',
+            )}
           </p>
           <ul className="rule-list">
             <li>
               <span>
-                <strong>The night choir</strong> (Common) — everyone sings the same note. Seven
-                prompts; the louder the answer in the crowd, the higher it lifts you. The strip under
-                the prompt is the real chorus share.
+                <strong>{t('The night choir')}</strong> ({t('Common')}) —{' '}
+                {t(
+                  'everyone sings the same note. Seven prompts; the louder the answer in the crowd, the higher it lifts you. The strip under the prompt is the real chorus share.',
+                )}
               </span>
             </li>
             <li>
               <span>
-                <strong>The empty hall</strong> (Rare) — one voice in a dark hall. The same seven
-                prompts, read from the other end: the quieter the answer, the higher it lifts you.
+                <strong>{t('The empty hall')}</strong> ({t('Rare')}) —{' '}
+                {t(
+                  'one voice in a dark hall. The same seven prompts, read from the other end: the quieter the answer, the higher it lifts you.',
+                )}
               </span>
             </li>
             <li>
               <span>
-                <strong>The lantern grid</strong> (Noct) — four boards of dark windows. One spark
-                per row, column and tone, no two touching. Each finished board lights a lantern.
+                <strong>{t('The lantern grid')}</strong> ({t('Noct')}) —{' '}
+                {t(
+                  'four boards of dark windows. One spark per row, column and tone, no two touching. Each finished board lights a lantern.',
+                )}
               </span>
             </li>
             <li>
               <span>
-                <strong>The quiet board</strong> (Chess) — the whole game against a bot. Castling,
-                en passant, promotion and every draw are in. The balance bar weighs the pieces, the
-                Threats ring points at what is hanging, and a crowned pawn flashes where it lands.
+                <strong>{t('The quiet board')}</strong> ({t('Chess')}) —{' '}
+                {t(
+                  'the whole game against a bot. Castling, en passant, promotion and every draw are in. The balance bar weighs the pieces, the Threats ring points at what is hanging, and a crowned pawn flashes where it lands.',
+                )}
               </span>
             </li>
             <li>
               <span>
-                <strong>The buried sky</strong> (Mines) — ten fallen stars under a 9×9 field. The
-                first tap is always safe; long-press (or right-click) to plant a lantern.
+                <strong>{t('The buried sky')}</strong> ({t('Mines')}) —{' '}
+                {t(
+                  'ten fallen stars under a 9×9 field. The first tap is always safe; long-press (or right-click) to plant a lantern.',
+                )}
               </span>
             </li>
             <li>
               <span>
-                <strong>The keepsake table</strong> (Pairs) — twelve keepsakes face down, one board
-                a day. Every match goes onto the shelf above the cards.
+                <strong>{t('The keepsake table')}</strong> ({t('Pairs')}) —{' '}
+                {t(
+                  'twelve keepsakes face down, one board a day. Every match goes onto the shelf above the cards.',
+                )}
               </span>
             </li>
             <li>
               <span>
-                <strong>The observatory windows</strong> (Lights) — a 5×5 room, all lit. Every tap
-                flips its neighbours too; every window you shut lets a star through.
+                <strong>{t('The observatory windows')}</strong> ({t('Lights')}) —{' '}
+                {t(
+                  'a 5×5 room, all lit. Every tap flips its neighbours too; every window you shut lets a star through.',
+                )}
               </span>
             </li>
           </ul>
           <p className="par-note" style={{ margin: 0 }}>
-            Three more tables wait in the <strong>Arcade</strong>: the glass orchard (Snake), the
-            doubling room (2048) and the turning table (Reversi). They are free play — their records
-            live in this browser and never touch the daily streak.
+            {t(
+              'Three more tables wait in the {arcade}: the glass orchard (Snake), the doubling room (2048) and the turning table (Reversi). They are free play — their records live in this browser and never touch the daily streak.',
+              { arcade: t('Arcade') },
+            )}
           </p>
           <div className="row gap-10" style={{ flexWrap: 'wrap' }}>
             <button className="btn btn-sm" onClick={() => navigate('/common')}>
-              Night choir
+              {t('Night choir')}
             </button>
             <button className="btn btn-sm btn-ghost" onClick={() => navigate('/rare')}>
-              Empty hall
+              {t('Empty hall')}
             </button>
             <button className="btn btn-sm btn-ghost" onClick={() => navigate('/play')}>
-              Lantern grid
+              {t('Lantern grid')}
             </button>
             <button className="btn btn-sm btn-ghost" onClick={() => navigate('/chess')}>
-              Chess
+              {t('Chess')}
             </button>
             <button className="btn btn-sm btn-ghost" onClick={() => navigate('/mines')}>
-              Buried sky
+              {t('Buried sky')}
             </button>
             <button className="btn btn-sm btn-ghost" onClick={() => navigate('/pairs')}>
-              Keepsakes
+              {t('Keepsakes')}
             </button>
             <button className="btn btn-sm btn-ghost" onClick={() => navigate('/lights')}>
-              Windows
+              {t('Windows')}
             </button>
             <button className="btn btn-sm btn-ghost" onClick={() => navigate('/arcade')}>
-              Arcade
+              {t('Arcade')}
             </button>
           </div>
         </div>

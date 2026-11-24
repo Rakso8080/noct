@@ -116,10 +116,14 @@ export function Home({ navigate, onTutorial }: HomeProps) {
 
   const streak = Math.max(streakFor('common', day).current, streakFor('rare', day).current);
 
-  const commonStatus = common ? `${common.score} pts` : 'Unplayed';
-  const rareStatus = rare ? `${rare.score} pts` : 'Unplayed';
-  const noctStatus = today?.played ? `${today.score}/${MAX_SCORE}` : today?.active ? 'In progress' : 'Unplayed';
-  const noctAction = today?.played ? 'See result' : today?.active ? 'Continue' : 'Play';
+  const commonStatus = common ? t('{n} pts', { n: common.score }) : t('Unplayed');
+  const rareStatus = rare ? t('{n} pts', { n: rare.score }) : t('Unplayed');
+  const noctStatus = today?.played
+    ? `${today.score}/${MAX_SCORE}`
+    : today?.active
+      ? t('In progress')
+      : t('Unplayed');
+  const noctAction = today?.played ? t('See result') : today?.active ? t('Continue') : t('Play');
 
   const key = String(day);
   const chessDay = games.chess.daily[key];
@@ -130,22 +134,31 @@ export function Home({ navigate, onTutorial }: HomeProps) {
 
   const chessStatus = chessDay
     ? chessDay.result === 'win'
-      ? `Won · ${chessDay.plies} plies`
+      ? t('Won · {n} plies', { n: chessDay.plies })
       : chessDay.result === 'loss'
-        ? 'Lost today'
-        : 'Drawn today'
+        ? t('Lost today')
+        : t('Drawn today')
     : chessSaved && chessSaved.moves.length
-      ? 'In progress'
-      : 'Unplayed';
-  const minesStatus = minesDay ? (minesDay.won ? `${(minesDay.ms / 1000).toFixed(1)}s` : 'Lost today') : 'Unplayed';
-  const pairsStatus = pairsDay ? `${pairsDay.moves} moves` : 'Unplayed';
-  const lightsStatus = lightsDay ? `${lightsDay.moves} presses` : 'Unplayed';
-  const snakeStatus = games.snake.best === null ? 'Unplayed' : `Best ${games.snake.best} steps`;
-  const numbersStatus = games.numbers.bestScore === null ? 'Unplayed' : `Best ${games.numbers.bestScore}`;
+      ? t('In progress')
+      : t('Unplayed');
+  const minesStatus = minesDay
+    ? minesDay.won
+      ? t('{n}s', { n: (minesDay.ms / 1000).toFixed(1) })
+      : t('Lost today')
+    : t('Unplayed');
+  const pairsStatus = pairsDay ? t('{n} moves', { n: pairsDay.moves }) : t('Unplayed');
+  const lightsStatus = lightsDay ? t('{n} presses', { n: lightsDay.moves }) : t('Unplayed');
+  const snakeStatus =
+    games.snake.best === null ? t('Unplayed') : t('Best {n} steps', { n: games.snake.best });
+  const numbersStatus =
+    games.numbers.bestScore === null ? t('Unplayed') : t('Best {n}', { n: games.numbers.bestScore });
   const reversiStatus =
     games.reversi.wins + games.reversi.losses + games.reversi.draws
-      ? `${games.reversi.wins}W · ${games.reversi.losses}L`
-      : 'Unplayed';
+      ? t('{wins}W · {losses}L', {
+          wins: games.reversi.wins,
+          losses: games.reversi.losses,
+        })
+      : t('Unplayed');
 
   return (
     <main className="main">
@@ -308,19 +321,19 @@ export function Home({ navigate, onTutorial }: HomeProps) {
 
         <div className="menu-row">
           <button className="tab" onClick={() => navigate('/practice?level=2')}>
-            Practice
+            {t('Practice')}
           </button>
           <button className="tab" onClick={() => navigate('/archive')}>
-            Archive
+            {t('Archive')}
           </button>
           <button className="tab" onClick={() => navigate('/leaderboard')}>
-            Standings
+            {t('Standings')}
           </button>
           <button className="tab" onClick={() => navigate('/stats')}>
-            Stats
+            {t('Stats')}
           </button>
           <button className="tab" onClick={() => navigate('/settings')}>
-            Settings
+            {t('Settings')}
           </button>
         </div>
 

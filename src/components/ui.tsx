@@ -64,6 +64,7 @@ function pad(n: number): string {
 }
 
 export function Countdown({ to }: { to: number }) {
+  const t = useT();
   const [left, setLeft] = useState(() => Math.max(0, to - Date.now()));
 
   useEffect(() => {
@@ -77,7 +78,7 @@ export function Countdown({ to }: { to: number }) {
   const s = Math.floor((left % 60_000) / 1000);
 
   return (
-    <span className="timer" aria-label={`Next board in ${h} hours ${m} minutes`}>
+    <span className="timer" aria-label={t('Next board in {h} hours {m} minutes', { h, m })}>
       {pad(h)}:{pad(m)}:{pad(s)}
     </span>
   );
@@ -94,6 +95,7 @@ export function Modal({
   title: string;
   children: ReactNode;
 }) {
+  const t = useT();
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -126,7 +128,7 @@ export function Modal({
       >
         <div className="modal-head">
           <h2 className="modal-title">{title}</h2>
-          <button className="icon-btn" onClick={onClose} aria-label="Close">
+          <button className="icon-btn" onClick={onClose} aria-label={t('Close')}>
             <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
               <path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
             </svg>
@@ -147,12 +149,13 @@ export function Switch({
   onChange: (v: boolean) => void;
   label: string;
 }) {
+  const t = useT();
   return (
     <button
       type="button"
       role="switch"
       aria-checked={checked}
-      aria-label={label}
+      aria-label={t(label)}
       className="switch"
       onClick={() => onChange(!checked)}
     />
@@ -170,6 +173,7 @@ export function Segmented<T extends string>({
   onChange: (v: T) => void;
   label: string;
 }) {
+  const t = useT();
   return (
     <div className="segmented" role="group" aria-label={label}>
       {options.map((o) => (
@@ -179,7 +183,7 @@ export function Segmented<T extends string>({
           aria-pressed={value === o.value}
           onClick={() => onChange(o.value)}
         >
-          {o.label}
+          {t(o.label)}
         </button>
       ))}
     </div>
@@ -195,11 +199,12 @@ export function StatBox({
   value: string | number;
   note?: string;
 }) {
+  const t = useT();
   return (
     <div className="stat">
-      <div className="stat-label">{label}</div>
+      <div className="stat-label">{t(label)}</div>
       <div className="stat-value">{value}</div>
-      {note ? <div className="stat-note">{note}</div> : null}
+      {note ? <div className="stat-note">{t(note)}</div> : null}
     </div>
   );
 }
@@ -220,7 +225,7 @@ export function ScreenHead({
       <h1 style={{ fontSize: 'var(--step-3)' }}>{t(title)}</h1>
       {children ? (
         <p className="lede" style={{ fontSize: 'var(--step-0)' }}>
-          {typeof children === 'string' ? t(children) : children}
+          {typeof children === 'string' ? t(children.replace(/\s+/g, ' ').trim()) : children}
         </p>
       ) : null}
     </header>

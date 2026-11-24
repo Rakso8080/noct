@@ -6,6 +6,7 @@ import { lightsToday, readGames, recordLights, type GameMode } from '../lib/game
 import { sfx } from '../lib/audio';
 import { haptic } from '../lib/settings';
 import { ScreenHead, Segmented } from '../components/ui';
+import { useT } from '../lib/i18n';
 
 const SIZE = 5;
 const CELLS = SIZE * SIZE;
@@ -38,6 +39,7 @@ function scramble(seed: number): { cells: boolean[]; par: number } {
 }
 
 export function Lights({ navigate }: { navigate: (path: string) => void }) {
+  const t = useT();
   const day = dayNumber();
   const [mode, setMode] = useState<GameMode>('daily');
 
@@ -131,9 +133,13 @@ export function Lights({ navigate }: { navigate: (path: string) => void }) {
   return (
     <main className="main">
       <div className="wrap" style={{ maxWidth: 600 }}>
-        <ScreenHead eyebrow={`Lights · Night ${String(day).padStart(3, '0')}`} title="The observatory windows">
-          Every press flips its window and the four beside it. Shut them all, and the sky behind
-          them comes through. The daily board is always solvable — the scramble starts from dark.
+        <ScreenHead
+          eyebrow={t('Lights · Night {n}', { n: String(day).padStart(3, '0') })}
+          title={t('The observatory windows')}
+        >
+          {t(
+            'Every press flips its window and the four beside it. Shut them all, and the sky behind them comes through. The daily board is always solvable — the scramble starts from dark.',
+          )}
         </ScreenHead>
 
         <div className="mini-modes">
@@ -151,29 +157,33 @@ export function Lights({ navigate }: { navigate: (path: string) => void }) {
             }}
           />
           <span className="chess-note">
-            {mode === 'daily' ? 'The same board for everyone today' : 'Fresh scramble every reset'}
+            {mode === 'daily'
+              ? t('The same board for everyone today')
+              : t('Fresh scramble every reset')}
           </span>
         </div>
 
         <div className="mini-hud">
           <span className="chip">
-            <span className="mono">{moves}</span> {moves === 1 ? 'press' : 'presses'}
+            <span className="mono">{moves}</span> {t('{n} presses', { n: moves })}
           </span>
-          <span className="chip">Par {par} presses</span>
+          <span className="chip">{t('Par {n} presses', { n: par })}</span>
           <span className="chip">
-            Shortest left <span className="mono">{left ?? '—'}</span>
+            {t('Shortest left')} <span className="mono">{left ?? '—'}</span>
           </span>
-          {hints > 0 ? <span className="chip">Hints {hints}</span> : null}
+          {hints > 0 ? <span className="chip">{t('Hints {n}', { n: hints })}</span> : null}
           <span className="chip">
             {mode === 'daily'
               ? today
-                ? `Your best today ${today.moves}`
-                : 'Unplayed today'
-              : 'Free play'}
+                ? t('Your best today {n}', { n: today.moves })
+                : t('Unplayed today')
+              : t('Free play')}
           </span>
-          <span className="chip">{best === null ? 'No best yet' : `Best ${best} presses`}</span>
           <span className="chip">
-            Windows dark <span className="mono">{dark}</span> / {CELLS}
+            {best === null ? t('No best yet') : t('Best {n} presses', { n: best })}
+          </span>
+          <span className="chip">
+            {t('Windows dark')} <span className="mono">{dark}</span> / {CELLS}
           </span>
         </div>
 
@@ -190,14 +200,19 @@ export function Lights({ navigate }: { navigate: (path: string) => void }) {
             ))}
             <span className="lights-sky-line" />
           </div>
-          <div className="lights-grid" role="group" aria-label="Lights-out board, 5 by 5">
+          <div className="lights-grid" role="group" aria-label={t('Lights-out board, 5 by 5')}>
             {cells.map((on, i) => (
               <button
                 key={i}
                 type="button"
                 className={`lights-cell${on ? ' is-on' : ''}${hintSquare === i ? ' is-hint' : ''}`}
                 aria-pressed={on}
-                aria-label={`Square ${Math.floor(i / SIZE) + 1}, ${(i % SIZE) + 1}: ${on ? 'lit' : 'dark'}${hintSquare === i ? ', suggested press' : ''}`}
+                aria-label={t('Square {r}, {c}: {state}{hint}', {
+                  r: Math.floor(i / SIZE) + 1,
+                  c: (i % SIZE) + 1,
+                  state: on ? t('lit') : t('dark'),
+                  hint: hintSquare === i ? t(', suggested press') : '',
+                })}
                 onClick={() => toggle(i)}
               />
             ))}
@@ -206,26 +221,26 @@ export function Lights({ navigate }: { navigate: (path: string) => void }) {
 
         <div className="mini-actions">
           <button className="btn btn-sm" onClick={hint} disabled={won || !left}>
-            Hint
+            {t('Hint')}
           </button>
           <button className="btn btn-sm btn-ghost" onClick={undo} disabled={!history.length}>
-            Undo
+            {t('Undo')}
           </button>
           <button className="btn btn-sm btn-ghost" onClick={() => reset()}>
-            New shuffle
+            {t('New shuffle')}
           </button>
           <button className="btn btn-sm btn-ghost" onClick={() => navigate('/')}>
-            Menu
+            {t('Menu')}
           </button>
         </div>
 
         {won ? (
           <div className="mini-banner" role="status">
             <strong>
-              Dark in {moves} {moves === 1 ? 'press' : 'presses'}
+              {t('Dark in {n} presses', { n: moves })}
             </strong>
             <button className="btn btn-sm btn-primary" onClick={() => reset()}>
-              Play again
+              {t('Play again')}
             </button>
           </div>
         ) : null}

@@ -1,3 +1,5 @@
+import { useT } from '../lib/i18n';
+
 interface ResumeCardProps {
   title: string;
   body: string;
@@ -8,9 +10,10 @@ interface ResumeCardProps {
 
 /** Offered when a saved round for today is waiting in local storage. */
 export function ResumeCard({ title, body, meta, onContinue, onDiscard }: ResumeCardProps) {
+  const t = useT();
   return (
     <div className="card resume-card" role="status">
-      <span className="eyebrow">Unfinished round</span>
+      <span className="eyebrow">{t('Unfinished round')}</span>
       <h2 style={{ fontSize: 'var(--step-2)', margin: 0 }}>{title}</h2>
       <p className="par-note" style={{ margin: 0 }}>
         {body}
@@ -18,10 +21,10 @@ export function ResumeCard({ title, body, meta, onContinue, onDiscard }: ResumeC
       {meta ? <p className="par-note mono" style={{ margin: 0 }}>{meta}</p> : null}
       <div className="row gap-10" style={{ flexWrap: 'wrap' }}>
         <button className="btn btn-sm btn-primary" onClick={onContinue}>
-          Continue
+          {t('Continue')}
         </button>
         <button className="btn btn-sm btn-ghost" onClick={onDiscard}>
-          Discard
+          {t('Discard')}
         </button>
       </div>
     </div>

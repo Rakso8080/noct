@@ -32,6 +32,7 @@ import {
   type ChessResult,
 } from '../lib/gamesStore';
 import { ScreenHead, Segmented } from '../components/ui';
+import { useT } from '../lib/i18n';
 
 /** Filled glyphs for both colours; CSS gives them their ink. */
 const GLYPH: Record<Kind, string> = { k: '♚', q: '♛', r: '♜', b: '♝', n: '♞', p: '♟' };
@@ -69,6 +70,7 @@ function outcomeText(result: Outcome, side: 'w' | 'b'): string {
 }
 
 export function Chess({ navigate }: { navigate: (path: string) => void }) {
+  const t = useT();
   const day = dayNumber();
 
   const initial = useMemo(() => {
@@ -402,28 +404,32 @@ export function Chess({ navigate }: { navigate: (path: string) => void }) {
   }, [checked, state]);
 
   const statusLine = over
-    ? outcomeText(result, side)
+    ? t(outcomeText(result, side))
     : thinking
-      ? 'The bot is thinking…'
+      ? t('The bot is thinking…')
       : checked
-        ? 'You are in check.'
+        ? t('You are in check.')
         : myTurn
-          ? 'Your move.'
-          : 'Bot to move.';
+          ? t('Your move.')
+          : t('Bot to move.');
 
   return (
     <main className="main">
       <div className="wrap" style={{ maxWidth: 1060 }}>
-        <ScreenHead eyebrow={`Chess · Night ${String(day).padStart(3, '0')}`} title="The quiet board">
-          The whole game, no clock. Every rule is in: castling, en passant, promotion, draws. The
-          daily bot answers the same way for everyone.
+        <ScreenHead
+          eyebrow={t('Chess · Night {n}', { n: String(day).padStart(3, '0') })}
+          title={t('The quiet board')}
+        >
+          {t(
+            'The whole game, no clock. Every rule is in: castling, en passant, promotion, draws. The daily bot answers the same way for everyone.',
+          )}
         </ScreenHead>
 
         <div className="chess-layout">
           <div className="chess-main">
             <div className="chess-bar">
-              <div className="chess-captured" aria-label="Pieces the bot has taken">
-                <span className="chess-tray-label">Lost</span>
+              <div className="chess-captured" aria-label={t('Pieces the bot has taken')}>
+                <span className="chess-tray-label">{t('Lost')}</span>
                 {captured.b.length ? (
                   captured.b.map((k, i) => (
                     <span key={`${k}${i}`} className="chess-tray-piece is-w" aria-hidden="true">
@@ -431,15 +437,17 @@ export function Chess({ navigate }: { navigate: (path: string) => void }) {
                     </span>
                   ))
                 ) : (
-                  <span className="chess-tray-empty">none</span>
+                  <span className="chess-tray-empty">{t('none')}</span>
                 )}
               </div>
               <div className={`chess-turn${checked ? ' is-check' : ''}`} aria-live="polite">
                 {statusLine}
-                <span className="chess-lastmove">{lastSan ? ` · ${lastSan}` : ' · opening'}</span>
+                <span className="chess-lastmove">
+                  {lastSan ? ` · ${lastSan}` : ` · ${t('opening')}`}
+                </span>
               </div>
-              <div className="chess-captured" aria-label="Pieces you have taken">
-                <span className="chess-tray-label">Taken</span>
+              <div className="chess-captured" aria-label={t('Pieces you have taken')}>
+                <span className="chess-tray-label">{t('Taken')}</span>
                 {captured.w.length ? (
                   captured.w.map((k, i) => (
                     <span key={`${k}${i}`} className="chess-tray-piece is-b" aria-hidden="true">
@@ -447,7 +455,7 @@ export function Chess({ navigate }: { navigate: (path: string) => void }) {
                     </span>
                   ))
                 ) : (
-                  <span className="chess-tray-empty">none</span>
+                  <span className="chess-tray-empty">{t('none')}</span>
                 )}
               </div>
             </div>
@@ -456,7 +464,9 @@ export function Chess({ navigate }: { navigate: (path: string) => void }) {
               <div
                 className="chess-board"
                 role="group"
-                aria-label={`Chess board, ${side === 'w' ? 'you play white' : 'you play black'}`}
+                aria-label={t('Chess board, {side}', {
+                  side: side === 'w' ? t('you play white') : t('you play black'),
+                })}
               >
                 {order.map((sq) => {
                   const piece = state.board[sq];
@@ -468,8 +478,10 @@ export function Chess({ navigate }: { navigate: (path: string) => void }) {
                   const showRank = flipped ? sq % 8 === 7 : sq % 8 === 0;
                   const showFile = flipped ? sq < 8 : sq >= 56;
                   const label = `${squareName(sq)}, ${
-                    piece ? `${piece.c === 'w' ? 'white' : 'black'} ${PIECE_NAME[piece.k]}` : 'empty'
-                  }${target ? ', legal move' : ''}`;
+                    piece
+                      ? `${t(piece.c === 'w' ? 'White' : 'Black')} ${t(PIECE_NAME[piece.k])}`
+                      : t('empty')
+                  }${target ? `, ${t('legal move')}` : ''}`;
                   return (
                     <button
                       key={sq}
@@ -511,8 +523,8 @@ export function Chess({ navigate }: { navigate: (path: string) => void }) {
               </div>
 
               {promo ? (
-                <div className="chess-promo" role="dialog" aria-label="Choose a promotion piece">
-                  <span className="chess-promo-label">Promote to</span>
+                <div className="chess-promo" role="dialog" aria-label={t('Choose a promotion piece')}>
+                  <span className="chess-promo-label">{t('Promote to')}</span>
                   <div className="row gap-10">
                     {(['q', 'r', 'b', 'n'] as Kind[]).map((k) => (
                       <button
@@ -520,7 +532,7 @@ export function Chess({ navigate }: { navigate: (path: string) => void }) {
                         type="button"
                         className={`chess-promo-btn is-${side}`}
                         onClick={() => choosePromotion(k)}
-                        aria-label={`Promote to ${k}`}
+                        aria-label={t('Promote to {piece}', { piece: t(PIECE_NAME[k]) })}
                       >
                         {GLYPH[k]}
                       </button>
@@ -532,18 +544,26 @@ export function Chess({ navigate }: { navigate: (path: string) => void }) {
               {over ? (
                 <div className="chess-over" role="status">
                   <span className="chess-over-eyebrow">
-                    {result.kind === 'checkmate' ? 'Checkmate' : result.kind === 'stalemate' ? 'Stalemate' : 'Draw'}
+                    {result.kind === 'checkmate'
+                      ? t('Checkmate')
+                      : result.kind === 'stalemate'
+                        ? t('Stalemate')
+                        : t('Draw')}
                   </span>
-                  <strong>{outcomeText(result, side)}</strong>
+                  <strong>{t(outcomeText(result, side))}</strong>
                   <span className="chess-over-note">
-                    {records.length} plies · level {level} · {mode === 'daily' ? 'daily' : 'free play'}
+                    {t('{n} plies · level {level} · {mode}', {
+                      n: records.length,
+                      level,
+                      mode: mode === 'daily' ? t('daily') : t('free play'),
+                    })}
                   </span>
                   <div className="row gap-10" style={{ flexWrap: 'wrap', justifyContent: 'center' }}>
                     <button className="btn btn-sm btn-primary" onClick={() => resetGame()}>
-                      Play again
+                      {t('Play again')}
                     </button>
                     <button className="btn btn-sm btn-ghost" onClick={undo}>
-                      Undo
+                      {t('Undo')}
                     </button>
                   </div>
                 </div>
@@ -553,13 +573,13 @@ export function Chess({ navigate }: { navigate: (path: string) => void }) {
             <div className="chess-under">
               <div className="row gap-10" style={{ flexWrap: 'wrap' }}>
                 <button className="btn btn-sm" onClick={() => resetGame()} disabled={thinking}>
-                  New game
+                  {t('New game')}
                 </button>
                 <button className="btn btn-sm btn-ghost" onClick={undo} disabled={!records.length || thinking}>
-                  Undo
+                  {t('Undo')}
                 </button>
                 <button className="btn btn-sm btn-ghost" onClick={requestHint} disabled={!myTurn || thinking}>
-                  Hint
+                  {t('Hint')}
                 </button>
                 <button
                   className={`btn btn-sm${threats ? ' btn-primary' : ' btn-ghost'}`}
@@ -569,32 +589,32 @@ export function Chess({ navigate }: { navigate: (path: string) => void }) {
                     sfx.tap();
                   }}
                 >
-                  Threats
+                  {t('Threats')}
                 </button>
                 <button className="btn btn-sm btn-ghost" onClick={() => setFlipped((f) => !f)}>
-                  Flip
+                  {t('Flip')}
                 </button>
                 <button className="btn btn-sm btn-ghost" onClick={() => navigate('/')}>
-                  Menu
+                  {t('Menu')}
                 </button>
               </div>
               <span className="chess-note">
                 {fen
-                  ? 'Shared position · free play'
+                  ? t('Shared position · free play')
                   : mode === 'daily'
-                    ? 'Daily bot · same reply for everyone today'
-                    : 'Free play · bot varies'}
+                    ? t('Daily bot · same reply for everyone today')
+                    : t('Free play · bot varies')}
               </span>
             </div>
           </div>
 
           <aside className="chess-side">
             <div className="card-flat stack gap-14">
-              <span className="eyebrow">Setup</span>
+              <span className="eyebrow">{t('Setup')}</span>
               <div className="stack gap-6">
-                <span className="chess-field-label">Mode</span>
+                <span className="chess-field-label">{t('Mode')}</span>
                 <Segmented
-                  label="Game mode"
+                  label={t('Game mode')}
                   value={mode}
                   options={[
                     { value: 'daily', label: 'Daily' },
@@ -604,9 +624,9 @@ export function Chess({ navigate }: { navigate: (path: string) => void }) {
                 />
               </div>
               <div className="stack gap-6">
-                <span className="chess-field-label">Bot</span>
+                <span className="chess-field-label">{t('Bot')}</span>
                 <Segmented
-                  label="Bot level"
+                  label={t('Bot level')}
                   value={String(level)}
                   options={[
                     { value: '1', label: 'Novice' },
@@ -617,9 +637,9 @@ export function Chess({ navigate }: { navigate: (path: string) => void }) {
                 />
               </div>
               <div className="stack gap-6">
-                <span className="chess-field-label">You play</span>
+                <span className="chess-field-label">{t('You play')}</span>
                 <Segmented
-                  label="Your side"
+                  label={t('Your side')}
                   value={side}
                   options={[
                     { value: 'w', label: 'White' },
@@ -629,18 +649,23 @@ export function Chess({ navigate }: { navigate: (path: string) => void }) {
                 />
               </div>
               <p className="par-note" style={{ margin: 0 }}>
-                Level {level} · {LEVEL_LABEL[level]}. Changing side starts a new game; the bot level can change
-                mid-game.
+                {t(
+                  'Level {level} · {label}. Changing side starts a new game; the bot level can change mid-game.',
+                  { level, label: t(LEVEL_LABEL[level]) },
+                )}
               </p>
             </div>
 
             <div className="card-flat stack gap-10 chess-material">
               <div className="row" style={{ justifyContent: 'space-between' }}>
-                <span className="eyebrow">The balance</span>
+                <span className="eyebrow">{t('The balance')}</span>
                 <span className="chip">
                   {material.diff === 0
-                    ? 'Even'
-                    : `${material.diff > 0 ? 'White' : 'Black'} +${Math.abs(material.diff)}`}
+                    ? t('Even')
+                    : t('{side} +{n}', {
+                        side: t(material.diff > 0 ? 'White' : 'Black'),
+                        n: Math.abs(material.diff),
+                      })}
                 </span>
               </div>
               <div className="chess-material-bar" aria-hidden="true">
@@ -652,12 +677,12 @@ export function Chess({ navigate }: { navigate: (path: string) => void }) {
                 />
               </div>
               <div className="chess-material-legend">
-                <span>White {material.white}</span>
-                <span>Black {material.black}</span>
+                <span>{t('White')} {material.white}</span>
+                <span>{t('Black')} {material.black}</span>
               </div>
               <div className="chess-taken">
                 <span className="chess-taken-row">
-                  <em>White took</em>
+                  <em>{t('White took')}</em>
                   <span>
                     {captured.w.length
                       ? captured.w.map((k, i) => (
@@ -669,7 +694,7 @@ export function Chess({ navigate }: { navigate: (path: string) => void }) {
                   </span>
                 </span>
                 <span className="chess-taken-row">
-                  <em>Black took</em>
+                  <em>{t('Black took')}</em>
                   <span>
                     {captured.b.length
                       ? captured.b.map((k, i) => (
@@ -685,11 +710,11 @@ export function Chess({ navigate }: { navigate: (path: string) => void }) {
 
             <div className="card-flat stack gap-10">
               <div className="row" style={{ justifyContent: 'space-between' }}>
-                <span className="eyebrow">Moves</span>
-                <span className="chip">{records.length} plies</span>
+                <span className="eyebrow">{t('Moves')}</span>
+                <span className="chip">{t('{n} plies', { n: records.length })}</span>
               </div>
               {moveRows.length ? (
-                <ol className="chess-moves" ref={listRef} aria-label="Move list">
+                <ol className="chess-moves" ref={listRef} aria-label={t('Move list')}>
                   {moveRows.map((row) => (
                     <li key={row.n}>
                       <span className="chess-move-n">{row.n}.</span>
@@ -700,7 +725,7 @@ export function Chess({ navigate }: { navigate: (path: string) => void }) {
                 </ol>
               ) : (
                 <p className="par-note" style={{ margin: 0 }}>
-                  No moves yet. Tap a piece; its legal squares light up.
+                  {t('No moves yet. Tap a piece; its legal squares light up.')}
                 </p>
               )}
             </div>

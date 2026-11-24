@@ -5,6 +5,7 @@ import { dayToISO } from '../../shared/dates';
 import { Board } from '../components/Board';
 import { formatDate, formatDuration, useCountUp } from '../components/ui';
 import { sfx } from '../lib/audio';
+import { translate, useT } from '../lib/i18n';
 
 interface ResultsProps {
   summary: Summary | null;
@@ -20,10 +21,13 @@ function shareText(summary: Summary): string {
     summary.mode === 'daily'
       ? `Noct #${String(summary.day ?? 1).padStart(3, '0')}`
       : summary.mode === 'archive'
-        ? `Noct archive #${summary.day}`
-        : 'Noct practice';
+        ? `${translate('Noct archive')} #${summary.day}`
+        : translate('Noct practice');
   const grid = summary.rounds.map((r) => tierGlyph(speedTier(r.timeMs, r.size))).join('');
-  const streak = summary.mode === 'daily' && summary.streak > 0 ? ` · ${summary.streak}-day streak` : '';
+  const streak =
+    summary.mode === 'daily' && summary.streak > 0
+      ? ` · ${translate('{n}-day streak', { n: summary.streak })}`
+      : '';
   const date = summary.mode === 'daily' && summary.day ? ` — ${dayToISO(summary.day)}` : '';
   return `${label}${date}\n${grid}  ${summary.score}/${summary.maxScore}\n${summary.rating}${streak}\nnoct.game`;
 }
@@ -76,7 +80,7 @@ function downloadCard(summary: Summary): void {
   ctx.font = '500 22px ui-sans-serif, system-ui, sans-serif';
   const label =
     summary.mode === 'daily'
-      ? `BOARD ${String(summary.day ?? 1).padStart(3, '0')} · ${summary.day ? dayToISO(summary.day) : ''}`
+      ? `${translate('BOARD')} ${String(summary.day ?? 1).padStart(3, '0')} · ${summary.day ? dayToISO(summary.day) : ''}`
       : summary.mode.toUpperCase();
   ctx.fillText(label, 104, 200);
 
@@ -100,14 +104,14 @@ function downloadCard(summary: Summary): void {
 
   ctx.fillStyle = '#e9edf2';
   ctx.font = '400 76px ui-serif, Georgia, serif';
-  ctx.fillText(summary.rating, 104, 800);
+  ctx.fillText(translate(summary.rating), 104, 800);
 
   ctx.fillStyle = '#8e9aa9';
   ctx.font = '400 34px ui-sans-serif, system-ui, sans-serif';
   const line2 =
     summary.mode === 'daily'
-      ? `${summary.streak}-day streak · ${summary.rounds.length} boards · ${formatDuration(summary.timeMs)}`
-      : `${summary.rounds.length} boards · ${formatDuration(summary.timeMs)}`;
+      ? `${translate('{n}-day streak', { n: summary.streak })} · ${translate('{n} boards', { n: summary.rounds.length })} · ${formatDuration(summary.timeMs)}`
+      : `${translate('{n} boards', { n: summary.rounds.length })} · ${formatDuration(summary.timeMs)}`;
   ctx.fillText(line2, 104, 860);
 
   ctx.fillStyle = '#4a5563';
@@ -126,6 +130,7 @@ function downloadCard(summary: Summary): void {
 }
 
 export function Results({ summary, navigate }: ResultsProps) {
+  const t = useT();
   const [revealed, setRevealed] = useState(false);
   const [copied, setCopied] = useState(false);
   const counted = useCountUp(summary?.score ?? 0, 900);
@@ -135,16 +140,18 @@ export function Results({ summary, navigate }: ResultsProps) {
       <main className="main">
         <div className="wrap" style={{ maxWidth: 520 }}>
           <div className="card stack gap-14">
-            <h1 style={{ fontSize: 'var(--step-2)' }}>No result to show</h1>
+            <h1 style={{ fontSize: 'var(--step-2)' }}>{t('No result to show')}</h1>
             <p className="par-note">
-              Results appear once you finish a board. Play today’s, or open one from the archive.
+              {t(
+                'Results appear once you finish a board. Play today’s, or open one from the archive.',
+              )}
             </p>
             <div className="row gap-10" style={{ flexWrap: 'wrap' }}>
               <button className="btn btn-primary" onClick={() => navigate('/play')}>
-                Play today’s board
+                {t('Play today’s board')}
               </button>
               <button className="btn btn-ghost" onClick={() => navigate('/archive')}>
-                Browse the archive
+                {t('Browse the archive')}
               </button>
             </div>
           </div>
@@ -192,32 +199,42 @@ export function Results({ summary, navigate }: ResultsProps) {
           <div className="stack gap-20">
             <header className="result-head fade-up">
               <div className="eyebrow">
-                {isDaily ? `Board #${String(summary.day).padStart(3, '0')} · ${dateLabel}` : summary.mode === 'archive' ? `Archive #${summary.day} · ${dateLabel}` : 'Practice run'}
+                {isDaily
+                  ? `${t('Board #{n}', { n: String(summary.day ?? 1).padStart(3, '0') })} · ${dateLabel}`
+                  : summary.mode === 'archive'
+                    ? `${t('Archive #{n}', { n: summary.day ?? 1 })} · ${dateLabel}`
+                    : t('Practice run')}
               </div>
               <div className="result-score">
                 <span className="score-big">{counted}</span>
                 <span className="result-max">/ {summary.maxScore}</span>
               </div>
-              <div className="rating-word">{summary.rating}</div>
+              <div className="rating-word">{t(summary.rating)}</div>
               <div className="row gap-6" style={{ flexWrap: 'wrap' }}>
                 {isDaily ? (
                   <span className={`chip${summary.streak > 0 ? ' chip-ember' : ''}`}>
                     <span className="chip-dot" aria-hidden="true" />
-                    {summary.streak}-day streak
+                    {t('{n}-day streak', { n: summary.streak })}
                   </span>
                 ) : (
-                  <span className="chip">Not counted towards your streak</span>
+                  <span className="chip">{t('Not counted towards your streak')}</span>
                 )}
-                {summary.personalBest && isDaily ? <span className="chip">Personal best</span> : null}
-                {summary.hints > 0 ? <span className="chip">{summary.hints} hint{summary.hints === 1 ? '' : 's'}</span> : <span className="chip">No hints</span>}
-                <span className="chip">{formatDuration(summary.timeMs)} total</span>
+                {summary.personalBest && isDaily ? (
+                  <span className="chip">{t('Personal best')}</span>
+                ) : null}
+                {summary.hints > 0 ? (
+                  <span className="chip">{t('{n} hints', { n: summary.hints })}</span>
+                ) : (
+                  <span className="chip">{t('No hints')}</span>
+                )}
+                <span className="chip">{t('{time} total', { time: formatDuration(summary.timeMs) })}</span>
               </div>
             </header>
 
             <section className="card stack gap-14">
               <div className="row" style={{ justifyContent: 'space-between' }}>
-                <span className="eyebrow">Your boards</span>
-                <span className="eyebrow">points · time</span>
+                <span className="eyebrow">{t('Your boards')}</span>
+                <span className="eyebrow">{t('points · time')}</span>
               </div>
               <div className="round-table">
                 {summary.rounds.map((r) => {
@@ -247,39 +264,47 @@ export function Results({ summary, navigate }: ResultsProps) {
               </div>
               <hr className="hairline" />
               <p className="par-note" style={{ margin: 0 }}>
-                Fastest board: <strong style={{ color: 'var(--text)' }}>{formatDuration(best.timeMs)}</strong> on{' '}
-                {best.size}×{best.size}. Par is {Math.round(parMs(best.size) / 1000)}s per board — beat it for the full
-                time bonus.
+                {t('Fastest board:')}{' '}
+                <strong style={{ color: 'var(--text)' }}>{formatDuration(best.timeMs)}</strong>{' '}
+                {t('on {size}×{size}. Par is {par}s per board — beat it for the full time bonus.', {
+                  size: best.size,
+                  par: Math.round(parMs(best.size) / 1000),
+                })}
               </p>
             </section>
 
             {isDaily && summary.global.completed > 0 ? (
               <section className="card stack gap-14">
-                <span className="eyebrow">Today, worldwide</span>
+                <span className="eyebrow">{t('Today, worldwide')}</span>
                 <div className="stat-grid">
                   <div className="stat" style={{ border: 0, padding: 0, background: 'transparent' }}>
-                    <div className="stat-label">Finished</div>
+                    <div className="stat-label">{t('Finished')}</div>
                     <div className="stat-value">{finishedRate}%</div>
                     <div className="stat-note">
-                      {summary.global.completed} of {summary.global.started} players
+                      {t('{done} of {started} players', {
+                        done: summary.global.completed,
+                        started: summary.global.started,
+                      })}
                     </div>
                   </div>
                   <div className="stat" style={{ border: 0, padding: 0, background: 'transparent' }}>
-                    <div className="stat-label">Average score</div>
+                    <div className="stat-label">{t('Average score')}</div>
                     <div className="stat-value">{summary.global.avgScore}</div>
-                    <div className="stat-note">all finished boards</div>
+                    <div className="stat-note">{t('all finished boards')}</div>
                   </div>
                   <div className="stat" style={{ border: 0, padding: 0, background: 'transparent' }}>
-                    <div className="stat-label">Your rank</div>
+                    <div className="stat-label">{t('Your rank')}</div>
                     <div className="stat-value">#{summary.rank ?? '—'}</div>
                     <div className="stat-note">
-                      {summary.percentile !== null ? `top ${summary.percentile}%` : 'unranked'}
+                      {summary.percentile !== null
+                        ? t('top {n}%', { n: summary.percentile })
+                        : t('unranked')}
                     </div>
                   </div>
                   <div className="stat" style={{ border: 0, padding: 0, background: 'transparent' }}>
-                    <div className="stat-label">Best streak</div>
+                    <div className="stat-label">{t('Best streak')}</div>
                     <div className="stat-value">{summary.bestStreak}</div>
-                    <div className="stat-note">days in a row</div>
+                    <div className="stat-note">{t('days in a row')}</div>
                   </div>
                 </div>
               </section>
@@ -287,9 +312,9 @@ export function Results({ summary, navigate }: ResultsProps) {
 
             <section className="card stack gap-14">
               <div className="row" style={{ justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
-                <span className="eyebrow">Solutions</span>
+                <span className="eyebrow">{t('Solutions')}</span>
                 <button className="btn btn-sm btn-ghost" onClick={() => setRevealed((v) => !v)} aria-expanded={revealed}>
-                  {revealed ? 'Hide' : 'Reveal the answers'}
+                  {revealed ? t('Hide') : t('Reveal the answers')}
                 </button>
               </div>
               {revealed ? (
@@ -306,19 +331,20 @@ export function Results({ summary, navigate }: ResultsProps) {
                           hinted={[]}
                           solved={false}
                           locked
-                          label={`Solution for board ${r.index + 1}`}
+                          label={t('Solution for board {n}', { n: r.index + 1 })}
                           onToggle={() => undefined}
                           onExclude={() => undefined}
                         />
                       </div>
-                      <span className="eyebrow">Board {r.index + 1}</span>
+                      <span className="eyebrow">{t('Board {n}', { n: r.index + 1 })}</span>
                     </div>
                   ))}
                 </div>
               ) : (
                 <p className="par-note" style={{ margin: 0 }}>
-                  Answers stay hidden while today is live so nobody can spoil it. Reveal only when you
-                  have finished.
+                  {t(
+                    'Answers stay hidden while today is live so nobody can spoil it. Reveal only when you have finished.',
+                  )}
                 </p>
               )}
             </section>
@@ -329,8 +355,8 @@ export function Results({ summary, navigate }: ResultsProps) {
               className="card stack gap-14"
               style={{ background: 'linear-gradient(155deg, var(--surface-2), var(--surface))' }}
             >
-              <span className="eyebrow">Share card</span>
-              <div className="stack gap-10" aria-label="Shareable result">
+              <span className="eyebrow">{t('Share card')}</span>
+              <div className="stack gap-10" aria-label={t('Shareable result')}>
                 <div className="row" style={{ justifyContent: 'space-between' }}>
                   <span className="eyebrow" style={{ color: 'var(--accent)' }}>Noct</span>
                   <span className="eyebrow">
@@ -343,46 +369,46 @@ export function Results({ summary, navigate }: ResultsProps) {
                     / {summary.maxScore}
                   </span>
                 </div>
-                <div className="share-grid" aria-label={`Board speed: ${grid}`}>
+                <div className="share-grid" aria-label={t('Board speed: {grid}', { grid })}>
                   {grid}
                 </div>
                 <div className="row" style={{ justifyContent: 'space-between' }}>
                   <span>{summary.rating}</span>
-                  {isDaily ? <span className="par-note">{summary.streak}-day</span> : null}
+                  {isDaily ? <span className="par-note">{t('{n}-day', { n: summary.streak })}</span> : null}
                 </div>
               </div>
               <hr className="hairline" />
               <div className="stack gap-10">
                 <button className="btn btn-primary btn-block" onClick={() => void handleShare()}>
-                  {copied ? 'Copied' : 'Share result'}
+                  {copied ? t('Copied') : t('Share result')}
                 </button>
                 <div className="row gap-10">
                   <button className="btn btn-sm btn-ghost" style={{ flex: 1 }} onClick={() => void handleCopy()}>
-                    Copy text
+                    {t('Copy text')}
                   </button>
                   <button className="btn btn-sm btn-ghost" style={{ flex: 1 }} onClick={() => downloadCard(summary)}>
-                    Save image
+                    {t('Save image')}
                   </button>
                 </div>
                 <p className="par-note" style={{ fontSize: '0.75rem' }}>
-                  The card never shows answers — only your score, speed and streak.
+                  {t('The card never shows answers — only your score, speed and streak.')}
                 </p>
               </div>
             </div>
 
             <div className="card stack gap-10">
-              <span className="eyebrow">Next</span>
+              <span className="eyebrow">{t('Next')}</span>
               <button className="btn btn-block" onClick={() => navigate(isDaily ? '/practice?level=3' : '/play')}>
-                {isDaily ? 'Practice another board' : 'Play today’s board'}
+                {isDaily ? t('Practice another board') : t('Play today’s board')}
               </button>
               <button className="btn btn-sm btn-ghost btn-block" onClick={() => navigate('/leaderboard')}>
-                See the standings
+                {t('See the standings')}
               </button>
               <button className="btn btn-sm btn-ghost btn-block" onClick={() => navigate('/stats')}>
-                Your statistics
+                {t('Your statistics')}
               </button>
               <button className="btn btn-sm btn-ghost btn-block" onClick={() => navigate('/archive')}>
-                Archive
+                {t('Archive')}
               </button>
             </div>
           </aside>

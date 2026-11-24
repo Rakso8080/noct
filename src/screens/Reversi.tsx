@@ -229,9 +229,9 @@ export function Reversi({ navigate }: { navigate: (path: string) => void }) {
           eyebrow={t('Reversi · Night {n}', { n: String(day).padStart(3, '0') })}
           title={t('The turning table')}
         >
-          Trap a line of the bot’s discs to turn them white. You are white; the table ends when neither
-          side can move, and the most discs wins. Arrows move the cursor, Enter places, Escape leaves
-          the table without touching the board.
+          {t(
+            'Trap a line of the bot’s discs to turn them white. You are white; the table ends when neither side can move, and the most discs wins. Arrows move the cursor, Enter places, Escape leaves the table without touching the board.',
+          )}
         </ScreenHead>
 
         <div className="mini-hud">
@@ -263,7 +263,10 @@ export function Reversi({ navigate }: { navigate: (path: string) => void }) {
           <ResumeCard
             title={t('A table is already set')}
             body={t('You left this game mid-turn. Continue it, or start a fresh table for today.')}
-            meta={`${resume.moves} moves · ${resume.turn === 1 ? 'your turn' : 'bot to move'}`}
+            meta={t('{n} moves · {turn}', {
+              n: resume.moves,
+              turn: t(resume.turn === 1 ? 'your turn' : 'bot to move'),
+            })}
             onContinue={() => {
               setBoard(resume.board as Disc[]);
               setTurn(resume.turn);
@@ -280,12 +283,21 @@ export function Reversi({ navigate }: { navigate: (path: string) => void }) {
             }}
           />
         ) : (
-        <div className={`rev-board${over ? ' is-over' : ''}`} role="group" aria-label="Reversi board, 8 by 8">
+        <div className={`rev-board${over ? ' is-over' : ''}`} role="group" aria-label={t('Reversi board, 8 by 8')}>
           {board.map((disc, i) => {
             const legal = !over && turn === 1 && whiteLegal.includes(i);
-            const label = `${squareName(i)}: ${
-              disc === 1 ? 'white disc' : disc === 2 ? 'black disc' : legal ? 'legal move' : 'empty'
-            }${cursor === i ? ', cursor' : ''}`;
+            const label = t('{square}: {disc}{cursor}', {
+              square: squareName(i),
+              disc:
+                disc === 1
+                  ? t('white disc')
+                  : disc === 2
+                    ? t('black disc')
+                    : legal
+                      ? t('legal move')
+                      : t('empty'),
+              cursor: cursor === i ? t(', cursor') : '',
+            });
             return (
               <button
                 key={i}

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { SparkGlyph } from './ui';
 import { TONE_NAMES } from '../brand';
+import { useT } from '../lib/i18n';
 
 export interface BoardProps {
   size: number;
@@ -50,6 +51,7 @@ export function Board({
   onToggle,
   onExclude,
 }: BoardProps) {
+  const t = useT();
   const [focus, setFocus] = useState(0);
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
   const longPress = useRef<{ cell: number; timer: ReturnType<typeof setTimeout> } | null>(null);
@@ -137,7 +139,7 @@ export function Board({
         className={`board${solved ? ' is-solved' : ''}`}
         style={{ ['--n' as string]: size }}
         role="grid"
-        aria-label={label ?? `${size} by ${size} board`}
+        aria-label={label ?? t('{size} by {size} board', { size })}
         aria-rowcount={size}
         aria-colcount={size}
         onContextMenu={(e) => e.preventDefault()}
@@ -173,7 +175,14 @@ export function Board({
               data-edge={edge}
               role="gridcell"
               tabIndex={cell === focus ? 0 : -1}
-              aria-label={`Row ${r + 1}, column ${c + 1}, ${TONE_NAMES[region[cell] % 7]} tone, ${state}${conflict ? ', conflict' : ''}${isGiven ? ', pre-lit' : ''}`}
+              aria-label={t('Row {r}, column {c}, {tone} tone, {state}{conflict}{given}', {
+                r: r + 1,
+                c: c + 1,
+                tone: t(TONE_NAMES[region[cell] % 7]),
+                state: state === 'spark' ? t('spark') : state === 'excluded' ? t('excluded') : t('empty'),
+                conflict: conflict ? t(', conflict') : '',
+                given: isGiven ? t(', pre-lit') : '',
+              })}
               aria-pressed={hasSpark}
               disabled={locked && !hasSpark}
               onFocus={() => setFocus(cell)}
