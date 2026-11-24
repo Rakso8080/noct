@@ -655,6 +655,32 @@ export function Chess({ navigate }: { navigate: (path: string) => void }) {
                 <span>White {material.white}</span>
                 <span>Black {material.black}</span>
               </div>
+              <div className="chess-taken">
+                <span className="chess-taken-row">
+                  <em>White took</em>
+                  <span>
+                    {captured.w.length
+                      ? captured.w.map((k, i) => (
+                          <i key={i} aria-hidden="true">
+                            {GLYPH[k]}
+                          </i>
+                        ))
+                      : '—'}
+                  </span>
+                </span>
+                <span className="chess-taken-row">
+                  <em>Black took</em>
+                  <span>
+                    {captured.b.length
+                      ? captured.b.map((k, i) => (
+                          <i key={i} aria-hidden="true">
+                            {GLYPH[k]}
+                          </i>
+                        ))
+                      : '—'}
+                  </span>
+                </span>
+              </div>
             </div>
 
             <div className="card-flat stack gap-10">

@@ -36,8 +36,11 @@ export function Pairs({ navigate }: { navigate: (path: string) => void }) {
   const [best, setBest] = useState<number | null>(null);
   const [bestMs, setBestMs] = useState<number | null>(null);
   const [keepsakes, setKeepsakes] = useState<string[]>([]);
+  const [peeks, setPeeks] = useState(0);
+  const [peeking, setPeeking] = useState(false);
 
   const timeout = useRef<number | null>(null);
+  const peekTimeout = useRef<number | null>(null);
 
   useEffect(() => {
     if (won || startedAt === null) return;
@@ -60,6 +63,7 @@ export function Pairs({ navigate }: { navigate: (path: string) => void }) {
 
   useEffect(() => () => {
     if (timeout.current !== null) clearTimeout(timeout.current);
+    if (peekTimeout.current !== null) clearTimeout(peekTimeout.current);
   }, []);
 
   const reset = useCallback(
@@ -73,10 +77,25 @@ export function Pairs({ navigate }: { navigate: (path: string) => void }) {
       setElapsed(0);
       setWon(false);
       setKeepsakes([]);
+      setPeeks(0);
+      setPeeking(false);
+      if (peekTimeout.current !== null) clearTimeout(peekTimeout.current);
       setRound((r) => r + 1);
     },
     [mode, day, round],
   );
+
+  /* One honest peek per board: every face shows for a breath, and it costs two moves. */
+  const peek = () => {
+    if (won || peeks > 0) return;
+    setPeeks(1);
+    setPeeking(true);
+    setMoves((m) => m + 2);
+    sfx.hint();
+    haptic(6);
+    if (peekTimeout.current !== null) clearTimeout(peekTimeout.current);
+    peekTimeout.current = window.setTimeout(() => setPeeking(false), 950);
+  };
 
   const flip = (index: number) => {
     if (won || flipped.length === 2 || flipped.includes(index) || matched.has(index)) return;
@@ -174,11 +193,13 @@ export function Pairs({ navigate }: { navigate: (path: string) => void }) {
           <span className="chip">{matched.size / 2} / {SYMBOLS.length} on the shelf</span>
           <span className="chip">{best === null ? 'No best yet' : `Best ${best} moves`}</span>
           {bestMs !== null ? <span className="chip">Best time {(bestMs / 1000).toFixed(1)}s</span> : null}
+          <span className="chip">Perfect is {SYMBOLS.length} moves</span>
+          {peeks > 0 ? <span className="chip">Peek used</span> : null}
         </div>
 
         <div className="pairs-grid">
           {deck.map((card, index) => {
-            const isUp = flipped.includes(index) || matched.has(index);
+            const isUp = flipped.includes(index) || matched.has(index) || (peeking && !matched.has(index));
             return (
               <button
                 key={card.id}
@@ -200,6 +221,9 @@ export function Pairs({ navigate }: { navigate: (path: string) => void }) {
         </div>
 
         <div className="mini-actions">
+          <button className="btn btn-sm" onClick={peek} disabled={won || peeks > 0}>
+            Peek <span className="par-note" style={{ margin: 0 }}>−2 moves</span>
+          </button>
           <button className="btn btn-sm btn-ghost" onClick={() => reset()}>
             New shuffle
           </button>

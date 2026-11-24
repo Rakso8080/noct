@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { dayNumber } from '../../shared/dates';
+import { solveLights } from '../lib/lights';
 import { hashSeed, mulberry32, shuffled } from '../lib/rng';
 import { lightsToday, readGames, recordLights, type GameMode } from '../lib/gamesStore';
 import { sfx } from '../lib/audio';
@@ -32,7 +33,8 @@ function scramble(seed: number): { cells: boolean[]; par: number } {
   let cells = Array<boolean>(CELLS).fill(false);
   for (const i of presses) cells = press(cells, i);
   if (cells.every((c) => !c)) cells = press(cells, presses[0]);
-  return { cells, par: presses.length };
+  /* Par is the shortest solution from this board, not the length of the scramble. */
+  return { cells, par: solveLights(cells)?.length ?? presses.length };
 }
 
 export function Lights({ navigate }: { navigate: (path: string) => void }) {
@@ -46,6 +48,9 @@ export function Lights({ navigate }: { navigate: (path: string) => void }) {
   const [won, setWon] = useState(false);
   const [round, setRound] = useState(0);
   const [best, setBest] = useState<number | null>(null);
+  const [history, setHistory] = useState<boolean[][]>([]);
+  const [hints, setHints] = useState(0);
+  const [hintSquare, setHintSquare] = useState<number | null>(null);
   const sky = useMemo(() => {
     const rnd = mulberry32(hashSeed('lights-sky', day));
     return Array.from({ length: CELLS }, () => ({
@@ -69,6 +74,8 @@ export function Lights({ navigate }: { navigate: (path: string) => void }) {
 
   const toggle = (i: number) => {
     if (won) return;
+    setHistory((h) => [...h, cells]);
+    setHintSquare(null);
     const next = press(cells, i);
     setCells(next);
     setMoves((m) => m + 1);
@@ -80,6 +87,28 @@ export function Lights({ navigate }: { navigate: (path: string) => void }) {
     }
   };
 
+  const undo = () => {
+    if (!history.length) return;
+    setCells(history[history.length - 1]);
+    setHistory((h) => h.slice(0, -1));
+    setMoves((m) => Math.max(0, m - 1));
+    setHintSquare(null);
+    setWon(false);
+    sfx.remove();
+    haptic(6);
+  };
+
+  /* A hint is one press of the shortest solution, and it says how many are left. */
+  const left = useMemo(() => solveLights(cells)?.length ?? null, [cells]);
+  const hint = () => {
+    const solution = solveLights(cells);
+    if (!solution || !solution.length) return;
+    setHintSquare(solution[0]);
+    setHints((h) => h + 1);
+    sfx.hint();
+    haptic(6);
+  };
+
   const reset = useCallback(
     (nextMode: GameMode = mode) => {
       const next = scramble(hashSeed('lights', nextMode, day, round + 1));
@@ -87,6 +116,9 @@ export function Lights({ navigate }: { navigate: (path: string) => void }) {
       setPar(next.par);
       setMoves(0);
       setWon(false);
+      setHistory([]);
+      setHints(0);
+      setHintSquare(null);
       setRound((r) => r + 1);
     },
     [mode, day, round],
@@ -125,9 +157,13 @@ export function Lights({ navigate }: { navigate: (path: string) => void }) {
 
         <div className="mini-hud">
           <span className="chip">
-            <span className="mono">{moves}</span> presses
+            <span className="mono">{moves}</span> {moves === 1 ? 'press' : 'presses'}
           </span>
           <span className="chip">Par {par} presses</span>
+          <span className="chip">
+            Shortest left <span className="mono">{left ?? '—'}</span>
+          </span>
+          {hints > 0 ? <span className="chip">Hints {hints}</span> : null}
           <span className="chip">
             {mode === 'daily'
               ? today
@@ -159,9 +195,9 @@ export function Lights({ navigate }: { navigate: (path: string) => void }) {
               <button
                 key={i}
                 type="button"
-                className={`lights-cell${on ? ' is-on' : ''}`}
+                className={`lights-cell${on ? ' is-on' : ''}${hintSquare === i ? ' is-hint' : ''}`}
                 aria-pressed={on}
-                aria-label={`Square ${Math.floor(i / SIZE) + 1}, ${(i % SIZE) + 1}: ${on ? 'lit' : 'dark'}`}
+                aria-label={`Square ${Math.floor(i / SIZE) + 1}, ${(i % SIZE) + 1}: ${on ? 'lit' : 'dark'}${hintSquare === i ? ', suggested press' : ''}`}
                 onClick={() => toggle(i)}
               />
             ))}
@@ -169,6 +205,12 @@ export function Lights({ navigate }: { navigate: (path: string) => void }) {
         </div>
 
         <div className="mini-actions">
+          <button className="btn btn-sm" onClick={hint} disabled={won || !left}>
+            Hint
+          </button>
+          <button className="btn btn-sm btn-ghost" onClick={undo} disabled={!history.length}>
+            Undo
+          </button>
           <button className="btn btn-sm btn-ghost" onClick={() => reset()}>
             New shuffle
           </button>

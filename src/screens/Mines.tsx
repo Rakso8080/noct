@@ -78,6 +78,7 @@ export function Mines({ navigate }: { navigate: (path: string) => void }) {
   const [round, setRound] = useState(0);
   const [best, setBest] = useState<number | null>(null);
   const [cascade, setCascade] = useState<number | null>(null);
+  const [history, setHistory] = useState<{ cells: Cell[]; status: Status; startedAt: number | null }[]>([]);
   const cascadeTimer = useRef<number | null>(null);
 
   const pressTimer = useRef<number | null>(null);
@@ -112,18 +113,41 @@ export function Mines({ navigate }: { navigate: (path: string) => void }) {
     setFlagMode(false);
     setStartedAt(null);
     setElapsed(0);
+    setHistory([]);
     setRound((r) => r + 1);
   }, []);
 
-  const toggleFlag = useCallback((i: number) => {
-    setCells((prev) => {
-      if (prev[i].open) return prev;
-      const next = prev.map((c) => ({ ...c }));
-      next[i].flag = !next[i].flag;
-      return next;
+  const remember = useCallback(() => {
+    setHistory((h) => [...h.slice(-40), { cells, status, startedAt }]);
+  }, [cells, status, startedAt]);
+
+  const toggleFlag = useCallback(
+    (i: number) => {
+      if (cells[i].open) return;
+      remember();
+      setCells((prev) => {
+        if (prev[i].open) return prev;
+        const next = prev.map((c) => ({ ...c }));
+        next[i].flag = !next[i].flag;
+        return next;
+      });
+      sfx.tap();
+      haptic(5);
+    },
+    [cells, remember],
+  );
+
+  const undo = useCallback(() => {
+    setHistory((h) => {
+      if (!h.length) return h;
+      const last = h[h.length - 1];
+      setCells(last.cells.map((c) => ({ ...c })));
+      setStatus(last.status);
+      setStartedAt(last.startedAt);
+      sfx.remove();
+      haptic(6);
+      return h.slice(0, -1);
     });
-    sfx.tap();
-    haptic(5);
   }, []);
 
   const dig = useCallback(
@@ -135,6 +159,7 @@ export function Mines({ navigate }: { navigate: (path: string) => void }) {
       }
       const next = cells.map((c) => ({ ...c }));
       if (next[i].open || next[i].flag) return;
+      remember();
 
       if (status === 'ready') {
         seedMines(next, i, seed + round * 7919);
@@ -168,7 +193,46 @@ export function Mines({ navigate }: { navigate: (path: string) => void }) {
         haptic(4);
       }
     },
-    [cells, status, flagMode, toggleFlag, seed, round, startedAt],
+    [cells, status, flagMode, toggleFlag, seed, round, startedAt, remember],
+  );
+
+  /* Classic chording: a number whose flags are all planted opens its neighbours. */
+  const chord = useCallback(
+    (i: number) => {
+      if (status !== 'playing') return;
+      const cell = cells[i];
+      if (!cell.open || cell.mine || cell.near === 0) return;
+      const ring = around(i);
+      if (ring.filter((j) => cells[j].flag).length !== cell.near) return;
+      const targets = ring.filter((j) => !cells[j].open && !cells[j].flag);
+      if (!targets.length) return;
+      remember();
+      const next = cells.map((c) => ({ ...c }));
+      let hitMine = false;
+      for (const j of targets) {
+        if (next[j].mine) {
+          hitMine = true;
+          for (const c of next) if (c.mine) c.open = true;
+          next[j].open = true;
+          break;
+        }
+        floodOpen(next, j);
+      }
+      setCells(next);
+      if (hitMine) {
+        setStatus('lost');
+        sfx.balloonPop();
+        return;
+      }
+      if (next.every((c) => c.open || c.mine)) {
+        setStatus('won');
+        setElapsed(startedAt === null ? 0 : Date.now() - startedAt);
+        return;
+      }
+      sfx.place();
+      haptic(4);
+    },
+    [cells, status, startedAt, remember],
   );
 
   const onPointerDown = (i: number) => {
@@ -275,7 +339,8 @@ export function Mines({ navigate }: { navigate: (path: string) => void }) {
                       suppressClick.current = false;
                       return;
                     }
-                    dig(i);
+                    if (cell.open) chord(i);
+                    else dig(i);
                   }}
                   onPointerDown={() => onPointerDown(i)}
                   onPointerUp={clearPress}
@@ -302,6 +367,9 @@ export function Mines({ navigate }: { navigate: (path: string) => void }) {
             }}
           >
             {flagMode ? 'Flagging' : 'Flag mode'}
+          </button>
+          <button className="btn btn-sm btn-ghost" onClick={undo} disabled={!history.length}>
+            Undo
           </button>
           <button className="btn btn-sm btn-ghost" onClick={reset}>
             New board

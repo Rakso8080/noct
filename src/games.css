@@ -918,6 +918,40 @@
   color: var(--muted);
 }
 
+/* --------------------------------------------------- chess: taken pieces */
+
+.chess-taken {
+  display: grid;
+  gap: 4px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--line);
+}
+
+.chess-taken-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.875rem;
+  line-height: 1.25;
+}
+
+.chess-taken-row em {
+  font-style: normal;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.chess-taken-row i {
+  font-style: normal;
+  color: #cfc4ae;
+  opacity: 0.9;
+  margin-left: 1px;
+}
+
 /* ------------------------------------------------------- mines: detail pass */
 
 .mines-board {
@@ -935,6 +969,15 @@
   background: #131826;
   overflow: hidden;
 }
+
+.mines-cell[data-n='1'] { color: #8fbfe0; }
+.mines-cell[data-n='2'] { color: #93c9a3; }
+.mines-cell[data-n='3'] { color: #e6b877; }
+.mines-cell[data-n='4'] { color: #c9a0e0; }
+.mines-cell[data-n='5'] { color: #e08f8f; }
+.mines-cell[data-n='6'] { color: #86c8c8; }
+.mines-cell[data-n='7'] { color: #e0c9a0; }
+.mines-cell[data-n='8'] { color: #b8b8c8; }
 
 .mines-progress span {
   display: block;
@@ -1026,6 +1069,21 @@
   opacity: 0.92;
 }
 
+.lights-cell.is-hint::after {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border: 2px dashed var(--accent);
+  border-radius: 2px;
+  pointer-events: none;
+  animation: lights-hint 1.4s ease-in-out infinite;
+}
+
+@keyframes lights-hint {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
 .lights-sky.is-full {
   box-shadow: inset 0 0 44px rgba(242, 179, 61, 0.25);
 }
@@ -1074,6 +1132,10 @@
   .lantern {
     transition: none;
   }
+
+  .lights-cell.is-hint::after {
+    animation: none;
+  }
 }
 
 [data-motion='reduced'] .chess-sq.is-check::before,
@@ -1090,4 +1152,8 @@
 [data-motion='reduced'] .board-glow,
 [data-motion='reduced'] .lantern {
   transition: none;
+}
+
+[data-motion='reduced'] .lights-cell.is-hint::after {
+  animation: none;
 }
