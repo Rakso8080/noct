@@ -80,6 +80,10 @@ export function streakFor(mode: SurveyMode, today = dayNumber()): { current: num
   return { current, best };
 }
 
+export function bestFor(mode: SurveyMode): number {
+  return Object.values(read()[mode] ?? {}).reduce((best, run) => Math.max(best, run.score), 0);
+}
+
 export function playedCount(mode: SurveyMode): number {
   return Object.keys(read()[mode] ?? {}).length;
 }

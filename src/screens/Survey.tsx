@@ -17,7 +17,7 @@ import {
   type SurveyPrompt,
   type Tier,
 } from '../../shared/survey';
-import { runFor, saveRun, streakFor, type LoggedAnswer, type SurveyRun } from '../lib/surveyStore';
+import { bestFor, runFor, saveRun, streakFor, type LoggedAnswer, type SurveyRun } from '../lib/surveyStore';
 import { sfx } from '../lib/audio';
 
 const GAMES: Record<SurveyMode, { name: string; tagline: string; rule: string; scoring: string }> = {
@@ -36,6 +36,32 @@ const GAMES: Record<SurveyMode, { name: string; tagline: string; rule: string; s
       'The board is read from the bottom: the loneliest answer on it is Moonrise and lifts you 100 points. It still has to be an answer somebody gave.',
   },
 };
+
+function useCountUp(target: number, ms = 650): number {
+  const [value, setValue] = useState(target);
+  const from = useRef(target);
+
+  useEffect(() => {
+    const origin = from.current;
+    if (origin === target) return;
+    const start = performance.now();
+    let raf = 0;
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - start) / ms);
+      const eased = 1 - Math.pow(1 - t, 3);
+      setValue(origin + (target - origin) * eased);
+      if (t < 1) {
+        raf = requestAnimationFrame(tick);
+      } else {
+        from.current = target;
+      }
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [target, ms]);
+
+  return value;
+}
 
 function pad(day: number): string {
   return String(day).padStart(3, '0');
@@ -288,6 +314,7 @@ function SurveyRunner({
   const maxTotal = prompts.reduce((sum, p) => sum + maxPointsFor(mode, p), 0);
   const earned = log.reduce((sum, a) => sum + a.points, 0);
   const progress = maxTotal > 0 ? earned / maxTotal : 0;
+  const shownKm = useCountUp(distanceFor(progress));
   const secondsLeft = Math.ceil(leftMs / 1000);
 
   const boardMax = Math.max(...prompt.answers.map((a) => a.weight), 1);
@@ -308,7 +335,7 @@ function SurveyRunner({
       <div className="stage-hud">
         <span className="stage-pill">
           <em>Distance</em>
-          <b>{distanceFor(progress).toFixed(1)} km</b>
+          <b>{shownKm.toFixed(1)} km</b>
         </span>
         <span className="stage-pill">
           <em>Prompt</em>
@@ -321,6 +348,13 @@ function SurveyRunner({
           <b>{reveal ? '—' : `${secondsLeft}s`}</b>
         </span>
       </div>
+
+      {reveal && reveal.points > 0 ? (
+        <span key={`float-${index}`} className="stage-float" aria-hidden="true">
+          +{reveal.points}
+        </span>
+      ) : null}
+      {reveal && reveal.tier === 'moonrise' ? <span key={`flash-${index}`} className="stage-flash" aria-hidden="true" /> : null}
 
       <div className="stage-rail" aria-hidden="true">
         <span className="stage-rail-line">
@@ -439,8 +473,10 @@ function SurveyResult({ run, navigate }: { run: SurveyRun; navigate: (path: stri
   const game = GAMES[run.mode];
   const other: SurveyMode = run.mode === 'common' ? 'rare' : 'common';
   const streak = streakFor(run.mode, run.day);
-  const km = distanceFor(run.max > 0 ? run.score / run.max : 0).toFixed(1);
+  const share = run.max > 0 ? run.score / run.max : 0;
+  const km = distanceFor(share).toFixed(1);
   const perfect = PROMPTS_PER_DAY * MAX_PER_PROMPT;
+  const best = Math.max(bestFor(run.mode), run.score);
 
   async function copy(): Promise<void> {
     const ok = await copyText(shareText(run));
@@ -461,6 +497,7 @@ function SurveyResult({ run, navigate }: { run: SurveyRun; navigate: (path: stri
         <div className="rating-word">{verdict(run.score, run.max)}</div>
         <div className="row gap-6" style={{ flexWrap: 'wrap' }}>
           <span className="chip chip-ember">{km} km walked</span>
+          <span className="chip">Best {best}</span>
           <span className={`chip${streak.current > 0 ? ' chip-ember' : ''}`}>
             <span className="chip-dot" aria-hidden="true" />
             {streak.current}-day streak
@@ -470,8 +507,30 @@ function SurveyResult({ run, navigate }: { run: SurveyRun; navigate: (path: stri
         </div>
 
         <div style={{ marginTop: 18 }}>
-          <Journey progress={run.max > 0 ? run.score / run.max : 0} />
+          <Journey progress={share} />
         </div>
+
+        <section className="route-map">
+          <div className="route-map-head">
+            <span className="eyebrow">The route</span>
+            <span className="eyebrow">
+              {km} / {ROUTE_KM} km
+            </span>
+          </div>
+          <div className="route-map-rail" aria-hidden="true">
+            <i style={{ width: `${share * 100}%` }} />
+            <b style={{ left: `${share * 100}%` }} />
+          </div>
+          <div className="route-map-stops">
+            {run.answers.map((a, i) => (
+              <div className="route-stop" key={`${a.promptId}-${i}`} data-tier={a.tier ?? 'lost'}>
+                <span className="route-stop-num">STOP {i + 1}</span>
+                <span className="route-stop-tier">{a.tier ? TIERS[a.tier].name : 'Lost'}</span>
+                <span className="route-stop-points">+{a.points}</span>
+              </div>
+            ))}
+          </div>
+        </section>
 
         <section className="card stack gap-14">
           <div className="row" style={{ justifyContent: 'space-between' }}>

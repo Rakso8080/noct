@@ -59,6 +59,21 @@ const ICE = ['X...X.', 'XX.XX.', 'XXXXX.', '.XXX..', '..X...', '..X...'];
 const ICE_SMALL = ['X.X.', 'XXX.', '.X..'];
 const ROCK = ['.XXX..', 'XXXXX.', 'XXXXXX', '.XXXX.'];
 const DEAD = ['X.X.X.', '.XXX..', '..X...', '..X...', '..X...'];
+/** Fixed but uneven spots, so the verge never looks stamped. */
+const SCATTER = [
+  { left: 3, scale: 1.1 },
+  { left: 11, scale: 0.8 },
+  { left: 19, scale: 1.25 },
+  { left: 27, scale: 0.9 },
+  { left: 34, scale: 0.7 },
+  { left: 43, scale: 1.15 },
+  { left: 52, scale: 0.85 },
+  { left: 60, scale: 1.05 },
+  { left: 69, scale: 0.75 },
+  { left: 78, scale: 1.2 },
+  { left: 86, scale: 0.95 },
+  { left: 94, scale: 0.7 },
+];
 const GRASS = ['X..X..X', 'X.XX.XX', '.XXXXX.', '..XXX..'];
 const FLOWER = ['X.X.', '.X..', 'XXX.'];
 
@@ -140,6 +155,14 @@ export function Journey({ progress, moving = false, variant = 'strip', answer = 
 
       <div className="journey-weather" data-weather={biome.weather} aria-hidden="true" />
 
+      <div className="journey-back" aria-hidden="true">
+        {Array.from({ length: 8 }, (_, i) => (
+          <span key={i} style={{ left: `${i * 13}%` }}>
+            <Sprite grid={biome.props[(i + 1) % biome.props.length]} />
+          </span>
+        ))}
+      </div>
+
       <div className="journey-track">
         {Array.from({ length: 9 }, (_, i) => (
           <span key={i} className="journey-prop" style={{ left: `${i * 14}%` }}>
@@ -149,8 +172,11 @@ export function Journey({ progress, moving = false, variant = 'strip', answer = 
       </div>
 
       <div className="journey-scatter" aria-hidden="true">
-        {Array.from({ length: 9 }, (_, i) => (
-          <span key={i} style={{ left: `${i * 11.2 + 3}%` }}>
+        {SCATTER.map((spot, i) => (
+          <span
+            key={i}
+            style={{ left: `${spot.left}%`, transform: `scale(${spot.scale})` }}
+          >
             <Sprite grid={biome.scatter[i % biome.scatter.length]} />
           </span>
         ))}
