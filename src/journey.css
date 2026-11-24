@@ -20,6 +20,8 @@
   --traveller: #f5c95c;
   --sun: #f8ecc4;
   --glow: rgba(126, 214, 168, 0.18);
+  --ground-rim: rgba(96, 148, 118, 0.4);
+  --scatter: rgba(104, 156, 124, 0.5);
 }
 
 .journey[data-biome='desert'] {
@@ -32,6 +34,8 @@
   --traveller: #f4ecd8;
   --sun: #ffd89a;
   --glow: rgba(255, 178, 92, 0.22);
+  --ground-rim: rgba(180, 132, 72, 0.45);
+  --scatter: rgba(176, 132, 76, 0.55);
 }
 
 .journey[data-biome='tundra'] {
@@ -44,6 +48,8 @@
   --traveller: #d9ecff;
   --sun: #eaf4ff;
   --glow: rgba(146, 200, 255, 0.2);
+  --ground-rim: rgba(120, 162, 204, 0.45);
+  --scatter: rgba(130, 172, 212, 0.55);
 }
 
 .journey[data-biome='volcano'] {
@@ -56,6 +62,8 @@
   --traveller: #ffd27a;
   --sun: #ff8a5c;
   --glow: rgba(255, 112, 74, 0.22);
+  --ground-rim: rgba(178, 92, 68, 0.5);
+  --scatter: rgba(198, 104, 74, 0.55);
 }
 
 .journey-sky {
@@ -74,26 +82,56 @@
   pointer-events: none;
 }
 
+/* A tiled field, so the sky stays full of stars at any size. */
 .journey-stars {
   position: absolute;
   inset: 0 0 42% 0;
   background-image:
-    radial-gradient(1.5px 1.5px at 8% 22%, rgba(255, 255, 255, 0.75), transparent 60%),
-    radial-gradient(1.5px 1.5px at 17% 58%, rgba(255, 255, 255, 0.5), transparent 60%),
-    radial-gradient(1.5px 1.5px at 26% 12%, rgba(255, 255, 255, 0.65), transparent 60%),
-    radial-gradient(1.5px 1.5px at 34% 40%, rgba(255, 255, 255, 0.4), transparent 60%),
-    radial-gradient(1.5px 1.5px at 42% 70%, rgba(255, 255, 255, 0.55), transparent 60%),
-    radial-gradient(1.5px 1.5px at 51% 26%, rgba(255, 255, 255, 0.7), transparent 60%),
-    radial-gradient(1.5px 1.5px at 58% 52%, rgba(255, 255, 255, 0.45), transparent 60%),
-    radial-gradient(1.5px 1.5px at 66% 18%, rgba(255, 255, 255, 0.6), transparent 60%),
-    radial-gradient(1.5px 1.5px at 73% 64%, rgba(255, 255, 255, 0.4), transparent 60%),
-    radial-gradient(1.5px 1.5px at 81% 34%, rgba(255, 255, 255, 0.7), transparent 60%),
-    radial-gradient(1.5px 1.5px at 88% 72%, rgba(255, 255, 255, 0.5), transparent 60%),
-    radial-gradient(1.5px 1.5px at 95% 20%, rgba(255, 255, 255, 0.6), transparent 60%),
-    radial-gradient(1.5px 1.5px at 45% 8%, rgba(255, 255, 255, 0.45), transparent 60%),
-    radial-gradient(1.5px 1.5px at 62% 78%, rgba(255, 255, 255, 0.35), transparent 60%);
-  opacity: 0.9;
+    radial-gradient(1px 1px at 14px 22px, rgba(255, 255, 255, 0.9), transparent 100%),
+    radial-gradient(1px 1px at 68px 58px, rgba(255, 255, 255, 0.55), transparent 100%),
+    radial-gradient(1.5px 1.5px at 112px 16px, rgba(255, 255, 255, 0.8), transparent 100%),
+    radial-gradient(1px 1px at 148px 86px, rgba(255, 255, 255, 0.45), transparent 100%),
+    radial-gradient(1.5px 1.5px at 186px 38px, rgba(255, 255, 255, 0.7), transparent 100%),
+    radial-gradient(1px 1px at 34px 96px, rgba(255, 255, 255, 0.4), transparent 100%),
+    radial-gradient(1px 1px at 96px 122px, rgba(255, 255, 255, 0.5), transparent 100%),
+    radial-gradient(1.5px 1.5px at 210px 104px, rgba(255, 255, 255, 0.6), transparent 100%);
+  background-size: 230px 140px;
+  opacity: 0.85;
   animation: twinkle 7s steps(2) infinite alternate;
+}
+
+.journey-bird {
+  position: absolute;
+  color: rgba(240, 232, 255, 0.6);
+  width: 26px;
+  height: 11px;
+}
+
+.journey-bird .sprite {
+  width: 100%;
+  height: 100%;
+}
+
+.journey-bird--a {
+  top: 30%;
+  animation: bird-glide 46s linear infinite;
+}
+
+.journey-bird--b {
+  top: 38%;
+  width: 15px;
+  height: 6px;
+  color: rgba(240, 232, 255, 0.3);
+  animation: bird-glide 62s linear infinite -20s;
+}
+
+@keyframes bird-glide {
+  from {
+    transform: translateX(-12vw);
+  }
+  to {
+    transform: translateX(112vw);
+  }
 }
 
 .journey-cloud {
@@ -119,15 +157,20 @@
   animation-delay: -30s;
 }
 
-.journey-sun {
+.journey-moon {
   position: absolute;
-  top: 18%;
-  right: 14%;
-  width: 26px;
-  height: 26px;
-  background: var(--sun);
-  clip-path: polygon(30% 0, 70% 0, 70% 12%, 88% 12%, 88% 30%, 100% 30%, 100% 70%, 88% 70%, 88% 88%, 70% 88%, 70% 100%, 30% 100%, 30% 88%, 12% 88%, 12% 70%, 0 70%, 0 30%, 12% 30%, 12% 12%, 30% 12%);
-  opacity: 0.9;
+  top: 17%;
+  right: 13%;
+  width: 30px;
+  height: 30px;
+  color: var(--sun);
+  opacity: 0.95;
+  filter: drop-shadow(0 0 10px rgba(255, 246, 216, 0.25));
+}
+
+.journey-moon .sprite {
+  width: 100%;
+  height: 100%;
 }
 
 .journey-far {
@@ -157,6 +200,7 @@
   bottom: 0;
   height: 24%;
   background: var(--ground);
+  box-shadow: inset 0 2px 0 var(--ground-rim);
 }
 
 .journey-track {
@@ -227,6 +271,240 @@
   }
 }
 
+/* --- the traveller: two walk frames and a lantern ------------------------ */
+
+.journey-traveller .journey-frame {
+  position: absolute;
+  inset: 0;
+}
+
+.journey-traveller .journey-frame .sprite {
+  width: 100%;
+  height: 100%;
+}
+
+.journey-frame--a {
+  animation: stride-a 0.46s steps(1) infinite;
+}
+
+.journey-frame--b {
+  opacity: 0;
+  animation: stride-b 0.46s steps(1) infinite;
+}
+
+.journey-lantern {
+  position: absolute;
+  right: -4px;
+  bottom: 5px;
+  width: 5px;
+  height: 5px;
+  background: #ffdc94;
+  box-shadow: 0 0 7px 3px rgba(255, 196, 120, 0.35);
+  animation: lantern-flicker 2.6s steps(2) infinite;
+}
+
+/* --- ground details ------------------------------------------------------ */
+
+.journey-scatter {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 12%;
+  height: 12px;
+  animation: scatter-drift 24s linear infinite;
+}
+
+.journey-scatter span {
+  position: absolute;
+  bottom: 0;
+  width: 12px;
+  height: 8px;
+  color: var(--scatter, var(--prop));
+  opacity: 0.9;
+}
+
+.journey-scatter .sprite {
+  width: 100%;
+  height: 100%;
+}
+
+/* --- weather, one layer per climate -------------------------------------- */
+
+.journey-weather {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.journey-weather::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+}
+
+.journey-weather[data-weather='fireflies']::before {
+  width: 3px;
+  height: 3px;
+  background: #ffe08a;
+  box-shadow:
+    9vw 62vh 0 0 #ffe08a,
+    18vw 74vh 0 0 rgba(255, 224, 138, 0.7),
+    27vw 55vh 0 0 rgba(255, 224, 138, 0.55),
+    38vw 68vh 0 0 #ffd48a,
+    47vw 44vh 0 0 rgba(255, 224, 138, 0.6),
+    58vw 72vh 0 0 rgba(255, 224, 138, 0.8),
+    66vw 58vh 0 0 rgba(255, 224, 138, 0.5),
+    74vw 66vh 0 0 #ffe08a,
+    86vw 48vh 0 0 rgba(255, 224, 138, 0.65),
+    92vw 70vh 0 0 rgba(255, 224, 138, 0.8);
+  animation: firefly-drift 8s ease-in-out infinite alternate;
+}
+
+.journey-weather[data-weather='sand']::before {
+  width: 12px;
+  height: 2px;
+  background: rgba(255, 226, 176, 0.55);
+  box-shadow:
+    0 22vh 0 0 rgba(255, 226, 176, 0.35),
+    0 38vh 0 0 rgba(255, 226, 176, 0.5),
+    0 54vh 0 0 rgba(255, 226, 176, 0.3),
+    0 68vh 0 0 rgba(255, 226, 176, 0.45),
+    22vw 28vh 0 0 rgba(255, 226, 176, 0.4),
+    22vw 46vh 0 0 rgba(255, 226, 176, 0.5),
+    22vw 61vh 0 0 rgba(255, 226, 176, 0.35),
+    22vw 76vh 0 0 rgba(255, 226, 176, 0.45),
+    46vw 18vh 0 0 rgba(255, 226, 176, 0.35),
+    46vw 35vh 0 0 rgba(255, 226, 176, 0.5),
+    46vw 58vh 0 0 rgba(255, 226, 176, 0.4),
+    70vw 26vh 0 0 rgba(255, 226, 176, 0.45),
+    70vw 49vh 0 0 rgba(255, 226, 176, 0.35),
+    70vw 72vh 0 0 rgba(255, 226, 176, 0.5),
+    94vw 33vh 0 0 rgba(255, 226, 176, 0.4),
+    94vw 63vh 0 0 rgba(255, 226, 176, 0.45);
+  animation: sand-blow 2.4s linear infinite;
+}
+
+.journey-weather[data-weather='snow']::before {
+  width: 3px;
+  height: 3px;
+  background: #eef6ff;
+  box-shadow:
+    6vw -8vh 0 0 #eef6ff,
+    16vw -22vh 0 0 rgba(238, 246, 255, 0.8),
+    25vw -40vh 0 0 #eef6ff,
+    34vw -14vh 0 0 rgba(238, 246, 255, 0.7),
+    44vw -32vh 0 0 #eef6ff,
+    53vw -50vh 0 0 rgba(238, 246, 255, 0.8),
+    62vw -18vh 0 0 #eef6ff,
+    71vw -36vh 0 0 rgba(238, 246, 255, 0.7),
+    80vw -26vh 0 0 #eef6ff,
+    89vw -44vh 0 0 rgba(238, 246, 255, 0.8),
+    96vw -10vh 0 0 #eef6ff;
+  animation: snowfall 9s linear infinite;
+}
+
+.journey-weather[data-weather='embers']::before {
+  width: 3px;
+  height: 3px;
+  background: #ff9c5c;
+  box-shadow:
+    10vw 62vh 0 0 rgba(255, 156, 92, 0.9),
+    21vw 74vh 0 0 rgba(255, 120, 74, 0.7),
+    33vw 58vh 0 0 rgba(255, 176, 110, 0.8),
+    45vw 70vh 0 0 rgba(255, 140, 84, 0.6),
+    57vw 64vh 0 0 rgba(255, 156, 92, 0.85),
+    69vw 76vh 0 0 rgba(255, 120, 74, 0.65),
+    81vw 60vh 0 0 rgba(255, 176, 110, 0.75),
+    92vw 72vh 0 0 rgba(255, 140, 84, 0.7);
+  animation: embers-rise 7s linear infinite;
+}
+
+@keyframes stride-a {
+  0%,
+  49.9% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes stride-b {
+  0%,
+  49.9% {
+    opacity: 0;
+  }
+  50%,
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes lantern-flicker {
+  0%,
+  100% {
+    opacity: 1;
+    box-shadow: 0 0 7px 3px rgba(255, 196, 120, 0.35);
+  }
+  50% {
+    opacity: 0.75;
+    box-shadow: 0 0 5px 2px rgba(255, 196, 120, 0.25);
+  }
+}
+
+@keyframes scatter-drift {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-11.2%);
+  }
+}
+
+@keyframes firefly-drift {
+  from {
+    transform: translate(0, 0);
+    opacity: 0.55;
+  }
+  to {
+    transform: translate(6vw, -4vh);
+    opacity: 1;
+  }
+}
+
+@keyframes sand-blow {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-22vw);
+  }
+}
+
+@keyframes snowfall {
+  from {
+    transform: translate(0, 0);
+  }
+  to {
+    transform: translate(-6vw, 90vh);
+  }
+}
+
+@keyframes embers-rise {
+  from {
+    transform: translate(0, 0);
+    opacity: 1;
+  }
+  to {
+    transform: translate(-4vw, -60vh);
+    opacity: 0;
+  }
+}
+
 @keyframes prop-drift {
   from {
     transform: translateX(0);
@@ -258,8 +536,14 @@
 
 @media (prefers-reduced-motion: reduce) {
   .journey-track,
+  .journey-scatter,
   .journey-stars,
   .journey-cloud,
+  .journey-bird,
+  .journey-weather::before,
+  .journey-frame--a,
+  .journey-frame--b,
+  .journey-lantern,
   .journey-traveller,
   .journey-traveller.is-moving {
     animation: none;

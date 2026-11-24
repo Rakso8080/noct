@@ -26,21 +26,21 @@
 }
 
 .journey--stage .journey-far {
-  bottom: 40%;
-  height: 24%;
+  bottom: 46%;
+  height: 22%;
 }
 
 .journey--stage .journey-mid {
-  bottom: 34%;
-  height: 17%;
+  bottom: 41%;
+  height: 15%;
 }
 
 .journey--stage .journey-ground {
-  height: 34%;
+  height: 42%;
 }
 
 .journey--stage .journey-track {
-  bottom: 30%;
+  bottom: 38%;
   height: 52px;
 }
 
@@ -51,16 +51,26 @@
 
 .journey--stage .journey-traveller {
   left: 34%;
-  bottom: 32%;
+  bottom: 39%;
   width: 64px;
   height: 50px;
 }
 
-.journey--stage .journey-sun {
-  top: 24%;
-  right: 12%;
-  width: 40px;
-  height: 40px;
+.journey--stage .journey-scatter {
+  bottom: 39%;
+  height: 20px;
+}
+
+.journey--stage .journey-scatter span {
+  width: 20px;
+  height: 14px;
+}
+
+.journey--stage .journey-moon {
+  top: 25%;
+  right: 11%;
+  width: 44px;
+  height: 44px;
 }
 
 .journey--stage .journey-hud {
@@ -143,6 +153,125 @@
   color: #ffb499;
 }
 
+/* --- the route rail ------------------------------------------------------ */
+
+.stage-rail {
+  position: absolute;
+  z-index: 3;
+  top: 78px;
+  left: 16px;
+  right: 16px;
+  pointer-events: none;
+}
+
+.stage-rail-line {
+  position: relative;
+  display: block;
+  height: 3px;
+  background: rgba(74, 63, 125, 0.55);
+}
+
+.stage-rail-line i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: #ffd48a;
+}
+
+.stage-rail-line b {
+  position: absolute;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  margin: -3.5px 0 0 -3.5px;
+  background: #fff3cf;
+  box-shadow: 0 0 6px 2px rgba(255, 212, 138, 0.55);
+}
+
+.stage-rail-marks {
+  display: flex;
+  font-style: normal;
+  justify-content: space-between;
+  margin-top: 5px;
+  font-family: var(--font-display);
+  font-size: 0.4375rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(167, 159, 198, 0.75);
+}
+
+/* --- the board of nine --------------------------------------------------- */
+
+.stage-board {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 2px dashed rgba(74, 63, 125, 0.6);
+}
+
+.stage-board-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.stage-board-row {
+  display: grid;
+  grid-template-columns: 14px minmax(0, 1fr) minmax(50px, 84px) 32px;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 0;
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  color: #a79fc6;
+}
+
+.stage-board-row.is-you {
+  color: #ffe08a;
+}
+
+.stage-board-rank {
+  font-size: 0.75rem;
+  color: rgba(167, 159, 198, 0.7);
+  text-align: right;
+}
+
+.stage-board-row.is-you .stage-board-rank {
+  color: #ffe08a;
+}
+
+.stage-board-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stage-board-bar {
+  display: block;
+  height: 5px;
+  background: rgba(74, 63, 125, 0.45);
+}
+
+.stage-board-bar i {
+  display: block;
+  height: 100%;
+  background: currentColor;
+  opacity: 0.75;
+}
+
+.stage-board-row.is-you .stage-board-bar i {
+  opacity: 1;
+}
+
+.stage-board-pct {
+  font-size: 0.75rem;
+  text-align: right;
+  color: rgba(167, 159, 198, 0.8);
+}
+
+.stage-board-row.is-you .stage-board-pct {
+  color: #ffe08a;
+}
+
 /* --- prompt panel -------------------------------------------------------- */
 
 .stage-panel {
@@ -151,7 +280,7 @@
   width: min(780px, calc(100% - 24px));
   margin: 0 auto 18px;
   padding: 16px 20px 18px;
-  background: rgba(9, 7, 20, 0.93);
+  background: #0b0818;
   border: 3px solid #4a3f7d;
   box-shadow: 6px 6px 0 rgba(6, 4, 14, 0.7);
 }
@@ -224,6 +353,10 @@
   flex-wrap: wrap;
 }
 
+.stage-reveal-top .btn {
+  margin-left: auto;
+}
+
 .stage-reveal-answer {
   flex: 1;
   min-width: 0;
@@ -242,7 +375,7 @@
 }
 
 .stage-reveal-line {
-  margin: 8px 0 12px;
+  margin: 8px 0 0;
   font-family: var(--font-body);
   font-size: 1rem;
   line-height: 1.3;
@@ -320,7 +453,20 @@
 
   .journey--stage .journey-traveller {
     left: 18%;
+    bottom: 36%;
     width: 54px;
     height: 42px;
+  }
+
+  .journey--stage .journey-ground {
+    height: 38%;
+  }
+
+  .journey--stage .journey-track {
+    bottom: 34%;
+  }
+
+  .journey--stage .journey-scatter {
+    bottom: 31%;
   }
 }

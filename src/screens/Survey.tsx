@@ -11,6 +11,7 @@ import {
   dailyPrompts,
   matchAnswer,
   maxPointsFor,
+  rankFor,
   scoreFor,
   type SurveyMode,
   type SurveyPrompt,
@@ -182,6 +183,7 @@ interface Reveal {
   points: number;
   tier: Tier | null;
   rank: number | null;
+  matchedIndex: number | null;
   timedOut: boolean;
 }
 
@@ -244,6 +246,7 @@ function SurveyRunner({
         points,
         tier: entry.tier ?? null,
         rank: entry.rank ?? null,
+        matchedIndex,
         timedOut,
       });
       if (timedOut) sfx.blocked();
@@ -287,6 +290,12 @@ function SurveyRunner({
   const progress = maxTotal > 0 ? earned / maxTotal : 0;
   const secondsLeft = Math.ceil(leftMs / 1000);
 
+  const boardMax = Math.max(...prompt.answers.map((a) => a.weight), 1);
+  const board = prompt.answers
+    .map((a, i) => ({ text: a.text, weight: a.weight, i, rank: rankFor(mode, prompt, i) }))
+    .sort((x, y) => x.rank - y.rank)
+    .slice(0, 3);
+
   return (
     <main className="stage">
       <Journey
@@ -310,6 +319,19 @@ function SurveyRunner({
         <span className={`stage-pill${!reveal && secondsLeft <= 5 ? ' is-urgent' : ''}`}>
           <em>Time</em>
           <b>{reveal ? '—' : `${secondsLeft}s`}</b>
+        </span>
+      </div>
+
+      <div className="stage-rail" aria-hidden="true">
+        <span className="stage-rail-line">
+          <i style={{ width: `${progress * 100}%` }} />
+          <b style={{ left: `${progress * 100}%` }} />
+        </span>
+        <span className="stage-rail-marks">
+          <span>Moss</span>
+          <span>Amber</span>
+          <span>Glass</span>
+          <span>Ember</span>
         </span>
       </div>
 
@@ -339,17 +361,34 @@ function SurveyRunner({
                 {reveal.matched ? `“${reveal.matched}”` : reveal.given ? `“${reveal.given}”` : '—'}
               </span>
               <span className="stage-reveal-points">+{reveal.points}</span>
+              <button className="btn btn-primary" onClick={next}>
+                {last ? 'See the map' : 'Next'}
+              </button>
             </div>
-            <p className="stage-reveal-line">
-              {reveal.matched
-                ? `${reveal.weight}% of the crowd said ${reveal.matched}.`
-                : reveal.timedOut
+            {reveal.matched ? null : (
+              <p className="stage-reveal-line">
+                {reveal.timedOut
                   ? 'The clock ran out. Nothing gained on this one.'
                   : 'Nobody on the board said that. Nothing gained.'}
-            </p>
-            <button className="btn btn-primary" onClick={next}>
-              {last ? 'See the map' : 'Next prompt'}
-            </button>
+              </p>
+            )}
+
+            <div className="stage-board">
+              <div className="stage-board-head">
+                <span className="eyebrow">The board</span>
+                <span className="eyebrow">crowd share</span>
+              </div>
+              {board.map((row) => (
+                <div className={`stage-board-row${row.i === reveal.matchedIndex ? ' is-you' : ''}`} key={row.text}>
+                  <span className="stage-board-rank">{row.rank}</span>
+                  <span className="stage-board-text">{row.text}</span>
+                  <span className="stage-board-bar">
+                    <i style={{ width: `${Math.round((row.weight / boardMax) * 100)}%` }} />
+                  </span>
+                  <span className="stage-board-pct">{row.weight}%</span>
+                </div>
+              ))}
+            </div>
           </div>
         ) : (
           <form

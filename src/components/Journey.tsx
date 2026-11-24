@@ -5,9 +5,12 @@ import { ROUTE_KM } from '../../shared/survey';
  * The run: the traveller crosses a country that changes climate as the score
  * carries them along. Used as a wide strip on the intro and result, and as the
  * whole stage while a run is being played.
+ *
+ * Two walk frames, a lantern, weather per climate and a scattering of small
+ * ground details keep the scene busy without a single image file.
  */
 
-const FOX = [
+const WALK_A = [
   '.......XX...',
   '......XXXX..',
   '.....XXXXX..',
@@ -16,22 +19,78 @@ const FOX = [
   '.XXXXXXXX...',
   '..XXXXXX....',
   '..XX..XX....',
-  '..XX..XX....',
+  '.XX....XX...',
 ];
 
+const WALK_B = [
+  '.......XX...',
+  '......XXXX..',
+  '.....XXXXX..',
+  'X....XXXX...',
+  'XX..XXXXX...',
+  '.XXXXXXXX...',
+  '..XXXXXX....',
+  '...XXXX.....',
+  '...X..X.....',
+];
+
+const MOON = [
+  '..XXXXX..',
+  '.XXXXXXX.',
+  'XXXXXXXXX',
+  'XXX.XXXXX',
+  'XXXXXXXXX',
+  'XXXXXXXXX',
+  'XXXXXX.XX',
+  'XXXXXXXXX',
+  '..XXXXX..',
+];
+
+const BIRD_A = ['X.....X', '.X...X.', '..X.X..'];
+const BIRD_B = ['X...X', '.X.X.', '..X..'];
+
 const PINE = ['..XX..', '.XXXX.', 'XXXXXX', '.XXXX.', '..XX..', '..XX..', '..XX..'];
-
+const BUSH = ['..XX..', '.XXXX.', 'XXXXXX', 'XXXXXX', '.XXXX.'];
+const MUSHROOM = ['..XX..', '.XXXX.', 'XXXXXX', '..XX..', '..XX..'];
 const CACTUS = ['..XX..', '..XX..', 'XX.XX.', 'XX.XX.', '..XX..', '..XX..'];
-
+const DRY = ['..X...', '.XXX..', 'X.X.X.', '..X...'];
+const ROCK_SMALL = ['.XX.', 'XXXX', 'XXXX'];
 const ICE = ['X...X.', 'XX.XX.', 'XXXXX.', '.XXX..', '..X...', '..X...'];
-
+const ICE_SMALL = ['X.X.', 'XXX.', '.X..'];
 const ROCK = ['.XXX..', 'XXXXX.', 'XXXXXX', '.XXXX.'];
+const DEAD = ['X.X.X.', '.XXX..', '..X...', '..X...', '..X...'];
+const GRASS = ['X..X..X', 'X.XX.XX', '.XXXXX.', '..XXX..'];
+const FLOWER = ['X.X.', '.X..', 'XXX.'];
 
 const ROUTE = [
-  { id: 'forest', name: 'The Moss Woods', prop: PINE },
-  { id: 'desert', name: 'The Amber Flats', prop: CACTUS },
-  { id: 'tundra', name: 'The Glass Tundra', prop: ICE },
-  { id: 'volcano', name: 'The Ember Ridge', prop: ROCK },
+  {
+    id: 'forest',
+    name: 'The Moss Woods',
+    props: [PINE, BUSH, MUSHROOM],
+    scatter: [GRASS, FLOWER],
+    weather: 'fireflies',
+  },
+  {
+    id: 'desert',
+    name: 'The Amber Flats',
+    props: [CACTUS, DRY, ROCK_SMALL],
+    scatter: [GRASS, ROCK_SMALL],
+    weather: 'sand',
+  },
+  {
+    id: 'tundra',
+    name: 'The Glass Tundra',
+    props: [ICE, PINE, ICE_SMALL],
+    scatter: [ICE_SMALL, GRASS],
+    weather: 'snow',
+  },
+  {
+    id: 'volcano',
+    name: 'The Ember Ridge',
+    props: [ROCK, DEAD, ROCK_SMALL],
+    scatter: [ROCK_SMALL, GRASS],
+    weather: 'embers',
+  },
 ];
 
 export function biomeFor(progress: number) {
@@ -60,24 +119,51 @@ export function Journey({ progress, moving = false, variant = 'strip', answer = 
     <div className={`journey journey--${variant}`} data-biome={biome.id}>
       <div className="journey-sky" />
       <div className="journey-stars" />
-      <div className="journey-glow" />
       <div className="journey-cloud journey-cloud--a" />
       <div className="journey-cloud journey-cloud--b" />
-      <div className="journey-sun" />
+
+      <span className="journey-bird journey-bird--a">
+        <Sprite grid={BIRD_A} />
+      </span>
+      <span className="journey-bird journey-bird--b">
+        <Sprite grid={BIRD_B} />
+      </span>
+
+      <div className="journey-moon" aria-hidden="true">
+        <Sprite grid={MOON} />
+      </div>
+
+      <div className="journey-glow" />
       <div className="journey-far" />
       <div className="journey-mid" />
       <div className="journey-ground" />
 
+      <div className="journey-weather" data-weather={biome.weather} aria-hidden="true" />
+
       <div className="journey-track">
         {Array.from({ length: 9 }, (_, i) => (
           <span key={i} className="journey-prop" style={{ left: `${i * 14}%` }}>
-            <Sprite grid={biome.prop} />
+            <Sprite grid={biome.props[i % biome.props.length]} />
+          </span>
+        ))}
+      </div>
+
+      <div className="journey-scatter" aria-hidden="true">
+        {Array.from({ length: 9 }, (_, i) => (
+          <span key={i} style={{ left: `${i * 11.2 + 3}%` }}>
+            <Sprite grid={biome.scatter[i % biome.scatter.length]} />
           </span>
         ))}
       </div>
 
       <div className={`journey-traveller${moving ? ' is-moving' : ''}`}>
-        <Sprite grid={FOX} />
+        <span className="journey-frame journey-frame--a">
+          <Sprite grid={WALK_A} />
+        </span>
+        <span className="journey-frame journey-frame--b">
+          <Sprite grid={WALK_B} />
+        </span>
+        <span className="journey-lantern" aria-hidden="true" />
         {answer ? <span className="journey-bubble">{answer}</span> : null}
       </div>
 
