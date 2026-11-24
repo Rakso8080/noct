@@ -55,7 +55,11 @@ const GAMES: Entry[] = [
     kind: 'orchard',
     line: 'The glass orchard: one press, one step, twelve apples before the walls or your tail.',
     tone: 'orchard',
-    best: (s) => (s.snake.best == null ? 'Unplayed' : `Best ${s.snake.best} steps`),
+    best: (s) =>
+      s.snake.best == null && s.snake.wins === 0
+        ? 'Unplayed'
+        : `Best ${s.snake.best ?? '—'} steps · ${s.snake.wins}W`,
+
   },
   {
     path: '/numbers',
@@ -66,7 +70,8 @@ const GAMES: Entry[] = [
     best: (s) =>
       s.numbers.bestScore == null
         ? 'Unplayed'
-        : `Best ${s.numbers.bestScore} · tile ${s.numbers.bestTile ?? 0}`,
+        : `Best ${s.numbers.bestScore} · tile ${s.numbers.bestTile ?? 0} · ${s.numbers.wins}W`,
+
   },
   {
     path: '/reversi',
@@ -76,7 +81,7 @@ const GAMES: Entry[] = [
     tone: 'stone',
     best: (s) =>
       s.reversi.wins + s.reversi.losses + s.reversi.draws
-        ? `Best +${s.reversi.bestMargin ?? 0} · ${s.reversi.wins}W`
+        ? `Best +${s.reversi.bestMargin ?? 0} · ${s.reversi.wins}W/${s.reversi.losses}L`
         : 'Unplayed',
   },
 ];
@@ -90,7 +95,7 @@ export function Arcade({ navigate }: { navigate: (path: string) => void }) {
       <div className="wrap">
         <ScreenHead eyebrow="Arcade · the side tables" title="Seven games beside the daily">
           Every table is played against the night, not against a scoreboard. Local records stay in this
-          browser; each game can reset its own best without touching the others.
+          browser; each arcade table can reset its own best without touching the others.
         </ScreenHead>
 
         <div className="menu-grid arcade-grid">

@@ -14,6 +14,7 @@ import { hashSeed, mulberry32 } from '../lib/rng';
 import { sfx } from '../lib/audio';
 import { haptic } from '../lib/settings';
 import { ScreenHead } from '../components/ui';
+import { LeaveGame } from '../components/LeaveGame';
 
 const FILES = 'abcdefgh';
 
@@ -30,6 +31,7 @@ export function Reversi({ navigate }: { navigate: (path: string) => void }) {
   const [over, setOver] = useState(false);
   const [bestMargin, setBestMargin] = useState<number | null>(() => readGames().reversi.bestMargin);
   const [thinking, setThinking] = useState(false);
+  const [leaveOpen, setLeaveOpen] = useState(false);
   const recorded = useRef(false);
 
   const whiteLegal = useMemo(() => legalMoves(board, 1), [board]);
@@ -148,7 +150,9 @@ export function Reversi({ navigate }: { navigate: (path: string) => void }) {
       }
       if (key === 'Escape') {
         event.preventDefault();
-        newGame();
+        if (leaveOpen) return;
+        if (moves > 0 && !over) setLeaveOpen(true);
+        else navigate('/arcade');
         return;
       }
       const deltas: Record<string, number> = {
@@ -175,7 +179,7 @@ export function Reversi({ navigate }: { navigate: (path: string) => void }) {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [cursor, newGame, over, play]);
+  }, [cursor, leaveOpen, moves, navigate, newGame, over, play]);
 
   const margin = counts.white - counts.black;
   const status = over
@@ -195,7 +199,8 @@ export function Reversi({ navigate }: { navigate: (path: string) => void }) {
       <div className="wrap" style={{ maxWidth: 640 }}>
         <ScreenHead eyebrow={`Reversi · Night ${String(day).padStart(3, '0')}`} title="The turning table">
           Trap a line of the bot’s discs to turn them white. You are white; the table ends when neither
-          side can move, and the most discs wins. Arrows move the cursor, Enter places, Escape starts over.
+          side can move, and the most discs wins. Arrows move the cursor, Enter places, Escape leaves
+          the table without touching the board.
         </ScreenHead>
 
         <div className="mini-hud">
@@ -219,7 +224,7 @@ export function Reversi({ navigate }: { navigate: (path: string) => void }) {
           {status}
         </p>
 
-        <div className={`rev-board${over ? ' is-over' : ''}`} role="grid" aria-label="Reversi board, 8 by 8">
+        <div className={`rev-board${over ? ' is-over' : ''}`} role="group" aria-label="Reversi board, 8 by 8">
           {board.map((disc, i) => {
             const legal = !over && turn === 1 && whiteLegal.includes(i);
             const label = `${squareName(i)}: ${
@@ -229,12 +234,10 @@ export function Reversi({ navigate }: { navigate: (path: string) => void }) {
               <button
                 key={i}
                 type="button"
-                role="gridcell"
                 className={`rev-cell${disc === 1 ? ' is-white' : ''}${disc === 2 ? ' is-black' : ''}${
                   legal ? ' is-legal' : ''
                 }${cursor === i ? ' is-cursor' : ''}`}
                 aria-label={label}
-                aria-pressed={false}
                 onClick={() => {
                   setCursor(i);
                   play(i);
@@ -265,6 +268,14 @@ export function Reversi({ navigate }: { navigate: (path: string) => void }) {
             Menu
           </button>
         </div>
+
+        <LeaveGame
+          open={leaveOpen}
+          title="Leave the turning table?"
+          body="The game is not saved between visits. Leaving ends this one."
+          onStay={() => setLeaveOpen(false)}
+          onLeave={() => navigate('/arcade')}
+        />
 
         {over ? (
           <div className="mini-banner" role="status">

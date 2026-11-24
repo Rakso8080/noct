@@ -6,6 +6,7 @@ import { hashSeed, mulberry32 } from '../lib/rng';
 import { sfx } from '../lib/audio';
 import { haptic } from '../lib/settings';
 import { ScreenHead } from '../components/ui';
+import { LeaveGame } from '../components/LeaveGame';
 
 const KEY_DIR: Record<string, Dir> = {
   ArrowUp: 'up',
@@ -29,6 +30,7 @@ export function Snake({ navigate }: { navigate: (path: string) => void }) {
   const [best, setBest] = useState<number | null>(() => readGames().snake.best);
   const [startedAt, setStartedAt] = useState<number | null>(null);
   const [elapsed, setElapsed] = useState(0);
+  const [leaveOpen, setLeaveOpen] = useState(false);
   const recorded = useRef(false);
 
   useEffect(() => {
@@ -95,6 +97,13 @@ export function Snake({ navigate }: { navigate: (path: string) => void }) {
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.metaKey || event.ctrlKey || event.altKey) return;
+      if (event.key === 'Escape') {
+        if (leaveOpen) return;
+        event.preventDefault();
+        if (state.steps > 0 && state.alive && !state.won) setLeaveOpen(true);
+        else navigate('/arcade');
+        return;
+      }
       if (event.key === 'Enter' && (state.won || !state.alive)) {
         event.preventDefault();
         reset();
@@ -107,17 +116,29 @@ export function Snake({ navigate }: { navigate: (path: string) => void }) {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [reset, state.alive, state.won, step]);
+  }, [leaveOpen, navigate, reset, state.alive, state.steps, state.won, step]);
 
   const head = state.snake[0];
   const body = useMemo(() => new Set(state.snake.slice(1)), [state.snake]);
   const applesLeft = Math.max(0, SNAKE_TARGET - state.apples);
   const seconds = Math.floor(elapsed / 1000);
+  const headRow = Math.floor(head / SNAKE_W) + 1;
+  const headCol = (head % SNAKE_W) + 1;
+  const foodRow = Math.floor(state.food / SNAKE_W) + 1;
+  const foodCol = (state.food % SNAKE_W) + 1;
   const status = state.won
     ? `Garden full in ${state.steps} steps`
     : !state.alive
       ? 'Caught in the glass'
-      : `${applesLeft} apples left · ${state.steps} steps`;
+      : `${applesLeft} apples left · ${state.steps} steps · head row ${headRow}, column ${headCol} · apple row ${foodRow}, column ${foodCol}`;
+
+  const cellLabel = (i: number): string => {
+    const parts = [`row ${Math.floor(i / SNAKE_W) + 1}, column ${(i % SNAKE_W) + 1}`];
+    if (i === head) parts.push('head');
+    else if (body.has(i)) parts.push('body');
+    if (i === state.food) parts.push('apple');
+    return parts.join(', ');
+  };
 
   return (
     <main className="main">
@@ -125,6 +146,7 @@ export function Snake({ navigate }: { navigate: (path: string) => void }) {
         <ScreenHead eyebrow={`Snake · Night ${String(day).padStart(3, '0')}`} title="The glass orchard">
           One press, one step: the snake moves only when you do, so every apple is a decision.
           Collect {SNAKE_TARGET} and the orchard is yours; a wall or your own tail ends the night.
+          Arrows or WASD step, Enter restarts, Escape leaves the table.
         </ScreenHead>
 
         <div className="mini-hud">
@@ -156,13 +178,20 @@ export function Snake({ navigate }: { navigate: (path: string) => void }) {
           role="grid"
           aria-label={`Snake board, ${SNAKE_W} by ${SNAKE_H}. ${state.apples} of ${SNAKE_TARGET} apples eaten, ${state.steps} steps.`}
         >
-          {Array.from({ length: SNAKE_W * SNAKE_H }, (_, i) => (
-            <span
-              key={i}
-              role="gridcell"
-              aria-hidden="true"
-              className={`snake-cell${i === head ? ' is-head' : ''}${body.has(i) ? ' is-body' : ''}${i === state.food ? ' is-food' : ''}`}
-            />
+          {Array.from({ length: SNAKE_H }, (_, row) => (
+            <div role="row" key={row} style={{ display: 'contents' }}>
+              {Array.from({ length: SNAKE_W }, (_, col) => {
+                const i = row * SNAKE_W + col;
+                return (
+                  <span
+                    key={i}
+                    role="gridcell"
+                    aria-label={cellLabel(i)}
+                    className={`snake-cell${i === head ? ' is-head' : ''}${body.has(i) ? ' is-body' : ''}${i === state.food ? ' is-food' : ''}`}
+                  />
+                );
+              })}
+            </div>
           ))}
         </div>
 
@@ -201,6 +230,14 @@ export function Snake({ navigate }: { navigate: (path: string) => void }) {
             Menu
           </button>
         </div>
+
+        <LeaveGame
+          open={leaveOpen}
+          title="Leave the orchard?"
+          body="The snake stays where it is only while this page is open. Leaving ends the run."
+          onStay={() => setLeaveOpen(false)}
+          onLeave={() => navigate('/arcade')}
+        />
 
         {state.won || !state.alive ? (
           <div className="mini-banner" role="status">

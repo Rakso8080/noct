@@ -1,6 +1,6 @@
 /** Local records for the side games: one key, merged over defaults on read. */
 import type { ChessMove } from './chess';
-import { dayNumber } from '../../shared/dates';
+import { dayNumber } from '../../shared/dates.ts';
 
 export type ChessLevel = 1 | 2 | 3;
 export type ChessResult = 'win' | 'loss' | 'draw';

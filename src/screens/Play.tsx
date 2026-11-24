@@ -14,6 +14,7 @@ interface PlayProps {
   onFinish: (summary: Summary) => void;
   onExit: () => void;
   onTutorial: () => void;
+  onToday?: () => void;
 }
 
 function clock(ms: number): string {
@@ -23,10 +24,11 @@ function clock(ms: number): string {
   return `${m}:${String(s).padStart(2, '0')}`;
 }
 
-export function Play({ mode, level, day, onFinish, onExit, onTutorial }: PlayProps) {
+export function Play({ mode, level, day, onFinish, onExit, onTutorial, onToday }: PlayProps) {
   const [session, setSession] = useState<StartResponse | null>(null);
   const [phase, setPhase] = useState<'loading' | 'playing' | 'solving' | 'error'>('loading');
   const [error, setError] = useState('');
+  const [errorKind, setErrorKind] = useState<'generic' | 'archive' | 'offline'>('generic');
   const [index, setIndex] = useState(0);
   const [sparks, setSparks] = useState<number[]>([]);
   const [excluded, setExcluded] = useState<number[]>([]);
@@ -81,10 +83,16 @@ export function Play({ mode, level, day, onFinish, onExit, onTutorial }: PlayPro
             return;
           }
         }
+        const archiveMiss = err instanceof ApiError && err.status === 400;
+        setErrorKind(
+          archiveMiss ? 'archive' : err instanceof ApiError && err.status === 0 ? 'offline' : 'generic',
+        );
         setError(
-          err instanceof ApiError && err.status === 0
-            ? 'You appear to be offline. The daily board needs a connection.'
-            : 'That board could not be opened. Try again.',
+          archiveMiss
+            ? `Board #${day ?? 1} is not in the archive. The drawer keeps the last 365 nights.`
+            : err instanceof ApiError && err.status === 0
+              ? 'You appear to be offline. The daily board needs a connection.'
+              : 'That board could not be opened. Try again.',
         );
         setPhase('error');
       });
@@ -231,15 +239,32 @@ export function Play({ mode, level, day, onFinish, onExit, onTutorial }: PlayPro
       <main className="main">
         <div className="wrap" style={{ maxWidth: 480 }}>
           <div className="card stack gap-14">
-            <h1 style={{ fontSize: 'var(--step-2)' }}>Board unavailable</h1>
+            <h1 style={{ fontSize: 'var(--step-2)' }}>
+              {errorKind === 'archive' ? 'Not in the archive' : 'Board unavailable'}
+            </h1>
             <p className="par-note">{error}</p>
             <div className="row gap-10" style={{ flexWrap: 'wrap' }}>
-              <button className="btn btn-primary" onClick={() => window.location.reload()}>
-                Try again
-              </button>
-              <button className="btn btn-ghost" onClick={onExit}>
-                Back home
-              </button>
+              {errorKind === 'archive' ? (
+                <>
+                  <button className="btn btn-primary" onClick={onExit}>
+                    Open the archive
+                  </button>
+                  {onToday ? (
+                    <button className="btn btn-ghost" onClick={onToday}>
+                      Play today’s board
+                    </button>
+                  ) : null}
+                </>
+              ) : (
+                <>
+                  <button className="btn btn-primary" onClick={() => window.location.reload()}>
+                    Try again
+                  </button>
+                  <button className="btn btn-ghost" onClick={onExit}>
+                    Back home
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>

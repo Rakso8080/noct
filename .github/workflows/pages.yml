@@ -22,13 +22,16 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           cache: npm
 
       - run: npm ci
 
       - name: Typecheck
         run: npm run typecheck
+
+      - name: Game logic tests
+        run: npm test
 
       # VITE_STATIC swaps the HTTP client for the in-tab engine, since Pages
       # cannot run the Node/sqlite API.

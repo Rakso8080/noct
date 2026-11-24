@@ -177,7 +177,7 @@ export function Settings({ navigate }: { navigate: (path: string) => void }) {
             <li>No account, no email, no password — ever, to play.</li>
             <li>A random device identifier and your board results are the only data stored.</li>
             <li>No advertising, no third-party trackers, no analytics profiles.</li>
-            <li>Chess, mines, pairs and lights are kept only in this browser; they never leave it.</li>
+            <li>Chess, mines, pairs, lights, snake, 2048 and reversi are kept only in this browser; they never leave it.</li>
             <li>Deleting your data removes your results, streak, name and side-game records immediately.</li>
           </ul>
           {confirmDelete ? (
@@ -204,8 +204,9 @@ export function Settings({ navigate }: { navigate: (path: string) => void }) {
         <section className="card stack gap-10">
           <span className="eyebrow">About</span>
           <p className="par-note" style={{ margin: 0 }}>
-            Noct is a small independent daily puzzle. Four boards a day, the same for everyone, reset
-            at 00:00 UTC. Built to be played in a queue, on a bus, or with coffee — then closed.
+            Noct is a small independent daily puzzle: seven boards for the night plus three arcade
+            tables, the same for everyone, reset at 00:00 UTC. Built to be played in a queue, on a
+            bus, or with coffee — then closed.
           </p>
           <div className="row gap-10" style={{ flexWrap: 'wrap' }}>
             <span className="chip">Version 0.1</span>

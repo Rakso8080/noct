@@ -18,6 +18,7 @@ import { Reversi } from './screens/Reversi';
 import { Arcade } from './screens/Arcade';
 import { Logo } from './components/ui';
 import { getSummary, setSummary } from './lib/results';
+import { dayNumber } from '../shared/dates';
 import { BRAND } from './brand';
 
 /** The site can be served from a subpath (GitHub Pages: /noct/), so routes carry the base. */
@@ -49,7 +50,15 @@ function useRoute(): [string, (to: string) => void] {
   return [path, navigate];
 }
 
-const NAV = [
+interface NavItem {
+  path: string;
+  label: string;
+  match: (s: string[]) => boolean;
+  /** stays in the bar on narrow screens; the rest fold into "More" */
+  always?: boolean;
+}
+
+const NAV: NavItem[] = [
   { path: '/', label: 'Menu', match: (s: string[]) => s.length === 0 },
   { path: '/common', label: 'Common', match: (s: string[]) => s[0] === 'common' },
   { path: '/rare', label: 'Rare', match: (s: string[]) => s[0] === 'rare' },
@@ -59,12 +68,26 @@ const NAV = [
     match: (s: string[]) => s[0] === 'play' || s[0] === 'practice' || s[0] === 'archive',
   },
   { path: '/chess', label: 'Chess', match: (s: string[]) => s[0] === 'chess' },
-  { path: '/arcade', label: 'Arcade', match: (s: string[]) => s[0] === 'arcade' },
+  { path: '/arcade', label: 'Arcade', match: (s: string[]) => s[0] === 'arcade', always: true },
   { path: '/stats', label: 'Stats', match: (s: string[]) => s[0] === 'stats' },
 ];
 
 export function App() {
   const [path, navigate] = useRoute();
+  const [moreOpen, setMoreOpen] = useState(false);
+
+  useEffect(() => {
+    setMoreOpen(false);
+  }, [path]);
+
+  useEffect(() => {
+    if (!moreOpen) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setMoreOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [moreOpen]);
 
   const url = new URL(path, window.location.origin);
   const segments = url.pathname.split('/').filter(Boolean);
@@ -110,15 +133,39 @@ export function App() {
     );
   } else if (section === 'archive' && segments[1]) {
     const day = Number(segments[1]);
-    page = (
+    const openable = Number.isFinite(day) && day < dayNumber() && day >= Math.max(1, dayNumber() - 365);
+    page = openable ? (
       <Play
         key={`archive-${day}`}
         mode="archive"
-        day={Number.isFinite(day) ? day : 1}
+        day={day}
         onFinish={finish}
         onExit={() => navigate('/archive')}
         onTutorial={() => navigate('/how-to')}
+        onToday={() => navigate('/play')}
       />
+    ) : (
+      <main className="main" key={`archive-miss-${segments[1]}`}>
+        <div className="wrap" style={{ maxWidth: 480 }}>
+          <div className="card stack gap-14">
+            <span className="eyebrow">Archive</span>
+            <h1 style={{ fontSize: 'var(--step-2)' }}>That board is not in the drawer</h1>
+            <p className="par-note" style={{ margin: 0 }}>
+              {Number.isFinite(day) && day >= dayNumber()
+                ? 'Today’s board is still being played — it lives under Noct, not the archive. It joins the drawer tomorrow.'
+                : 'The archive keeps the last 365 nights. This address is outside it.'}
+            </p>
+            <div className="row gap-10" style={{ flexWrap: 'wrap' }}>
+              <button className="btn btn-primary" onClick={() => navigate('/play')}>
+                Play today’s board
+              </button>
+              <button className="btn btn-ghost" onClick={() => navigate('/archive')}>
+                Open the archive
+              </button>
+            </div>
+          </div>
+        </div>
+      </main>
     );
   } else if (section === 'archive') {
     page = <Archive key="archive" navigate={navigate} />;
@@ -182,11 +229,11 @@ export function App() {
           </a>
 
           <nav className="nav" aria-label="Main">
-            {NAV.map((item, i) => (
+            {NAV.map((item) => (
               <a
                 key={item.path}
                 href={`${BASE}${item.path}`}
-                className={`nav-link${i >= 3 ? ' nav-hide-sm' : ''}`}
+                className={`nav-link${item.always ? '' : ' nav-hide-sm'}`}
                 aria-current={item.match(segments) ? 'page' : undefined}
                 onClick={(e) => {
                   e.preventDefault();
@@ -196,6 +243,34 @@ export function App() {
                 {item.label}
               </a>
             ))}
+            <button
+              type="button"
+              className="nav-more-btn"
+              aria-expanded={moreOpen}
+              aria-controls="nav-more"
+              onClick={() => setMoreOpen((open) => !open)}
+            >
+              More
+            </button>
+            {moreOpen ? (
+              <div className="nav-more" id="nav-more" role="group" aria-label="All boards">
+                {NAV.filter((item) => !item.always).map((item) => (
+                  <a
+                    key={item.path}
+                    href={`${BASE}${item.path}`}
+                    className="nav-more-link"
+                    aria-current={item.match(segments) ? 'page' : undefined}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setMoreOpen(false);
+                      navigate(item.path);
+                    }}
+                  >
+                    {item.label}
+                  </a>
+                ))}
+              </div>
+            ) : null}
             <button className="icon-btn" onClick={() => navigate('/settings')} aria-label="Settings">
               <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none">
                 <circle cx="8" cy="8" r="2.4" stroke="currentColor" strokeWidth="1.4" />

@@ -177,6 +177,11 @@ export function HowTo({ navigate }: { navigate: (path: string) => void }) {
               </span>
             </li>
           </ul>
+          <p className="par-note" style={{ margin: 0 }}>
+            Three more tables wait in the <strong>Arcade</strong>: the glass orchard (Snake), the
+            doubling room (2048) and the turning table (Reversi). They are free play — their records
+            live in this browser and never touch the daily streak.
+          </p>
           <div className="row gap-10" style={{ flexWrap: 'wrap' }}>
             <button className="btn btn-sm" onClick={() => navigate('/common')}>
               Night choir
@@ -198,6 +203,9 @@ export function HowTo({ navigate }: { navigate: (path: string) => void }) {
             </button>
             <button className="btn btn-sm btn-ghost" onClick={() => navigate('/lights')}>
               Windows
+            </button>
+            <button className="btn btn-sm btn-ghost" onClick={() => navigate('/arcade')}>
+              Arcade
             </button>
           </div>
         </div>

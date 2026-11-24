@@ -15,6 +15,7 @@ import { hashSeed, mulberry32 } from '../lib/rng';
 import { sfx } from '../lib/audio';
 import { haptic } from '../lib/settings';
 import { ScreenHead } from '../components/ui';
+import { LeaveGame } from '../components/LeaveGame';
 
 const KEY_DIR: Record<string, NumDir> = {
   ArrowUp: 'up',
@@ -44,6 +45,7 @@ export function Numbers({ navigate }: { navigate: (path: string) => void }) {
   const [bestTile, setBestTile] = useState<number | null>(() => readGames().numbers.bestTile);
   const [startedAt, setStartedAt] = useState<number | null>(null);
   const [elapsed, setElapsed] = useState(0);
+  const [leaveOpen, setLeaveOpen] = useState(false);
   const recorded = useRef(false);
 
   useEffect(() => {
@@ -115,6 +117,13 @@ export function Numbers({ navigate }: { navigate: (path: string) => void }) {
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.metaKey || event.ctrlKey || event.altKey) return;
+      if (event.key === 'Escape') {
+        if (leaveOpen) return;
+        event.preventDefault();
+        if (moves > 0 && phase === 'playing') setLeaveOpen(true);
+        else navigate('/arcade');
+        return;
+      }
       if (event.key === 'Enter' && phase !== 'playing') {
         event.preventDefault();
         reset();
@@ -128,7 +137,7 @@ export function Numbers({ navigate }: { navigate: (path: string) => void }) {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [move, phase, reset]);
+  }, [leaveOpen, move, moves, navigate, phase, reset]);
 
   const max = maxTile(board);
   const seconds = Math.floor(elapsed / 1000);
@@ -144,7 +153,8 @@ export function Numbers({ navigate }: { navigate: (path: string) => void }) {
       <div className="wrap" style={{ maxWidth: 600 }}>
         <ScreenHead eyebrow={`2048 · Night ${String(day).padStart(3, '0')}`} title="The doubling room">
           Slide every lantern; equal neighbours fuse into the next power. The room is lit at a{' '}
-          {NUM_GOAL} tile, and the night ends when nothing can move. Arrows, WASD or the pad below.
+          {NUM_GOAL} tile, and the night ends when nothing can move. Arrows, WASD or the pad below;
+          Enter restarts, Escape leaves the table.
         </ScreenHead>
 
         <div className="mini-hud">
@@ -173,13 +183,23 @@ export function Numbers({ navigate }: { navigate: (path: string) => void }) {
           role="grid"
           aria-label={`2048 board, 4 by 4. ${score} points, ${moves} moves, largest tile ${max}.`}
         >
-          {board.map((value, i) => (
-            <div
-              key={i}
-              className={`num-cell${value ? ` num-${Math.min(value, 2048)}` : ''}`}
-              aria-label={`Row ${Math.floor(i / NUM_SIZE) + 1}, column ${(i % NUM_SIZE) + 1}: ${value || 'empty'}`}
-            >
-              {value || ''}
+          {Array.from({ length: NUM_SIZE }, (_, row) => (
+            <div role="row" key={row} style={{ display: 'contents' }}>
+              {Array.from({ length: NUM_SIZE }, (_, col) => {
+                const i = row * NUM_SIZE + col;
+                const value = board[i];
+                return (
+                  <div
+                    key={i}
+                    role="gridcell"
+                    aria-readonly="true"
+                    className={`num-cell${value ? ` num-${Math.min(value, 2048)}` : ''}`}
+                    aria-label={`Row ${row + 1}, column ${col + 1}: ${value || 'empty'}`}
+                  >
+                    {value || ''}
+                  </div>
+                );
+              })}
             </div>
           ))}
         </div>
@@ -220,6 +240,14 @@ export function Numbers({ navigate }: { navigate: (path: string) => void }) {
             Menu
           </button>
         </div>
+
+        <LeaveGame
+          open={leaveOpen}
+          title="Leave the doubling room?"
+          body="The room is only kept while this page is open. Leaving ends this run."
+          onStay={() => setLeaveOpen(false)}
+          onLeave={() => navigate('/arcade')}
+        />
 
         {phase !== 'playing' ? (
           <div className="mini-banner" role="status">

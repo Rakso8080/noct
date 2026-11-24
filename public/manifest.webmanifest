@@ -1,7 +1,7 @@
 {
-  "name": "Noct — daily spark puzzle",
+  "name": "Noct — seven boards and three arcade tables",
   "short_name": "Noct",
-  "description": "One puzzle a day. Place a single spark in every row, column and tone, and never let two sparks touch.",
+  "description": "Seven nightly boards — Common, Rare, Noct, chess, mines, pairs and lights — plus three arcade tables: Snake, 2048 and Reversi.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
