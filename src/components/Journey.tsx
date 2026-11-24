@@ -10,28 +10,37 @@ import { ROUTE_KM } from '../../shared/survey';
  * ground details keep the scene busy without a single image file.
  */
 
+/** A hooded wanderer, one step apart in the two frames. */
 const WALK_A = [
-  '.......XX...',
-  '......XXXX..',
-  '.....XXXXX..',
-  'X....XXXX...',
-  'XX..XXXXX...',
-  '.XXXXXXXX...',
-  '..XXXXXX....',
-  '..XX..XX....',
-  '.XX....XX...',
+  '...XXXX...',
+  '..XXXXXX..',
+  '..XX..XX..',
+  '..XXXXXX..',
+  '.XXXXXXXX.',
+  '.XXXXXXXX.',
+  'XXXXXXXXXX',
+  'XXXXXXXXXX',
+  'XXXXXXXXXX',
+  '.XXXXXXXX.',
+  '..XX..XX..',
+  '..XX..XX..',
+  '.XXX..XXX.',
 ];
 
 const WALK_B = [
-  '.......XX...',
-  '......XXXX..',
-  '.....XXXXX..',
-  'X....XXXX...',
-  'XX..XXXXX...',
-  '.XXXXXXXX...',
-  '..XXXXXX....',
-  '...XXXX.....',
-  '...X..X.....',
+  '...XXXX...',
+  '..XXXXXX..',
+  '..XX..XX..',
+  '..XXXXXX..',
+  '.XXXXXXXX.',
+  '.XXXXXXXX.',
+  'XXXXXXXXXX',
+  'XXXXXXXXXX',
+  'XXXXXXXXXX',
+  '.XXXXXXXX.',
+  '...XXXX...',
+  '...XXXX...',
+  '..XXXXXX..',
 ];
 
 const MOON = [
@@ -152,6 +161,7 @@ export function Journey({ progress, moving = false, variant = 'strip', answer = 
       <div className="journey-far" />
       <div className="journey-mid" />
       <div className="journey-ground" />
+      <div className="journey-water" aria-hidden="true" />
 
       <div className="journey-weather" data-weather={biome.weather} aria-hidden="true" />
 

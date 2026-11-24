@@ -176,6 +176,13 @@ function SurveyIntro({
             {game.scoring}
           </p>
           <div className="row gap-8" style={{ flexWrap: 'wrap' }}>
+            {(['moonrise', 'aurora', 'starlit', 'lantern', 'lost'] as Tier[]).map((t) => (
+              <span className="chip" key={t}>
+                {TIERS[t].name} <b className="mono">{TIERS[t].points}</b>
+              </span>
+            ))}
+          </div>
+          <div className="row gap-8" style={{ flexWrap: 'wrap' }}>
             <span className="chip">{PROMPTS_PER_DAY} prompts</span>
             <span className="chip">{SECONDS_PER_PROMPT}s each</span>
             <span className="chip">One attempt a day</span>
@@ -276,6 +283,7 @@ function SurveyRunner({
         timedOut,
       });
       if (timedOut) sfx.blocked();
+      else if (scored && scored.tier === 'moonrise') sfx.moonrise();
       else if (points > 0) sfx.solve();
       else sfx.tap();
     },
@@ -355,6 +363,13 @@ function SurveyRunner({
         </span>
       ) : null}
       {reveal && reveal.tier === 'moonrise' ? <span key={`flash-${index}`} className="stage-flash" aria-hidden="true" /> : null}
+      {reveal && reveal.tier === 'moonrise' ? (
+        <span key={`confetti-${index}`} className="stage-confetti" aria-hidden="true">
+          {Array.from({ length: 9 }, (_, i) => (
+            <i key={i} style={{ left: `${30 + i * 4.5}%`, animationDelay: `${i * 0.035}s` }} />
+          ))}
+        </span>
+      ) : null}
 
       <div className="stage-rail" aria-hidden="true">
         <span className="stage-rail-line">

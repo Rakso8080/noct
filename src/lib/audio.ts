@@ -71,6 +71,12 @@ export const sfx = {
     voice(880, 0.18, 'sine', 0.06, 0.075);
     voice(1174.66, 0.24, 'sine', 0.05, 0.15);
   },
+  /** The top answer: a short bright climb. */
+  moonrise(): void {
+    if (!enabled()) return;
+    [659.25, 830.61, 987.77, 1318.51].forEach((f, i) => voice(f, 0.3, 'sine', 0.06, i * 0.075));
+    voice(1661.22, 0.34, 'triangle', 0.03, 0.3);
+  },
   complete(): void {
     if (!enabled()) return;
     [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => voice(f, 0.32, 'sine', 0.055, i * 0.1));
