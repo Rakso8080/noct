@@ -2,12 +2,13 @@
   "name": "Noct — daily spark puzzle",
   "short_name": "Noct",
   "description": "One puzzle a day. Place a single spark in every row, column and tone, and never let two sparks touch.",
-  "start_url": "/",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#0b0d10",
   "theme_color": "#0b0d10",
   "orientation": "portrait-primary",
   "icons": [
-    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+    { "src": "./icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
   ]
 }

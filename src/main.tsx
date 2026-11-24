@@ -12,7 +12,8 @@ if (!container) throw new Error('missing root');
 createRoot(container).render(<App />);
 
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  const base = import.meta.env.BASE_URL;
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(() => undefined);
+    navigator.serviceWorker.register(`${base}sw.js`, { scope: base }).catch(() => undefined);
   });
 }

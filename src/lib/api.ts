@@ -9,16 +9,12 @@ import type {
   Summary,
   TodayResponse,
 } from '../../shared/types';
+import type { NoctApi } from './contract';
+import { ApiError } from './errors';
+import { localApi } from './localApi';
 
-export class ApiError extends Error {
-  status: number;
-  body: unknown;
-  constructor(status: number, message: string, body: unknown) {
-    super(message);
-    this.status = status;
-    this.body = body;
-  }
-}
+export { ApiError };
+export type { NoctApi };
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   let res: Response;
@@ -48,7 +44,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return body as T;
 }
 
-export const api = {
+const remoteApi: NoctApi = {
   today: () => request<TodayResponse>('/api/today'),
   dailyStart: () => request<StartResponse>('/api/daily/start', { method: 'POST', body: '{}' }),
   practiceStart: (level: number) =>
@@ -78,4 +74,20 @@ export const api = {
   deleteMe: () => request<{ ok: boolean }>('/api/me', { method: 'DELETE' }),
 };
 
-export type { ArchiveEntry, LeaderboardResponse, RoundResponse, StartResponse, StatsResponse, Summary, TodayResponse };
+/**
+ * The GitHub Pages build has no Node process behind it, so it swaps the HTTP
+ * client for an engine that runs in the tab and keeps results on the device.
+ */
+export const LOCAL_MODE = import.meta.env.VITE_STATIC === '1';
+
+export const api: NoctApi = LOCAL_MODE ? localApi : remoteApi;
+
+export type {
+  ArchiveEntry,
+  LeaderboardResponse,
+  RoundResponse,
+  StartResponse,
+  StatsResponse,
+  Summary,
+  TodayResponse,
+};

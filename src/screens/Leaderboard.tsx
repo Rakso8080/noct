@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { api, type LeaderboardResponse } from '../lib/api';
+import { LOCAL_MODE, api, type LeaderboardResponse } from '../lib/api';
 import { ScreenHead } from '../components/ui';
 
 type Scope = 'today' | 'week' | 'all';
@@ -63,6 +63,13 @@ export function Leaderboard({ navigate }: { navigate: (path: string) => void }) 
         <ScreenHead eyebrow="Standings" title="One attempt, one place">
           Ranked on score, then on speed. No retries, so the table means something.
         </ScreenHead>
+
+        {LOCAL_MODE ? (
+          <p className="par-note" style={{ marginBottom: 16 }}>
+            This copy of Noct runs entirely in your browser, so there is no shared table — the row
+            below is your own result on this device.
+          </p>
+        ) : null}
 
         <div className="lb-tabs" style={{ marginBottom: 16 }}>
           {SCOPES.map((s) => (

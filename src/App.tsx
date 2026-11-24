@@ -11,18 +11,28 @@ import { Logo } from './components/ui';
 import { getSummary, setSummary } from './lib/results';
 import { BRAND } from './brand';
 
+/** The site can be served from a subpath (GitHub Pages: /noct/), so routes carry the base. */
+const BASE = import.meta.env.BASE_URL.replace(/\/+$/, '');
+
+function stripBase(pathname: string): string {
+  if (!BASE) return pathname;
+  if (pathname === BASE) return '/';
+  if (pathname.startsWith(`${BASE}/`)) return pathname.slice(BASE.length);
+  return pathname;
+}
+
 function useRoute(): [string, (to: string) => void] {
-  const [path, setPath] = useState(() => window.location.pathname + window.location.search);
+  const [path, setPath] = useState(() => stripBase(window.location.pathname) + window.location.search);
 
   useEffect(() => {
-    const onPop = () => setPath(window.location.pathname + window.location.search);
+    const onPop = () => setPath(stripBase(window.location.pathname) + window.location.search);
     window.addEventListener('popstate', onPop);
     return () => window.removeEventListener('popstate', onPop);
   }, []);
 
   const navigate = useCallback((to: string) => {
     const next = to === '/' ? '/' : to;
-    window.history.pushState({}, '', next);
+    window.history.pushState({}, '', `${BASE}${next}`);
     setPath(next);
     window.scrollTo({ top: 0, behavior: 'auto' });
   }, []);
@@ -125,7 +135,7 @@ export function App() {
         <div className="wrap">
           <a
             className="brand"
-            href="/"
+            href={`${BASE}/`}
             onClick={(e) => {
               e.preventDefault();
               navigate('/');
@@ -140,7 +150,7 @@ export function App() {
             {NAV.map((item, i) => (
               <a
                 key={item.path}
-                href={item.path}
+                href={`${BASE}${item.path}`}
                 className={`nav-link${i >= 3 ? ' nav-hide-sm' : ''}`}
                 aria-current={item.match(segments) ? 'page' : undefined}
                 onClick={(e) => {
@@ -175,7 +185,7 @@ export function App() {
           <span>© {new Date().getFullYear()} {BRAND.name} — a new board every day at 00:00 UTC.</span>
           <span className="row gap-14" style={{ flexWrap: 'wrap' }}>
             <a
-              href="/how-to"
+              href={`${BASE}/how-to`}
               onClick={(e) => {
                 e.preventDefault();
                 navigate('/how-to');
@@ -184,7 +194,7 @@ export function App() {
               How to play
             </a>
             <a
-              href="/stats"
+              href={`${BASE}/stats`}
               onClick={(e) => {
                 e.preventDefault();
                 navigate('/stats');
@@ -193,7 +203,7 @@ export function App() {
               Your data
             </a>
             <a
-              href="/settings"
+              href={`${BASE}/settings`}
               onClick={(e) => {
                 e.preventDefault();
                 navigate('/settings');
