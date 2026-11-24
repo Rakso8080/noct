@@ -90,12 +90,17 @@ const SCHEMA = [
      PRIMARY KEY (day, device, kind))`,
 ];
 
+/* Older rows counted the browser's device id as it came in. Only hashes may
+   live here, so anything that still looks like a raw id is dropped once. */
+const PURGE_RAW_DEVICES = `DELETE FROM usage WHERE device GLOB '*-*-*-*-*'`;
+
 let schemaReady: Promise<void> | null = null;
 
 function ensureSchema(env: Env): Promise<void> {
   if (!schemaReady) {
     schemaReady = (async () => {
       for (const sql of SCHEMA) await env.DB.prepare(sql).run();
+      await env.DB.prepare(PURGE_RAW_DEVICES).run();
     })().catch((error: unknown) => {
       schemaReady = null; /* try again on the next request */
       throw error;
@@ -175,6 +180,18 @@ function clientIp(request: Request): string {
   return 'local';
 }
 
+/**
+ * The only form of a device id that is ever stored: a one-way hash, so the
+ * daily caps still work but a row cannot be traced back to a browser.
+ */
+async function deviceKey(device: string): Promise<string> {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(`noct:${device}`));
+  return [...new Uint8Array(digest)]
+    .slice(0, 16)
+    .map((byte) => byte.toString(16).padStart(2, '0'))
+    .join('');
+}
+
 async function underDailyCap(
   env: Env,
   day: number,
@@ -187,7 +204,7 @@ async function underDailyCap(
      ON CONFLICT(day, device, kind) DO UPDATE SET n = n + 1
      RETURNING n`,
   )
-    .bind(day, device, kind)
+    .bind(day, await deviceKey(device), kind)
     .first<{ n: number }>();
   return (row?.n ?? 1) <= cap;
 }
@@ -359,7 +376,10 @@ async function run(request: Request, env: Env): Promise<Response> {
   const mode = typeof body.mode === 'string' ? body.mode : '';
   const score = typeof body.score === 'number' ? Math.round(body.score) : NaN;
   const height = typeof body.height === 'number' ? Math.round(body.height) : NaN;
-  const runId = typeof body.runId === 'string' ? body.runId.slice(0, 64) : '';
+  /* A run id must be the client's random UUID; only its hash is stored, so this
+     column can never hold free text. */
+  const runId = typeof body.runId === 'string' ? body.runId.trim() : '';
+  const RUN_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
   if (
     day === null ||
@@ -371,7 +391,7 @@ async function run(request: Request, env: Env): Promise<Response> {
     score > 700 ||
     height < 0 ||
     height > 14000 ||
-    runId.length < 8
+    !RUN_ID.test(runId)
   ) {
     return json(request, env, { error: 'bad run' }, 400, true);
   }
@@ -384,7 +404,7 @@ async function run(request: Request, env: Env): Promise<Response> {
     `INSERT OR IGNORE INTO runs (id, day, game, mode, score, height, created_at)
      VALUES (?, ?, ?, ?, ?, ?, ?)`,
   )
-    .bind(runId, day, game, mode, score, height, Date.now())
+    .bind(await deviceKey(runId), day, game, mode, score, height, Date.now())
     .run();
 
   return json(request, env, { ok: true }, 200, true);
