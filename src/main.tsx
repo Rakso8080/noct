@@ -3,6 +3,7 @@ import { App } from './App';
 import { applyTheme, watchSystemTheme } from './lib/settings';
 import './styles.css';
 import './survey.css';
+import './pixel.css';
 
 applyTheme();
 watchSystemTheme();
