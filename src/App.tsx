@@ -8,6 +8,10 @@ import { Leaderboard } from './screens/Leaderboard';
 import { Settings } from './screens/Settings';
 import { HowTo } from './screens/HowTo';
 import { Survey } from './screens/Survey';
+import { Chess } from './screens/Chess';
+import { Mines } from './screens/Mines';
+import { Pairs } from './screens/Pairs';
+import { Lights } from './screens/Lights';
 import { Logo } from './components/ui';
 import { getSummary, setSummary } from './lib/results';
 import { BRAND } from './brand';
@@ -50,6 +54,7 @@ const NAV = [
     label: 'Noct',
     match: (s: string[]) => s[0] === 'play' || s[0] === 'practice' || s[0] === 'archive',
   },
+  { path: '/chess', label: 'Chess', match: (s: string[]) => s[0] === 'chess' },
   { path: '/stats', label: 'Stats', match: (s: string[]) => s[0] === 'stats' },
 ];
 
@@ -114,6 +119,14 @@ export function App() {
     page = <Archive key="archive" navigate={navigate} />;
   } else if (section === 'results') {
     page = <Results key="results" summary={getSummary()} navigate={navigate} />;
+  } else if (section === 'chess') {
+    page = <Chess key="chess" navigate={navigate} />;
+  } else if (section === 'mines') {
+    page = <Mines key="mines" navigate={navigate} />;
+  } else if (section === 'pairs') {
+    page = <Pairs key="pairs" navigate={navigate} />;
+  } else if (section === 'lights') {
+    page = <Lights key="lights" navigate={navigate} />;
   } else if (section === 'stats') {
     page = <Stats key="stats" navigate={navigate} />;
   } else if (section === 'leaderboard') {

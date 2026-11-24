@@ -10,6 +10,7 @@ import './stage.css';
 import './climb.css';
 import './start.css';
 import './play.css';
+import './games.css';
 
 applyTheme();
 watchSystemTheme();

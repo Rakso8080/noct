@@ -5,19 +5,34 @@ import { HeroWorld, WorldStrip } from '../components/World';
 import { dailyRunFor, streakFor, type SurveyRun } from '../lib/surveyStore';
 import { dayNumber, nextResetAt } from '../../shared/dates';
 import { MAX_SCORE } from '../../shared/score';
+import { readGames, type GamesStore } from '../lib/gamesStore';
 
 interface HomeProps {
   navigate: (path: string) => void;
   onTutorial: () => void;
 }
 
-type Shape = 'up' | 'down' | 'diamond';
+type Shape = 'up' | 'down' | 'diamond' | 'ring';
 
 /** Tiny 8×8 pixel glyphs, so the tiles read like a cartridge menu. */
 const SHAPES: Record<Shape, number[][]> = {
   up: [[3, 0, 2], [2, 1, 4], [1, 2, 6], [0, 3, 8], [3, 4, 2], [3, 5, 2], [3, 6, 2]],
   down: [[3, 0, 2], [3, 1, 2], [3, 2, 2], [0, 3, 8], [1, 4, 6], [2, 5, 4], [3, 6, 2]],
   diamond: [[3, 0, 2], [2, 1, 4], [1, 2, 6], [0, 3, 8], [1, 4, 6], [2, 5, 4], [3, 6, 2]],
+  ring: [
+    [2, 0, 4],
+    [1, 1, 2],
+    [5, 1, 2],
+    [1, 2, 2],
+    [5, 2, 2],
+    [1, 3, 2],
+    [5, 3, 2],
+    [1, 4, 2],
+    [5, 4, 2],
+    [1, 5, 2],
+    [5, 5, 2],
+    [2, 6, 4],
+  ],
 };
 
 function PixelIcon({ shape }: { shape: Shape }) {
@@ -36,7 +51,7 @@ interface TileProps {
   name: string;
   line: string;
   meta: string;
-  tone: 'ember' | 'moss' | 'slate';
+  tone: 'ember' | 'moss' | 'slate' | 'violet' | 'rust' | 'teal' | 'sand';
   shape: Shape;
   status: string;
   action: string;
@@ -79,6 +94,7 @@ export function Home({ navigate, onTutorial }: HomeProps) {
   const [rare, setRare] = useState<SurveyRun | null>(null);
 
   const day = dayNumber();
+  const [games] = useState<GamesStore>(() => readGames());
 
   useEffect(() => {
     let alive = true;
@@ -102,6 +118,26 @@ export function Home({ navigate, onTutorial }: HomeProps) {
   const noctStatus = today?.played ? `${today.score}/${MAX_SCORE}` : today?.active ? 'In progress' : 'Unplayed';
   const noctAction = today?.played ? 'See result' : today?.active ? 'Continue' : 'Play';
 
+  const key = String(day);
+  const chessDay = games.chess.daily[key];
+  const chessSaved = games.chess.saved;
+  const minesDay = games.mines.daily[key];
+  const pairsDay = games.pairs.daily[key];
+  const lightsDay = games.lights.daily[key];
+
+  const chessStatus = chessDay
+    ? chessDay.result === 'win'
+      ? `Won · ${chessDay.plies} plies`
+      : chessDay.result === 'loss'
+        ? 'Lost today'
+        : 'Drawn today'
+    : chessSaved && chessSaved.moves.length
+      ? 'In progress'
+      : 'Unplayed';
+  const minesStatus = minesDay ? (minesDay.won ? `${(minesDay.ms / 1000).toFixed(1)}s` : 'Lost today') : 'Unplayed';
+  const pairsStatus = pairsDay ? `${pairsDay.moves} moves` : 'Unplayed';
+  const lightsStatus = lightsDay ? `${lightsDay.moves} presses` : 'Unplayed';
+
   return (
     <main className="main">
       <div className="wrap">
@@ -122,7 +158,8 @@ export function Home({ navigate, onTutorial }: HomeProps) {
 
             <h1 className="wordmark">Noct</h1>
             <p className="hero-line">
-              Three small games, the same for everyone. Twenty-five seconds a prompt, one attempt each.
+              Seven small games, the same for everyone. Twenty-five seconds a prompt, one attempt
+              each.
             </p>
 
             <div className="row gap-10" style={{ flexWrap: 'wrap', justifyContent: 'center', marginTop: 4 }}>
@@ -139,9 +176,9 @@ export function Home({ navigate, onTutorial }: HomeProps) {
         <div className="menu-grid" style={{ marginTop: 20 }} aria-label="Choose a game">
           <GameTile
             index="01"
-            kind="survey"
+            kind="choir"
             name="Common"
-            line="Give the answer everybody gives. The obvious one pays best."
+            line="The night choir: everyone sings the same note. The loudest answer in the crowd pays best."
             meta="7 prompts · 25s"
             tone="ember"
             shape="up"
@@ -151,9 +188,9 @@ export function Home({ navigate, onTutorial }: HomeProps) {
           />
           <GameTile
             index="02"
-            kind="survey"
+            kind="hall"
             name="Rare"
-            line="Give the answer nobody gives. The loneliest one pays best."
+            line="The empty hall: one voice in the dark. The quietest answer on the board pays best."
             meta="7 prompts · 25s"
             tone="moss"
             shape="down"
@@ -163,15 +200,63 @@ export function Home({ navigate, onTutorial }: HomeProps) {
           />
           <GameTile
             index="03"
-            kind="grid"
+            kind="lanterns"
             name="Noct"
-            line="One spark in every row, column and tone. Never let two touch."
+            line="The lantern grid: four boards of dark windows. One spark per row, column and tone; never let two touch."
             meta="4 boards · 2 min"
             tone="slate"
             shape="diamond"
             status={noctStatus}
             action={noctAction}
             onPlay={() => navigate('/play')}
+          />
+          <GameTile
+            index="04"
+            kind="board"
+            name="Chess"
+            line="Every rule, no clock. Threats, captures and a bot that answers the same for all of us tonight."
+            meta="daily bot · 3 levels"
+            tone="violet"
+            shape="ring"
+            status={chessStatus}
+            action={chessDay || (chessSaved && chessSaved.moves.length) ? 'Open' : 'Play'}
+            onPlay={() => navigate('/chess')}
+          />
+          <GameTile
+            index="05"
+            kind="sky"
+            name="Mines"
+            line="Ten fallen stars under a 9×9 field. The first tap is always safe."
+            meta="9×9 · 10 buried stars"
+            tone="rust"
+            shape="diamond"
+            status={minesStatus}
+            action={minesDay ? 'Play again' : 'Play'}
+            onPlay={() => navigate('/mines')}
+          />
+          <GameTile
+            index="06"
+            kind="keepsakes"
+            name="Pairs"
+            line="Twelve keepsakes face down. Turn two; a match goes on the shelf."
+            meta="24 cards · 12 keepsakes"
+            tone="teal"
+            shape="down"
+            status={pairsStatus}
+            action={pairsDay ? 'Play again' : 'Play'}
+            onPlay={() => navigate('/pairs')}
+          />
+          <GameTile
+            index="07"
+            kind="windows"
+            name="Lights"
+            line="Twenty-five lit windows. Every press flips its neighbours too; each one shut lets a star through."
+            meta="5×5 · clear the sky"
+            tone="sand"
+            shape="up"
+            status={lightsStatus}
+            action={lightsDay ? 'Play again' : 'Play'}
+            onPlay={() => navigate('/lights')}
           />
         </div>
 

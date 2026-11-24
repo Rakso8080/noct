@@ -4,6 +4,7 @@ import { ScreenHead, Segmented, Switch } from '../components/ui';
 import { haptic, updateSettings, useSettings, type Theme } from '../lib/settings';
 import { sfx } from '../lib/audio';
 import { clearSummary } from '../lib/results';
+import { clearGames } from '../lib/gamesStore';
 
 export function Settings({ navigate }: { navigate: (path: string) => void }) {
   const settings = useSettings();
@@ -43,6 +44,7 @@ export function Settings({ navigate }: { navigate: (path: string) => void }) {
     try {
       await api.deleteMe();
       clearSummary();
+      clearGames();
       setMessage('All your data has been deleted. You start fresh as a new guest.');
       setConfirmDelete(false);
       setSavedName(null);
@@ -175,7 +177,8 @@ export function Settings({ navigate }: { navigate: (path: string) => void }) {
             <li>No account, no email, no password — ever, to play.</li>
             <li>A random device identifier and your board results are the only data stored.</li>
             <li>No advertising, no third-party trackers, no analytics profiles.</li>
-            <li>Deleting your data removes your results, streak and name immediately.</li>
+            <li>Chess, mines, pairs and lights are kept only in this browser; they never leave it.</li>
+            <li>Deleting your data removes your results, streak, name and side-game records immediately.</li>
           </ul>
           {confirmDelete ? (
             <div className="stack gap-10">

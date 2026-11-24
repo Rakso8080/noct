@@ -264,7 +264,7 @@ export function Play({ mode, level, day, onFinish, onExit, onTutorial }: PlayPro
                   </svg>
                 </button>
                 <div className="stack">
-                  <span className="eyebrow">{modeLabel}</span>
+                  <span className="eyebrow">{modeLabel} · The lantern grid</span>
                   <span className="mono" style={{ fontSize: '0.8125rem' }}>
                     Board {index + 1} of {session.rounds.length} · {puzzle.size}×{puzzle.size}
                   </span>
@@ -286,6 +286,10 @@ export function Play({ mode, level, day, onFinish, onExit, onTutorial }: PlayPro
               </div>
             </div>
 
+            <div
+              className="board-glow"
+              data-placed={sparks.length}
+            >
             <Board
               key={`${session.sessionId}-${index}`}
               size={puzzle.size}
@@ -300,6 +304,7 @@ export function Play({ mode, level, day, onFinish, onExit, onTutorial }: PlayPro
               onToggle={toggle}
               onExclude={exclude}
             />
+            </div>
 
             <div className="play-tools">
               <button
@@ -366,6 +371,29 @@ export function Play({ mode, level, day, onFinish, onExit, onTutorial }: PlayPro
                   </div>
                 ))}
               </div>
+            </div>
+
+            <div className="card-flat stack gap-10">
+              <div className="row" style={{ justifyContent: 'space-between' }}>
+                <span className="eyebrow">The lanterns</span>
+                <span className="mono" style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>
+                  {sparks.length}/{puzzle.size} sparks
+                </span>
+              </div>
+              <div className="lantern-strip" aria-hidden="true">
+                {session.rounds.map((r, i) => (
+                  <span
+                    key={i}
+                    className="lantern"
+                    data-state={i < index ? 'lit' : i === index ? 'now' : 'dark'}
+                    data-size={r.size}
+                  />
+                ))}
+              </div>
+              <p className="par-note" style={{ margin: 0 }}>
+                Board {index + 1} of {session.rounds.length}: {sparks.length} of {puzzle.size} sparks
+                placed. Each board you finish lights its lantern.
+              </p>
             </div>
 
             <div className="card-flat stack gap-10">

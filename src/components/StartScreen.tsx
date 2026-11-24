@@ -12,8 +12,8 @@ const MODES: { id: RunMode; name: string; line: string }[] = [
 ];
 
 const NAMES: Record<SurveyMode, { name: string; line: string }> = {
-  common: { name: 'Common', line: 'the nightly climb' },
-  rare: { name: 'Rare', line: 'the lonely climb' },
+  common: { name: 'Common', line: 'The night choir · everyone sings the same note' },
+  rare: { name: 'Rare', line: 'The empty hall · one voice, as quiet as possible' },
 };
 
 interface StartScreenProps {

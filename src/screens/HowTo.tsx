@@ -124,6 +124,83 @@ export function HowTo({ navigate }: { navigate: (path: string) => void }) {
             <span className="chip">Reset 00:00 UTC</span>
           </div>
         </div>
+
+        <div className="card-flat stack gap-14" style={{ marginTop: 20 }}>
+          <span className="eyebrow">The seven boards</span>
+          <p className="par-note" style={{ margin: 0 }}>
+            One night, seven boards, each with its own weather. They share the dark, not the score —
+            no account, no server, just a board waiting on the menu.
+          </p>
+          <ul className="rule-list">
+            <li>
+              <span>
+                <strong>The night choir</strong> (Common) — everyone sings the same note. Seven
+                prompts; the louder the answer in the crowd, the higher it lifts you. The strip under
+                the prompt is the real chorus share.
+              </span>
+            </li>
+            <li>
+              <span>
+                <strong>The empty hall</strong> (Rare) — one voice in a dark hall. The same seven
+                prompts, read from the other end: the quieter the answer, the higher it lifts you.
+              </span>
+            </li>
+            <li>
+              <span>
+                <strong>The lantern grid</strong> (Noct) — four boards of dark windows. One spark
+                per row, column and tone, no two touching. Each finished board lights a lantern.
+              </span>
+            </li>
+            <li>
+              <span>
+                <strong>The quiet board</strong> (Chess) — the whole game against a bot. Castling,
+                en passant, promotion and every draw are in. The balance bar weighs the pieces, the
+                Threats ring points at what is hanging, and a crowned pawn flashes where it lands.
+              </span>
+            </li>
+            <li>
+              <span>
+                <strong>The buried sky</strong> (Mines) — ten fallen stars under a 9×9 field. The
+                first tap is always safe; long-press (or right-click) to plant a lantern.
+              </span>
+            </li>
+            <li>
+              <span>
+                <strong>The keepsake table</strong> (Pairs) — twelve keepsakes face down, one board
+                a day. Every match goes onto the shelf above the cards.
+              </span>
+            </li>
+            <li>
+              <span>
+                <strong>The observatory windows</strong> (Lights) — a 5×5 room, all lit. Every tap
+                flips its neighbours too; every window you shut lets a star through.
+              </span>
+            </li>
+          </ul>
+          <div className="row gap-10" style={{ flexWrap: 'wrap' }}>
+            <button className="btn btn-sm" onClick={() => navigate('/common')}>
+              Night choir
+            </button>
+            <button className="btn btn-sm btn-ghost" onClick={() => navigate('/rare')}>
+              Empty hall
+            </button>
+            <button className="btn btn-sm btn-ghost" onClick={() => navigate('/play')}>
+              Lantern grid
+            </button>
+            <button className="btn btn-sm btn-ghost" onClick={() => navigate('/chess')}>
+              Chess
+            </button>
+            <button className="btn btn-sm btn-ghost" onClick={() => navigate('/mines')}>
+              Buried sky
+            </button>
+            <button className="btn btn-sm btn-ghost" onClick={() => navigate('/pairs')}>
+              Keepsakes
+            </button>
+            <button className="btn btn-sm btn-ghost" onClick={() => navigate('/lights')}>
+              Windows
+            </button>
+          </div>
+        </div>
       </div>
     </main>
   );

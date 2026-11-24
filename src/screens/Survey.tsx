@@ -6,6 +6,7 @@ import { Journey } from '../components/Journey';
 import { dayNumber, dayToISO, nextResetAt } from '../../shared/dates';
 import {
   BALLOONS,
+  BOARD_SIZE,
   PROMPTS_PER_DAY,
   ROUTE_KM,
   SECONDS_PER_PROMPT,
@@ -45,16 +46,23 @@ import { haptic, preferReducedMotion, updateSettings, useSettings } from '../lib
 import { liveCrowd, loadShares, recordAnswer, recordRun, shareOf, type CrowdPrompt } from '../lib/crowd';
 import { shareRunCard } from '../lib/shareCard';
 
-const GAMES: Record<SurveyMode, { name: string; tagline: string; scoring: string }> = {
+const GAMES: Record<
+  SurveyMode,
+  { name: string; tagline: string; scoring: string; world: string; worldLine: string }
+> = {
   common: {
     name: 'Common',
     tagline: 'Give the answer everybody gives.',
     scoring: 'The top answer on the board is Moonrise and lifts you 100 points. Off the board still counts, just less.',
+    world: 'The night choir',
+    worldLine: 'Everyone sings the same note. The louder the answer, the higher it lifts you.',
   },
   rare: {
     name: 'Rare',
     tagline: 'Give the answer nobody gives.',
     scoring: 'The board is read from the bottom: the loneliest answer on it is Moonrise. Off the board still counts, just less.',
+    world: 'The empty hall',
+    worldLine: 'One voice in a dark hall. The quieter the answer, the higher it lifts you.',
   },
 };
 
@@ -518,6 +526,15 @@ function ClimbRun({ mode, runMode, day, seed, resume, drawn, onQuit, onDone }: C
   const boardRows = showBoard ? board.slice(0, 9) : board.slice(0, 4);
   const boardPeak = Math.max(...boardRows.map((row) => shareOf(cohort, row.text, row.weight)), 1);
 
+  /* Identity strip: real round state, in this board's own weather. */
+  const game = GAMES[mode];
+  const answered = log.length;
+  const steps = runMode === 'endless' ? Math.max(PROMPTS_PER_DAY, answered) : PROMPTS_PER_DAY;
+  const hasShare = Boolean(reveal?.matched);
+  const echoShare = hasShare ? shareOf(cohort, reveal?.matched ?? '', reveal?.weight ?? 0) : 0;
+  const metre = mode === 'common' ? echoShare : 100 - echoShare;
+  const alone = log.filter((a) => (a.rank ?? 0) > BOARD_SIZE).length;
+
   return (
     <main className="play">
       <Climb
@@ -577,6 +594,40 @@ function ClimbRun({ mode, runMode, day, seed, resume, drawn, onQuit, onDone }: C
           </button>
         </span>
       </div>
+
+      <section className={`survey-ident is-${mode}`} aria-label={game.world}>
+        <div className="survey-ident-head">
+          <span className="eyebrow">{game.world}</span>
+          <span className="mono survey-ident-num">
+            {hasShare ? `${metre}% ${mode === 'common' ? 'chorus' : 'solitude'}` : '—'}
+          </span>
+        </div>
+        <div className="survey-meter" aria-hidden="true">
+          <i style={{ width: `${hasShare ? metre : 0}%` }} />
+        </div>
+        <div className="survey-ident-foot">
+          <span className="survey-steps" aria-hidden="true">
+            {Array.from({ length: steps }, (_, i) => {
+              const entry = log[i];
+              return (
+                <span
+                  key={i}
+                  className="survey-step"
+                  data-state={entry ? 'sung' : i === answered ? 'now' : 'todo'}
+                  data-tier={entry?.tier ?? undefined}
+                />
+              );
+            })}
+          </span>
+          <span className="survey-ident-line">
+            {mode === 'common'
+              ? `Echo ${answered}/${steps} · ${
+                  hasShare ? `${echoShare}% sang it` : answered ? 'off the board' : 'listening'
+                }`
+              : `${answered}/${steps} answered · ${alone} alone`}
+          </span>
+        </div>
+      </section>
 
       {reveal && reveal.points > 0 ? (
         <span key={`float-${index}`} className="play-float" aria-hidden="true">
@@ -796,7 +847,7 @@ function SurveyResult({
       ) : null}
       <div className="wrap survey-wrap">
         <div className="eyebrow">
-          {game.name} · {modeLabel}
+          {game.world} · {modeLabel}
           {run.runMode === 'daily' ? ` #${pad(run.day)} · ${dayToISO(run.day)}` : ''}
         </div>
 
