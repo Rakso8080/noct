@@ -6,6 +6,7 @@ import './survey.css';
 import './pixel.css';
 import './world.css';
 import './journey.css';
+import './stage.css';
 
 applyTheme();
 watchSystemTheme();

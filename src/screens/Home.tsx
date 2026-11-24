@@ -122,7 +122,7 @@ export function Home({ navigate, onTutorial }: HomeProps) {
 
             <h1 className="wordmark">Noct</h1>
             <p className="hero-line">
-              Three small games, the same for everyone. Thirty seconds a prompt, one attempt each.
+              Three small games, the same for everyone. Twenty-five seconds a prompt, one attempt each.
             </p>
 
             <div className="row gap-10" style={{ flexWrap: 'wrap', justifyContent: 'center', marginTop: 4 }}>
@@ -142,7 +142,7 @@ export function Home({ navigate, onTutorial }: HomeProps) {
             kind="survey"
             name="Common"
             line="Give the answer everybody gives. The obvious one pays best."
-            meta="5 prompts · 35s"
+            meta="7 prompts · 25s"
             tone="ember"
             shape="up"
             status={commonStatus}
@@ -154,7 +154,7 @@ export function Home({ navigate, onTutorial }: HomeProps) {
             kind="survey"
             name="Rare"
             line="Give the answer nobody gives. The loneliest one pays best."
-            meta="5 prompts · 35s"
+            meta="7 prompts · 25s"
             tone="moss"
             shape="down"
             status={rareStatus}

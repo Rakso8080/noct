@@ -1,15 +1,20 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Countdown } from '../components/ui';
-import { Journey } from '../components/Journey';
+import { Journey, distanceFor } from '../components/Journey';
 import { dayNumber, dayToISO, nextResetAt } from '../../shared/dates';
 import {
+  MAX_PER_PROMPT,
+  PROMPTS_PER_DAY,
+  ROUTE_KM,
   SECONDS_PER_PROMPT,
+  TIERS,
   dailyPrompts,
   matchAnswer,
   maxPointsFor,
-  pointsFor,
+  scoreFor,
   type SurveyMode,
   type SurveyPrompt,
+  type Tier,
 } from '../../shared/survey';
 import { runFor, saveRun, streakFor, type LoggedAnswer, type SurveyRun } from '../lib/surveyStore';
 import { sfx } from '../lib/audio';
@@ -18,15 +23,16 @@ const GAMES: Record<SurveyMode, { name: string; tagline: string; rule: string; s
   common: {
     name: 'Common',
     tagline: 'Give the answer everybody gives.',
-    rule: 'Five prompts, 35 seconds each. Type the answer you think most people would give.',
-    scoring: 'You score the share of people who said it. The obvious answer pays best.',
+    rule: `Seven prompts, ${SECONDS_PER_PROMPT} seconds each. Type the answer you think most people would give.`,
+    scoring:
+      'Answers are graded on a board of nine. The top answer is Moonrise and lifts you 100 points; lower answers lift less. Seven Moonrises is 700 points and a full 14 km route.',
   },
   rare: {
     name: 'Rare',
     tagline: 'Give the answer nobody gives.',
-    rule: 'Five prompts, 35 seconds each. Type the answer you think hardly anybody would give.',
+    rule: `Seven prompts, ${SECONDS_PER_PROMPT} seconds each. Type the answer you think hardly anybody would give.`,
     scoring:
-      'You score what the crowd left over: the loneliest answer pays best. It still has to be one somebody gave.',
+      'The board is read from the bottom: the loneliest answer on it is Moonrise and lifts you 100 points. It still has to be an answer somebody gave.',
   },
 };
 
@@ -43,16 +49,19 @@ function verdict(score: number, max: number): string {
   return 'Warming up';
 }
 
-function glyph(mode: SurveyMode, points: number): string {
-  if (points <= 0) return '⬛';
-  if (mode === 'common') return points >= 18 ? '🟩' : points >= 8 ? '🟨' : '🟧';
-  return points >= 75 ? '🟩' : points >= 45 ? '🟨' : '🟧';
+function glyph(points: number): string {
+  if (points >= TIERS.moonrise.points) return '🌕';
+  if (points >= TIERS.aurora.points) return '🟩';
+  if (points >= TIERS.starlit.points) return '🟨';
+  if (points >= TIERS.lantern.points) return '🟧';
+  return '⬛';
 }
 
 function shareText(run: SurveyRun): string {
-  const bars = run.answers.map((a) => glyph(run.mode, a.points)).join('');
+  const bars = run.answers.map((a) => glyph(a.points)).join('');
   const label = GAMES[run.mode].name;
-  return `Noct ${label} #${pad(run.day)}\n${bars}  ${run.score}/${run.max}\n${verdict(run.score, run.max)}\nnoct.game`;
+  const km = distanceFor(run.max > 0 ? run.score / run.max : 0).toFixed(1);
+  return `Noct ${label} #${pad(run.day)}\n${bars}  ${km} km · ${run.score}/${run.max}\n${verdict(run.score, run.max)}\nnoct.game`;
 }
 
 async function copyText(text: string): Promise<boolean> {
@@ -98,6 +107,7 @@ export function Survey({ mode, navigate }: { mode: SurveyMode; navigate: (path: 
           saveRun(run);
           setStored(run);
         }}
+        onQuit={() => setStarted(false)}
       />
     );
   }
@@ -139,7 +149,7 @@ function SurveyIntro({
             {game.scoring}
           </p>
           <div className="row gap-8" style={{ flexWrap: 'wrap' }}>
-            <span className="chip">5 prompts</span>
+            <span className="chip">{PROMPTS_PER_DAY} prompts</span>
             <span className="chip">{SECONDS_PER_PROMPT}s each</span>
             <span className="chip">One attempt a day</span>
             <span className="chip chip-ember">
@@ -150,7 +160,7 @@ function SurveyIntro({
           <hr className="hairline" />
           <div className="row gap-10" style={{ flexWrap: 'wrap' }}>
             <button className="btn btn-primary btn-lg" onClick={onStart}>
-              Start {game.name} #{pad(day)}
+              Begin the walk · #{pad(day)}
             </button>
             <button className="btn btn-ghost" onClick={() => navigate('/')}>
               Back to menu
@@ -170,6 +180,8 @@ interface Reveal {
   matched: string | null;
   weight: number | null;
   points: number;
+  tier: Tier | null;
+  rank: number | null;
   timedOut: boolean;
 }
 
@@ -178,11 +190,13 @@ function SurveyRunner({
   day,
   prompts,
   onDone,
+  onQuit,
 }: {
   mode: SurveyMode;
   day: number;
   prompts: SurveyPrompt[];
   onDone: (run: SurveyRun) => void;
+  onQuit: () => void;
 }) {
   const [index, setIndex] = useState(0);
   const [input, setInput] = useState('');
@@ -210,7 +224,8 @@ function SurveyRunner({
       const given = raw.trim();
       const matchedIndex = given ? matchAnswer(prompt, given) : null;
       const answer = matchedIndex === null ? null : prompt.answers[matchedIndex];
-      const points = answer ? pointsFor(mode, answer.weight) : 0;
+      const scored = answer ? scoreFor(mode, prompt, matchedIndex as number) : null;
+      const points = scored ? scored.points : 0;
       const entry: LoggedAnswer = {
         promptId: prompt.id,
         asked: prompt.prompt,
@@ -218,9 +233,19 @@ function SurveyRunner({
         matched: answer ? answer.text : null,
         weight: answer ? answer.weight : null,
         points,
+        tier: scored ? scored.tier : null,
+        rank: scored ? scored.rank : null,
       };
       setLog((prev) => [...prev, entry]);
-      setReveal({ given, matched: entry.matched, weight: entry.weight, points, timedOut });
+      setReveal({
+        given,
+        matched: entry.matched,
+        weight: entry.weight,
+        points,
+        tier: entry.tier ?? null,
+        rank: entry.rank ?? null,
+        timedOut,
+      });
       if (timedOut) sfx.blocked();
       else if (points > 0) sfx.solve();
       else sfx.tap();
@@ -260,101 +285,112 @@ function SurveyRunner({
   const maxTotal = prompts.reduce((sum, p) => sum + maxPointsFor(mode, p), 0);
   const earned = log.reduce((sum, a) => sum + a.points, 0);
   const progress = maxTotal > 0 ? earned / maxTotal : 0;
+  const secondsLeft = Math.ceil(leftMs / 1000);
 
   return (
-    <main className="main">
-      <div className="wrap survey-wrap">
-        <Journey progress={progress} moving={Boolean(reveal && reveal.points > 0)} />
+    <main className="stage">
+      <Journey
+        variant="stage"
+        progress={progress}
+        moving={Boolean(reveal && reveal.points > 0)}
+        answer={reveal ? reveal.matched ?? reveal.given : input}
+      />
 
-        <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+      <div className="stage-hud">
+        <span className="stage-pill">
+          <em>Distance</em>
+          <b>{distanceFor(progress).toFixed(1)} km</b>
+        </span>
+        <span className="stage-pill">
+          <em>Prompt</em>
+          <b>
+            {index + 1} / {prompts.length}
+          </b>
+        </span>
+        <span className={`stage-pill${!reveal && secondsLeft <= 5 ? ' is-urgent' : ''}`}>
+          <em>Time</em>
+          <b>{reveal ? '—' : `${secondsLeft}s`}</b>
+        </span>
+      </div>
+
+      <section className="stage-panel">
+        <div className="stage-panel-head">
           <span className="eyebrow">
-            {GAMES[mode].name} · prompt {index + 1} of {prompts.length}
+            {GAMES[mode].name} · {mode === 'common' ? 'the crowd' : 'the leftovers'}
           </span>
-          <span className="mono" style={{ fontSize: '0.8125rem', color: 'var(--muted)' }} aria-live="off">
-            {Math.ceil(leftMs / 1000)}s
-          </span>
+          <button className="stage-quit" type="button" onClick={onQuit}>
+            Quit
+          </button>
         </div>
-        <div className="time-bar" style={{ marginTop: 10 }} aria-hidden="true">
+
+        <h1 className="stage-prompt">{prompt.prompt}</h1>
+
+        <div className="time-bar" aria-hidden="true">
           <i style={{ width: `${reveal ? 0 : pct}%` }} />
         </div>
 
-        <h1 className="prompt-text" style={{ margin: '28px 0 10px' }}>
-          {prompt.prompt}
-        </h1>
-        <p className="par-note" style={{ marginTop: 0 }}>
-          {mode === 'common' ? 'Name the answer most people would give.' : 'Name the answer hardly anybody would give.'}
-        </p>
-
         {reveal ? (
-          <div className="reveal" style={{ marginTop: 22 }} aria-live="polite">
-            {reveal.matched ? (
-              <>
-                <span className="eyebrow">{reveal.weight}% said this</span>
-                <div className="reveal-percent">{reveal.matched}</div>
-                <p className="par-note" style={{ margin: 0 }}>
-                  {mode === 'common'
-                    ? reveal.points >= 18
-                      ? 'Right with the crowd.'
-                      : 'The crowd mostly went somewhere else.'
-                    : reveal.points >= 75
-                      ? 'Almost nobody said that. Exactly the idea.'
-                      : 'Others said it too, so it is not rare enough.'}
-                </p>
-              </>
-            ) : (
-              <>
-                <span className="eyebrow">{reveal.timedOut ? 'Out of time' : 'Nobody said that'}</span>
-                <div className="reveal-percent">{reveal.given || '—'}</div>
-                <p className="par-note" style={{ margin: 0 }}>
-                  {reveal.timedOut
-                    ? 'The clock ran out. No points on this one.'
-                    : 'That was not one of the answers people gave, so it scores nothing.'}
-                </p>
-              </>
-            )}
-            <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', marginTop: 8, gap: 10 }}>
-              <span className="chip chip-ember">+{reveal.points}</span>
-              <button className="btn btn-primary" onClick={next}>
-                {last ? 'See your result' : 'Next prompt'}
-              </button>
+          <div className="stage-reveal" aria-live="polite">
+            <div className="stage-reveal-top">
+              <span className="stage-tier" data-tier={reveal.tier ?? 'lost'}>
+                {reveal.tier ? TIERS[reveal.tier].name : 'Lost'}
+              </span>
+              <span className="stage-reveal-answer">
+                {reveal.matched ? `“${reveal.matched}”` : reveal.given ? `“${reveal.given}”` : '—'}
+              </span>
+              <span className="stage-reveal-points">+{reveal.points}</span>
             </div>
+            <p className="stage-reveal-line">
+              {reveal.matched
+                ? `${reveal.weight}% of the crowd said ${reveal.matched}.`
+                : reveal.timedOut
+                  ? 'The clock ran out. Nothing gained on this one.'
+                  : 'Nobody on the board said that. Nothing gained.'}
+            </p>
+            <button className="btn btn-primary" onClick={next}>
+              {last ? 'See the map' : 'Next prompt'}
+            </button>
           </div>
         ) : (
           <form
-            style={{ marginTop: 22 }}
+            className="stage-form"
             onSubmit={(e) => {
               e.preventDefault();
               commit(input, false);
             }}
           >
-            <label className="eyebrow" htmlFor="survey-answer">
-              Your answer
-            </label>
-            <input
-              id="survey-answer"
-              ref={inputRef}
-              className="answer-input"
-              style={{ marginTop: 8 }}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              autoComplete="off"
-              autoCorrect="off"
-              autoCapitalize="off"
-              spellCheck={false}
-              maxLength={40}
-              placeholder="Type it, then press enter"
-            />
-            <div className="row gap-10" style={{ marginTop: 12, flexWrap: 'wrap' }}>
+            <div className="stage-input-row">
+              <input
+                id="survey-answer"
+                ref={inputRef}
+                className="answer-input"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck={false}
+                maxLength={40}
+                aria-label="Your answer"
+                placeholder={mode === 'common' ? 'What would most people say?' : 'What would nobody say?'}
+              />
               <button className="btn btn-primary" type="submit">
                 Lock it in
               </button>
-              <button className="btn btn-ghost" type="button" onClick={() => commit('', false)}>
+            </div>
+            <div className="stage-form-foot">
+              <span className="par-note" style={{ margin: 0, fontSize: '0.8125rem' }}>
+                {mode === 'common'
+                  ? 'Top of the board lifts 100 points.'
+                  : 'Bottom of the board lifts 100 points.'}
+              </span>
+              <button className="btn btn-ghost btn-sm" type="button" onClick={() => commit('', false)}>
                 Skip
               </button>
             </div>
           </form>
         )}
-      </div>
+      </section>
     </main>
   );
 }
@@ -364,6 +400,8 @@ function SurveyResult({ run, navigate }: { run: SurveyRun; navigate: (path: stri
   const game = GAMES[run.mode];
   const other: SurveyMode = run.mode === 'common' ? 'rare' : 'common';
   const streak = streakFor(run.mode, run.day);
+  const km = distanceFor(run.max > 0 ? run.score / run.max : 0).toFixed(1);
+  const perfect = PROMPTS_PER_DAY * MAX_PER_PROMPT;
 
   async function copy(): Promise<void> {
     const ok = await copyText(shareText(run));
@@ -379,10 +417,11 @@ function SurveyResult({ run, navigate }: { run: SurveyRun; navigate: (path: stri
         </div>
         <div className="result-score" style={{ marginTop: 10 }}>
           <span className="score-big">{run.score}</span>
-          <span className="result-max">/ {run.max}</span>
+          <span className="result-max">/ {run.max || perfect}</span>
         </div>
         <div className="rating-word">{verdict(run.score, run.max)}</div>
         <div className="row gap-6" style={{ flexWrap: 'wrap' }}>
+          <span className="chip chip-ember">{km} km walked</span>
           <span className={`chip${streak.current > 0 ? ' chip-ember' : ''}`}>
             <span className="chip-dot" aria-hidden="true" />
             {streak.current}-day streak
@@ -412,7 +451,12 @@ function SurveyResult({ run, navigate }: { run: SurveyRun; navigate: (path: stri
                     {a.weight === null ? 'nobody said that' : `${a.weight}% said ${a.matched}`}
                   </span>
                 </div>
-                <span className="mono">+{a.points}</span>
+                <div className="stack gap-6" style={{ alignItems: 'flex-end' }}>
+                  <span className="mono">+{a.points}</span>
+                  <span className="stage-tier is-small" data-tier={a.tier ?? 'lost'}>
+                    {a.tier ? TIERS[a.tier].name : 'Lost'}
+                  </span>
+                </div>
               </div>
             ))}
           </div>
@@ -432,6 +476,9 @@ function SurveyResult({ run, navigate }: { run: SurveyRun; navigate: (path: stri
 
         <p className="par-note" style={{ marginTop: 14 }}>
           Next {game.name} in <Countdown to={nextResetAt()} />
+        </p>
+        <p className="par-note" style={{ marginTop: 4, fontSize: '0.8125rem' }}>
+          A perfect walk is {perfect} points and {ROUTE_KM} km.
         </p>
       </div>
     </main>

@@ -1,5 +1,5 @@
 import { dayNumber } from '../../shared/dates';
-import type { SurveyMode } from '../../shared/survey';
+import type { SurveyMode, Tier } from '../../shared/survey';
 
 export interface LoggedAnswer {
   promptId: string;
@@ -8,6 +8,8 @@ export interface LoggedAnswer {
   matched: string | null;
   weight: number | null;
   points: number;
+  tier?: Tier | null;
+  rank?: number | null;
 }
 
 export interface SurveyRun {

@@ -24,8 +24,26 @@ export interface SurveyPrompt {
   answers: SurveyAnswer[];
 }
 
-export const PROMPTS_PER_DAY = 5;
-export const SECONDS_PER_PROMPT = 35;
+export const PROMPTS_PER_DAY = 7;
+export const SECONDS_PER_PROMPT = 25;
+/** A perfect run: seven top answers, 700 points, 14 km along the route. */
+export const MAX_PER_PROMPT = 100;
+export const ROUTE_KM = 14;
+
+/**
+ * A guess is placed on a board of nine answers and graded by where it lands.
+ * Rank 1 is the best answer for the mode: the most common for Common, the
+ * rarest for Rare. The names are the game's own weather.
+ */
+export type Tier = 'moonrise' | 'aurora' | 'starlit' | 'lantern' | 'lost';
+
+export const TIERS: Record<Tier, { name: string; points: number; line: string }> = {
+  moonrise: { name: 'Moonrise', points: 100, line: 'The answer at the very top of the board.' },
+  aurora: { name: 'Aurora', points: 64, line: 'Right at the front of the crowd.' },
+  starlit: { name: 'Starlit', points: 32, line: 'On the board, but further down it.' },
+  lantern: { name: 'Lantern', points: 16, line: 'Someone said it. Hardly anyone.' },
+  lost: { name: 'Lost', points: 0, line: 'Nobody on the board said that.' },
+};
 
 type Row = [text: string, weight: number, aliases?: string[]];
 
@@ -399,14 +417,32 @@ export function matchAnswer(prompt: SurveyPrompt, raw: string): number | null {
   return null;
 }
 
-/** Points for an answer, in the direction the game asks for. */
-export function pointsFor(mode: SurveyMode, weight: number): number {
-  return mode === 'common' ? weight : Math.max(1, 100 - weight);
+/** Where a guess lands on the board: 1 is the best answer for the mode. */
+export function rankFor(mode: SurveyMode, prompt: SurveyPrompt, index: number): number {
+  return mode === 'common' ? index + 1 : prompt.answers.length - index;
 }
 
-export function maxPointsFor(mode: SurveyMode, prompt: SurveyPrompt): number {
-  const weights = prompt.answers.map((a) => a.weight);
-  return mode === 'common' ? Math.max(...weights) : 100 - Math.min(...weights);
+export function tierForRank(rank: number): Tier {
+  if (rank <= 1) return 'moonrise';
+  if (rank <= 3) return 'aurora';
+  if (rank <= 6) return 'starlit';
+  if (rank <= 9) return 'lantern';
+  return 'lost';
+}
+
+/** Board position, tier and points for an answer index. */
+export function scoreFor(
+  mode: SurveyMode,
+  prompt: SurveyPrompt,
+  index: number,
+): { rank: number; tier: Tier; points: number } {
+  const rank = rankFor(mode, prompt, index);
+  const tier = tierForRank(rank);
+  return { rank, tier, points: TIERS[tier].points };
+}
+
+export function maxPointsFor(_mode: SurveyMode, _prompt?: SurveyPrompt): number {
+  return MAX_PER_PROMPT;
 }
 
 /** Today's five prompts, the same for everyone, in a stable shuffled order. */
