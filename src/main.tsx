@@ -7,6 +7,9 @@ import './pixel.css';
 import './world.css';
 import './journey.css';
 import './stage.css';
+import './climb.css';
+import './start.css';
+import './play.css';
 
 applyTheme();
 watchSystemTheme();
@@ -18,7 +21,10 @@ createRoot(container).render(<App />);
 
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   const base = import.meta.env.BASE_URL;
+  const crowd = import.meta.env.VITE_CROWD_API;
+  /* The API origin rides along so the worker can answer for it when it is down. */
+  const swUrl = crowd ? `${base}sw.js?api=${encodeURIComponent(crowd)}` : `${base}sw.js`;
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register(`${base}sw.js`, { scope: base }).catch(() => undefined);
+    navigator.serviceWorker.register(swUrl, { scope: base }).catch(() => undefined);
   });
 }

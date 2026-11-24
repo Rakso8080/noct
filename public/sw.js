@@ -1,5 +1,20 @@
-const CACHE = 'noct-shell-v3';
+const CACHE = 'noct-shell-v4';
 const BASE = new URL(self.registration.scope).pathname;
+
+/* The app registers this worker with the crowd API origin, so a stopped API
+   answers through the worker instead of failing in the page. */
+const API_BASE = (() => {
+  try {
+    const raw = new URL(self.location.href).searchParams.get('api');
+    return raw ? raw.replace(/\/+$/, '') : null;
+  } catch {
+    return null;
+  }
+})();
+
+function isCrowdRequest(url) {
+  return Boolean(API_BASE) && (url.href === API_BASE || url.href.startsWith(`${API_BASE}/`));
+}
 const SHELL = [
   BASE,
   `${BASE}index.html`,
@@ -23,8 +38,33 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   const request = event.request;
-  if (request.method !== 'GET') return;
   const url = new URL(request.url);
+
+  if (isCrowdRequest(url)) {
+    const cors = {
+      'access-control-allow-origin': '*',
+      'access-control-allow-methods': 'GET, POST, OPTIONS',
+      'access-control-allow-headers': 'content-type, x-noct-device',
+    };
+    /* A preflight must still pass when the API is down, or the browser logs a
+       CORS error before the answer is even attempted. */
+    if (request.method === 'OPTIONS') {
+      event.respondWith(new Response(null, { status: 204, headers: cors }));
+      return;
+    }
+    event.respondWith(
+      fetch(request).catch(
+        () =>
+          new Response(JSON.stringify({ offline: true }), {
+            status: 200,
+            headers: { ...cors, 'content-type': 'application/json' },
+          }),
+      ),
+    );
+    return;
+  }
+
+  if (request.method !== 'GET') return;
   if (url.origin !== self.location.origin) return;
 
   // Never serve stale game state from a live server.

@@ -5,9 +5,12 @@
  * answer, so a guess can be judged against how common it was. Two games use the
  * same pool in opposite directions: Common rewards the obvious answer, Rare
  * rewards the one hardly anybody gives.
+ *
+ * The prompts themselves live in promptBank.ts, grouped by climate band.
  */
 
 import { hashSeed, mulberry32 } from './puzzle.ts';
+import { BANK, normaliseWeights, promptId, type Band } from './promptBank.ts';
 
 export type SurveyMode = 'common' | 'rare';
 
@@ -21,369 +24,55 @@ export interface SurveyAnswer {
 export interface SurveyPrompt {
   id: string;
   prompt: string;
+  /** which climate of the climb the prompt belongs to */
+  band: Band;
   answers: SurveyAnswer[];
 }
 
 export const PROMPTS_PER_DAY = 7;
 export const SECONDS_PER_PROMPT = 25;
-/** A perfect run: seven top answers, 700 points, 14 km along the route. */
+/** A perfect run: seven top answers, 700 points, 14 km of climb. */
 export const MAX_PER_PROMPT = 100;
+export const HEIGHT_PER_POINT = 20;
+export const MAX_HEIGHT = PROMPTS_PER_DAY * MAX_PER_PROMPT * HEIGHT_PER_POINT;
 export const ROUTE_KM = 14;
+export const BALLOONS = 3;
+
+/** Daily is one try, Classic is repeatable, Endless keeps dealing prompts. */
+export type RunMode = 'daily' | 'classic' | 'endless';
 
 /**
  * A guess is placed on a board of nine answers and graded by where it lands.
  * Rank 1 is the best answer for the mode: the most common for Common, the
  * rarest for Rare. The names are the game's own weather.
  */
-export type Tier = 'moonrise' | 'aurora' | 'starlit' | 'lantern' | 'lost';
+export type Tier = 'moonrise' | 'aurora' | 'starlit' | 'lantern' | 'ember' | 'grounded' | 'lost';
 
 export const TIERS: Record<Tier, { name: string; points: number; line: string }> = {
   moonrise: { name: 'Moonrise', points: 100, line: 'The answer at the very top of the board.' },
   aurora: { name: 'Aurora', points: 64, line: 'Right at the front of the crowd.' },
   starlit: { name: 'Starlit', points: 32, line: 'On the board, but further down it.' },
-  lantern: { name: 'Lantern', points: 16, line: 'Someone said it. Hardly anyone.' },
-  lost: { name: 'Lost', points: 0, line: 'Nobody on the board said that.' },
+  lantern: { name: 'Lantern', points: 16, line: 'Off the board, but somebody said it.' },
+  ember: { name: 'Ember', points: 8, line: 'Almost nobody said that.' },
+  grounded: { name: 'Grounded', points: 4, line: 'Nobody else said it.' },
+  lost: { name: 'Lost', points: 0, line: 'Nothing was accepted.' },
 };
 
-type Row = [text: string, weight: number, aliases?: string[]];
+/** Board size, and the tiers a board place can reach. */
+export const BOARD_SIZE = 9;
 
-function build(prompt: string, rows: Row[]): SurveyPrompt {
+/** The bank, with every row's authored share turned into a whole percentage. */
+export const SURVEY_PROMPTS: SurveyPrompt[] = BANK.map(({ band, prompt, rows }) => {
+  const weights = normaliseWeights(rows.map(([, weight]) => weight));
   return {
-    id: prompt
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '')
-      .slice(0, 48),
+    id: promptId(prompt),
+    band,
     prompt,
-    answers: rows.map(([text, weight, aliases]) => ({ text, weight, aliases })),
+    answers: rows.map(([text, , aliases], index) => ({ text, weight: weights[index], aliases })),
   };
-}
+});
 
-export const SURVEY_PROMPTS: SurveyPrompt[] = [
-  build('Something you always forget to pack', [
-    ['Charger', 27, ['phone charger', 'charging cable', 'charger cable']],
-    ['Toothbrush', 19, ['tooth brush', 'brush']],
-    ['Socks', 12, ['sock', 'pair of socks']],
-    ['Sunscreen', 9, ['sun cream', 'sunblock', 'spf']],
-    ['Passport', 8],
-    ['Razor', 7],
-    ['Towel', 5],
-    ['Pyjamas', 4, ['pajamas']],
-    ['Headphones', 3],
-  ]),
-  build('A food that tastes better cold', [
-    ['Pizza', 26, ['leftover pizza']],
-    ['Fried chicken', 12, ['chicken']],
-    ['Cake', 11],
-    ['Pasta', 10],
-    ['Soup', 8],
-    ['Coffee', 6],
-    ['Rice', 5],
-    ['Fries', 5, ['chips']],
-    ['Chocolate', 4],
-  ]),
-  build('Something you would find in a hotel room', [
-    ['Towel', 21],
-    ['Bible', 15],
-    ['Kettle', 13],
-    ['TV', 12, ['television']],
-    ['Minibar', 10, ['mini bar', 'fridge']],
-    ['Iron', 8, ['ironing board']],
-    ['Slippers', 6],
-    ['Hairdryer', 6, ['hair dryer']],
-    ['Remote', 4, ['remote control']],
-  ]),
-  build('A reason to leave a party early', [
-    ['Tired', 24],
-    ['Work tomorrow', 19, ['work', 'early start']],
-    ['Headache', 12],
-    ['Bored', 11, ['boring']],
-    ['Babysitter', 8, ['kids', 'childcare']],
-    ['Argument', 7, ['fight']],
-    ['Other plans', 5],
-    ['Hungry', 4, ['hangry']],
-  ]),
-  build('Something in a junk drawer', [
-    ['Batteries', 23, ['battery']],
-    ['Scissors', 18],
-    ['Tape', 14, ['duct tape', 'sticky tape']],
-    ['Pens', 12, ['pen', 'pencils']],
-    ['Keys', 9, ['key']],
-    ['String', 7, ['rubber bands', 'elastic bands']],
-    ['Takeaway menu', 6, ['menus', 'flyers']],
-    ['Glue', 4],
-  ]),
-  build('A sound that wakes you up', [
-    ['Alarm', 38, ['alarm clock']],
-    ['Dog', 14, ['barking']],
-    ['Baby', 12, ['crying']],
-    ['Traffic', 9, ['cars']],
-    ['Neighbour', 8, ['neighbor', 'neighbours']],
-    ['Rain', 6],
-    ['Phone', 5, ['notification']],
-    ['Bird', 4, ['birds']],
-  ]),
-  build('Something people do when they are nervous', [
-    ['Bite nails', 26, ['nail biting']],
-    ['Pace', 18, ['walk up and down']],
-    ['Fidget', 13, ['shake leg']],
-    ['Sweat', 11],
-    ['Talk fast', 9, ['ramble']],
-    ['Laugh', 7],
-    ['Check phone', 6],
-    ['Tap foot', 5],
-  ]),
-  build('A topping that ruins a pizza', [
-    ['Pineapple', 34],
-    ['Anchovy', 21, ['anchovies']],
-    ['Olives', 13],
-    ['Tuna', 8],
-    ['Broccoli', 6],
-    ['Corn', 5],
-    ['Artichoke', 3],
-    ['Egg', 3],
-  ]),
-  build('Something you would never lend a friend', [
-    ['Car', 24],
-    ['Toothbrush', 18, ['tooth brush']],
-    ['Phone', 16],
-    ['Money', 12, ['cash']],
-    ['Laptop', 9, ['computer']],
-    ['Clothes', 7],
-    ['Headphones', 5],
-    ['Bike', 3, ['bicycle']],
-  ]),
-  build('A place people go to be alone', [
-    ['Bathroom', 22, ['toilet']],
-    ['Park', 16],
-    ['Bedroom', 15, ['room']],
-    ['Beach', 10],
-    ['Forest', 9, ['woods']],
-    ['Car', 8],
-    ['Library', 7],
-    ['Shower', 5],
-  ]),
-  build('Something you keep buying but never finish', [
-    ['Milk', 20],
-    ['Bread', 18],
-    ['Shampoo', 14],
-    ['Notebook', 10],
-    ['Spices', 9],
-    ['Candles', 8, ['candle']],
-    ['Pens', 7, ['pen']],
-    ['Chips', 5, ['crisps']],
-  ]),
-  build('A word you always misspell', [
-    ['Necessary', 22],
-    ['Definitely', 18],
-    ['Separate', 14],
-    ['Restaurant', 11],
-    ['Tomorrow', 9],
-    ['Believe', 8],
-    ['Beautiful', 7],
-    ['Receive', 6],
-  ]),
-  build('Something that is always in a car', [
-    ['Charger', 18, ['phone charger', 'cable']],
-    ['Spare tyre', 17, ['spare tire', 'wheel']],
-    ['Water bottle', 13, ['water']],
-    ['Sunglasses', 11],
-    ['Coins', 9, ['change']],
-    ['Umbrella', 8],
-    ['Tissues', 7],
-    ['Jumper', 5, ['jacket', 'sweater']],
-  ]),
-  build('A chore people put off', [
-    ['Ironing', 24, ['iron']],
-    ['Dishes', 19, ['washing up']],
-    ['Laundry', 14, ['washing']],
-    ['Cleaning the bathroom', 11, ['toilet']],
-    ['Taxes', 9],
-    ['Dusting', 7],
-    ['Mowing', 6, ['lawn']],
-    ['Folding clothes', 5, ['folding']],
-  ]),
-  build('Something you only see at a wedding', [
-    ['Cake', 24],
-    ['Bride', 18],
-    ['Rings', 14, ['ring']],
-    ['Dancing', 12],
-    ['Speech', 9, ['speeches']],
-    ['Flowers', 8],
-    ['Wedding dress', 7, ['dress']],
-    ['Tears', 4, ['crying']],
-  ]),
-  build('An excuse for being late', [
-    ['Traffic', 32],
-    ['Alarm', 20, ['slept in', 'overslept']],
-    ['Bus', 12, ['public transport', 'train']],
-    ['Parking', 9],
-    ['Kids', 8, ['children']],
-    ['Weather', 6, ['rain']],
-    ['Lost track of time', 5],
-    ['Dog', 3],
-  ]),
-  build('Something with a screen', [
-    ['Phone', 30, ['mobile']],
-    ['TV', 22, ['television']],
-    ['Laptop', 14, ['computer']],
-    ['Tablet', 10, ['ipad']],
-    ['Watch', 8, ['smartwatch']],
-    ['Microwave', 5],
-    ['Car', 4],
-    ['Cinema', 3, ['movie theatre']],
-  ]),
-  build('A smell that reminds you of childhood', [
-    ['Sunscreen', 18, ['sun cream']],
-    ['Cut grass', 16, ['freshly cut grass', 'grass']],
-    ['Baking', 15, ['cookies', 'cake']],
-    ['Petrol', 10, ['gasoline']],
-    ['Chlorine', 9, ['pool']],
-    ['Crayons', 8],
-    ['Rain', 7],
-    ['Soap', 5],
-  ]),
-  build('Something you do at the airport', [
-    ['Wait', 26, ['waiting']],
-    ['Security', 20, ['check security']],
-    ['Eat', 12, ['food']],
-    ['Shop', 10, ['duty free']],
-    ['Sleep', 8],
-    ['Run', 7, ['rush']],
-    ['Check in', 6],
-    ['Cry', 4],
-  ]),
-  build('A food you eat with your hands', [
-    ['Pizza', 24],
-    ['Chips', 17, ['fries']],
-    ['Burger', 15],
-    ['Sandwich', 10],
-    ['Wings', 9, ['chicken wings']],
-    ['Fruit', 8, ['apple', 'banana']],
-    ['Sushi', 6],
-    ['Popcorn', 5],
-  ]),
-  build('Something on a bucket list', [
-    ['Travel', 30, ['travel the world', 'travelling']],
-    ['Skydive', 18, ['skydiving']],
-    ['Northern lights', 12, ['aurora']],
-    ['Learn a language', 10],
-    ['Write a book', 8],
-    ['Run a marathon', 7],
-    ['Buy a house', 6],
-    ['Swim with dolphins', 5],
-  ]),
-  build('Something that is always cold', [
-    ['Ice', 20],
-    ['Fridge', 18],
-    ['Freezer', 15],
-    ['Winter', 10],
-    ['Water', 9, ['cold water']],
-    ['Beer', 8],
-    ['Snow', 7],
-    ['Hands', 5],
-  ]),
-  build('Something people collect', [
-    ['Stamps', 20, ['stamp']],
-    ['Coins', 18, ['coin']],
-    ['Cards', 14, ['trading cards']],
-    ['Shoes', 10, ['trainers', 'sneakers']],
-    ['Books', 9, ['book']],
-    ['Mugs', 8, ['cups']],
-    ['Records', 7, ['vinyl']],
-    ['Keychains', 5, ['keyrings']],
-  ]),
-  build('A show almost everyone has seen', [
-    ['Friends', 22],
-    ['The Office', 18],
-    ['Game of Thrones', 15],
-    ['Breaking Bad', 11],
-    ['Stranger Things', 10],
-    ['The Simpsons', 8],
-    ['Squid Game', 7],
-    ['SpongeBob', 5],
-  ]),
-  build('Something in a first-aid kit', [
-    ['Plasters', 28, ['band aids', 'band-aids', 'bandages']],
-    ['Bandage', 18],
-    ['Painkillers', 15, ['paracetamol', 'aspirin']],
-    ['Scissors', 9],
-    ['Antiseptic', 8, ['disinfectant']],
-    ['Gloves', 7],
-    ['Tape', 6],
-    ['Thermometer', 5],
-  ]),
-  build('A reason to move to a new city', [
-    ['Job', 32, ['work']],
-    ['Love', 18, ['partner']],
-    ['Study', 13, ['university']],
-    ['Cheaper', 10, ['cost of living']],
-    ['Family', 9],
-    ['Weather', 7],
-    ['Adventure', 6],
-    ['Noise', 3, ['quiet']],
-  ]),
-  build('Something you regret buying', [
-    ['Clothes', 20],
-    ['Gym membership', 18, ['gym']],
-    ['Gadget', 14, ['gadgets']],
-    ['Shoes', 11],
-    ['Subscription', 9],
-    ['Book', 8],
-    ['Plant', 7],
-    ['Diet', 5, ['diet food']],
-  ]),
-  build('A game you can play with no equipment', [
-    ['Tag', 22, ['it']],
-    ['Hide and seek', 18],
-    ['20 questions', 14, ['twenty questions']],
-    ['Charades', 12],
-    ['Truth or dare', 10],
-    ['I spy', 9],
-    ['Rock paper scissors', 8],
-    ['Staring contest', 4],
-  ]),
-  build('Something that breaks easily', [
-    ['Glass', 24],
-    ['Phone screen', 20, ['screen']],
-    ['Egg', 14],
-    ['Mirror', 9],
-    ['Headphones', 8],
-    ['Plate', 6],
-    ['Toy', 5],
-    ['Charger cable', 5, ['cable']],
-  ]),
-  build('Something you can hear at night', [
-    ['Crickets', 20, ['insects']],
-    ['Traffic', 16, ['cars']],
-    ['Fridge', 12],
-    ['Snoring', 11, ['snore']],
-    ['Dog', 9, ['barking']],
-    ['Wind', 8],
-    ['Clock', 7, ['ticking']],
-    ['Neighbours', 6, ['neighbors']],
-  ]),
-  build('A fruit that is hard to open', [
-    ['Pineapple', 30],
-    ['Coconut', 24],
-    ['Pomegranate', 15],
-    ['Mango', 10],
-    ['Durian', 7],
-    ['Melon', 6],
-    ['Kiwi', 4],
-    ['Orange', 3],
-  ]),
-  build('Something everyone lies about', [
-    ['Age', 20],
-    ['How they are', 18, ['being fine', 'feelings', 'i am fine']],
-    ['Salary', 15, ['income', 'pay']],
-    ['Reading the terms', 10, ['terms and conditions']],
-    ['Going to the gym', 9, ['gym']],
-    ['Their diet', 8, ['diet']],
-    ['Their height', 6],
-    ['Having read the book', 6],
-  ]),
-];
+const BY_ID = new Map(SURVEY_PROMPTS.map((prompt) => [prompt.id, prompt]));
 
 /** Stable key for comparing a guess with an answer, tolerant of plurals. */
 export function normaliseAnswer(raw: string): string {
@@ -424,10 +113,10 @@ export function rankFor(mode: SurveyMode, prompt: SurveyPrompt, index: number): 
 
 export function tierForRank(rank: number): Tier {
   if (rank <= 1) return 'moonrise';
-  if (rank <= 3) return 'aurora';
-  if (rank <= 6) return 'starlit';
-  if (rank <= 9) return 'lantern';
-  return 'lost';
+  if (rank <= 4) return 'aurora';
+  if (rank <= BOARD_SIZE) return 'starlit';
+  if (rank === BOARD_SIZE + 1) return 'lantern';
+  return 'ember';
 }
 
 /** Board position, tier and points for an answer index. */
@@ -445,7 +134,161 @@ export function maxPointsFor(_mode: SurveyMode, _prompt?: SurveyPrompt): number 
   return MAX_PER_PROMPT;
 }
 
-/** Today's five prompts, the same for everyone, in a stable shuffled order. */
+/** Points turned into metres of climb, the way the game shows progress. */
+export function heightFor(points: number): number {
+  return Math.max(0, points) * HEIGHT_PER_POINT;
+}
+
+/** How obvious the top answer is, shown on the prompt card. */
+export function difficultyFor(prompt: SurveyPrompt): 'Easy' | 'Medium' | 'Hard' {
+  const top = Math.max(...prompt.answers.map((a) => a.weight));
+  if (top >= 30) return 'Easy';
+  if (top >= 20) return 'Medium';
+  return 'Hard';
+}
+
+export function bandFor(progress: number): 0 | 1 | 2 | 3 {
+  const clamped = Math.max(0, Math.min(0.999, progress));
+  return Math.floor(clamped * 4) as 0 | 1 | 2 | 3;
+}
+
+/* ------------------------------------------------------------------ judge */
+
+const CATCH_ALL = new Set([
+  'stuff',
+  'thing',
+  'things',
+  'something',
+  'anything',
+  'whatever',
+  'idk',
+  'dunno',
+  'none',
+  'nothing',
+  'who know',
+  'etc',
+  'other',
+  'misc',
+]);
+
+export interface Judgement {
+  ok: boolean;
+  /** Why an answer was turned away, shown under the input. */
+  reason: string | null;
+  /** Board index when the answer is on the board. */
+  index: number | null;
+  tier: Tier;
+  points: number;
+  rank: number | null;
+}
+
+const TURNED_DOWN = (reason: string): Judgement => ({
+  ok: false,
+  reason,
+  index: null,
+  tier: 'lost',
+  points: 0,
+  rank: null,
+});
+
+/** Off-board answers still get graded, just never better than Lantern. */
+function offBoardTier(prompt: SurveyPrompt, given: string): Tier {
+  const guess = normaliseAnswer(given);
+  const sharesRoot = prompt.answers.some((a) => {
+    const form = normaliseAnswer(a.text);
+    return form.length > 3 && (form.startsWith(guess.slice(0, 4)) || guess.startsWith(form.slice(0, 4)));
+  });
+  if (sharesRoot) return 'lantern';
+  return guess.length >= 6 ? 'lantern' : 'ember';
+}
+
+/**
+ * The judge: generous about form, strict about substance. Board answers take
+ * their place; a sensible answer off the board is graded no higher than
+ * Lantern; jokes, catch-alls and two answers in one are turned away.
+ */
+export function judge(mode: SurveyMode, prompt: SurveyPrompt, raw: string): Judgement {
+  const given = raw.trim();
+  if (!given) return TURNED_DOWN('Type an answer first.');
+
+  const norm = normaliseAnswer(given);
+  if (!norm) return TURNED_DOWN('Letters and numbers only, please.');
+  if (CATCH_ALL.has(norm)) return TURNED_DOWN('That could be anything. Name the thing itself.');
+
+  const parts = given
+    .toLowerCase()
+    .split(/\band\b|,|\//)
+    .map((p) => p.trim())
+    .filter((p) => p.length > 2);
+  if (parts.length > 1) return TURNED_DOWN('One answer at a time.');
+
+  const promptWords = new Set(normaliseAnswer(prompt.prompt).split(' ').filter((w) => w.length > 3));
+  const words = norm.split(' ').filter(Boolean);
+  if (words.length && words.every((w) => promptWords.has(w))) {
+    return TURNED_DOWN('That is the prompt itself. Name the thing.');
+  }
+
+  const index = matchAnswer(prompt, given);
+  if (index !== null) {
+    const scored = scoreFor(mode, prompt, index);
+    return { ok: true, reason: null, index, tier: scored.tier, points: scored.points, rank: scored.rank };
+  }
+
+  const tier = offBoardTier(prompt, given);
+  return { ok: true, reason: null, index: null, tier, points: TIERS[tier].points, rank: null };
+}
+
+/* ------------------------------------------------------- prompt selection */
+
+function shuffled(pool: SurveyPrompt[], seed: number): SurveyPrompt[] {
+  const rng = mulberry32(seed);
+  const list = pool.slice();
+  for (let i = list.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    const swap = list[i];
+    list[i] = list[j];
+    list[j] = swap;
+  }
+  return list;
+}
+
+/** Seven prompts for Classic, reshuffled from a fresh seed each run. */
+export function classicPrompts(mode: SurveyMode, seed: number, count = PROMPTS_PER_DAY): SurveyPrompt[] {
+  return shuffled(SURVEY_PROMPTS, hashSeed(`noct-classic-${mode}-${seed}`)).slice(0, count);
+}
+
+/**
+ * Classic keeps a deck instead of rolling dice: it deals the next seven off a
+ * shuffled bank and only reshuffles once the deck runs low, so a prompt cannot
+ * come back until the whole bank has been seen.
+ */
+export function classicDeck(
+  mode: SurveyMode,
+  left: string[],
+  seed: number,
+  count = PROMPTS_PER_DAY,
+): { left: string[]; prompts: SurveyPrompt[] } {
+  const deck = left.filter((id) => BY_ID.has(id));
+  const tail = deck.slice(0, count);
+  const fresh = shuffled(SURVEY_PROMPTS, hashSeed(`noct-classic-${mode}-${seed}`))
+    .map((prompt) => prompt.id)
+    .filter((id) => !tail.includes(id));
+  const ready = deck.length >= count ? deck : [...tail, ...fresh];
+  const dealt = ready.slice(0, count);
+  return {
+    left: ready.slice(count),
+    prompts: dealt.map((id) => BY_ID.get(id)).filter((prompt): prompt is SurveyPrompt => Boolean(prompt)),
+  };
+}
+
+/** Endless never runs out: it walks the shuffled bank, then reshuffles. */
+export function endlessPromptAt(mode: SurveyMode, seed: number, index: number): SurveyPrompt {
+  const round = Math.floor(index / SURVEY_PROMPTS.length);
+  const order = shuffled(SURVEY_PROMPTS, hashSeed(`noct-endless-${mode}-${seed}-${round}`));
+  return order[index % order.length];
+}
+
+/** Today's seven prompts, the same for everyone, in a stable shuffled order. */
 export function dailyPrompts(day: number, mode: SurveyMode, count = PROMPTS_PER_DAY): SurveyPrompt[] {
   const rng = mulberry32(hashSeed(`noct-survey-${mode}-${day}`));
   const pool = SURVEY_PROMPTS.slice();

@@ -10,7 +10,10 @@
     "build": "vite build",
     "start": "node server/index.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "verify": "node scripts/verify.ts"
+    "verify": "node scripts/verify.ts",
+    "verify:prompts": "node scripts/verify-prompts.ts",
+    "crowd:dev": "wrangler dev --port 8787 --local",
+    "crowd:db": "wrangler d1 execute DB --local --file=./crowd/schema.sql"
   },
   "dependencies": {
     "react": "^19.1.0",
@@ -22,6 +25,7 @@
     "@types/react-dom": "^19.1.0",
     "@vitejs/plugin-react": "^4.3.4",
     "typescript": "^5.7.2",
-    "vite": "^6.0.7"
+    "vite": "^6.0.7",
+    "wrangler": "^4.168.0"
   }
 }

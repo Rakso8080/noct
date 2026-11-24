@@ -1,8 +1,11 @@
 node_modules/
 dist/
 .data/
+.wrangler/
 .freebuff/
 .env
 .env.*
 *.log
 .DS_Store
+.allowed-origins.txt
+crowd-dist/

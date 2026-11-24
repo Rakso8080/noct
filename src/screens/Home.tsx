@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { api, type TodayResponse } from '../lib/api';
 import { Countdown } from '../components/ui';
 import { HeroWorld, WorldStrip } from '../components/World';
-import { runFor, streakFor, type SurveyRun } from '../lib/surveyStore';
+import { dailyRunFor, streakFor, type SurveyRun } from '../lib/surveyStore';
 import { dayNumber, nextResetAt } from '../../shared/dates';
 import { MAX_SCORE } from '../../shared/score';
 
@@ -88,8 +88,8 @@ export function Home({ navigate, onTutorial }: HomeProps) {
         if (alive) setToday(t);
       })
       .catch(() => undefined);
-    setCommon(runFor('common', day));
-    setRare(runFor('rare', day));
+    setCommon(dailyRunFor('common', day));
+    setRare(dailyRunFor('rare', day));
     return () => {
       alive = false;
     };

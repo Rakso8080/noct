@@ -1,0 +1,674 @@
+/* =========================================================================
+   The climb screen: floating HUD, prompt card in the middle, answer bar below.
+   ========================================================================= */
+
+.play {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: calc(100vh - 92px);
+  padding: 76px 12px 14px;
+  overflow: hidden;
+  background: #08120e;
+  isolation: isolate;
+}
+
+/* --- HUD ---------------------------------------------------------------- */
+
+.play-hud {
+  position: absolute;
+  z-index: 4;
+  top: 12px;
+  left: 12px;
+  right: 12px;
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.play-pill {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 92px;
+  padding: 8px 12px 9px;
+  background: rgba(7, 11, 16, 0.78);
+  border: 2px solid rgba(120, 150, 130, 0.3);
+  box-shadow: 3px 3px 0 rgba(4, 8, 8, 0.45);
+  backdrop-filter: blur(3px);
+}
+
+.play-pill em {
+  font-family: var(--font-display);
+  font-style: normal;
+  font-size: 0.375rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #9ab8a6;
+}
+
+.play-pill b {
+  font-family: var(--font-mono);
+  font-size: 1.0625rem;
+  font-weight: 400;
+  color: #f7efdb;
+}
+
+.play-hud-right {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin-left: auto;
+}
+
+/* Altitude on the left, the prompt count in the middle, controls on the right. */
+@media (min-width: 621px) {
+  .play-hud {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+  }
+
+  .play-hud > .play-pill:first-child {
+    justify-self: start;
+  }
+
+  .play-hud > .play-pill:nth-child(2) {
+    justify-self: center;
+  }
+
+  .play-hud-right {
+    justify-self: end;
+    margin-left: 0;
+  }
+}
+
+.play-lift {
+  min-width: 0;
+}
+
+.play-balloons {
+  display: flex;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.play-balloons i {
+  width: 9px;
+  height: 11px;
+  background: rgba(247, 239, 219, 0.18);
+  border: 1px solid rgba(247, 239, 219, 0.28);
+  border-radius: 50% 50% 45% 45%;
+}
+
+.play-balloons i.is-full {
+  background: #ff9fb6;
+  border-color: #ffd0dc;
+  box-shadow: 0 0 6px rgba(255, 159, 182, 0.55);
+}
+
+.play-icon {
+  min-width: 42px;
+  height: 42px;
+  padding: 0 10px;
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  color: #f7efdb;
+  background: rgba(7, 11, 16, 0.78);
+  border: 2px solid rgba(120, 150, 130, 0.3);
+  cursor: pointer;
+}
+
+.play-icon.is-text {
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.play-icon:hover {
+  border-color: #ffd48a;
+}
+
+/* --- floating points ---------------------------------------------------- */
+
+.play-float {
+  position: absolute;
+  z-index: 5;
+  left: 47%;
+  top: 42%;
+  font-family: var(--font-mono);
+  font-size: 1.6rem;
+  color: #ffe08a;
+  text-shadow: 2px 2px 0 rgba(4, 8, 8, 0.8);
+  pointer-events: none;
+  animation: float-up 1.3s ease-out forwards;
+}
+
+/* --- prompt card -------------------------------------------------------- */
+
+.play-card {
+  width: min(620px, calc(100% - 40px));
+  margin: auto;
+  padding: 16px 20px 18px;
+  background: rgba(6, 9, 14, 0.84);
+  border: 3px solid rgba(126, 160, 138, 0.45);
+  box-shadow:
+    6px 6px 0 rgba(3, 6, 6, 0.6),
+    0 0 40px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(4px);
+}
+
+/* A wrong answer costs a balloon: the card takes the hit. */
+.play-card.is-shaking {
+  animation: card-shake 0.32s ease-in-out;
+}
+
+@keyframes card-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-3px);
+  }
+  55% {
+    transform: translateX(3px);
+  }
+  80% {
+    transform: translateX(-1px);
+  }
+}
+
+.play-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.play-level {
+  font-family: var(--font-display);
+  font-size: 0.4375rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #ffd48a;
+}
+
+.play-prompt {
+  margin: 10px 0 6px;
+  font-family: var(--font-body);
+  font-size: clamp(1.5rem, 3.6vw, 2.2rem);
+  font-weight: 400;
+  line-height: 1.14;
+  color: #f7efdb;
+  text-align: center;
+}
+
+.play-hint {
+  margin: 10px 0 2px;
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+  text-align: center;
+  color: #9ab8a6;
+}
+
+/* --- the graded answer --------------------------------------------------- */
+
+.play-result {
+  margin-top: 12px;
+}
+
+.play-result-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.play-result-answer {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  color: #f7efdb;
+}
+
+.play-result-points {
+  font-family: var(--font-mono);
+  font-size: 1.0625rem;
+  color: #ffd48a;
+}
+
+.play-result-line {
+  margin: 8px 0 10px;
+  font-family: var(--font-body);
+  font-size: 1rem;
+  line-height: 1.3;
+  color: #cfd9d2;
+}
+
+.play-tier {
+  display: inline-block;
+  padding: 5px 9px 6px;
+  font-family: var(--font-display);
+  font-size: 0.5rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  border: 2px solid currentColor;
+  color: #cfd9d2;
+}
+
+.play-tier[data-tier='moonrise'] {
+  color: #ffe08a;
+}
+.play-tier[data-tier='aurora'] {
+  color: #9be8b4;
+}
+.play-tier[data-tier='starlit'] {
+  color: #a8c8ff;
+}
+.play-tier[data-tier='lantern'] {
+  color: #ffb877;
+}
+.play-tier[data-tier='ember'] {
+  color: #e6935c;
+}
+.play-tier[data-tier='grounded'] {
+  color: #b5b0c8;
+}
+.play-tier[data-tier='lost'] {
+  color: #8d84a8;
+}
+
+.play-board {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 2px dashed rgba(126, 160, 138, 0.35);
+}
+
+.play-board-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 5px;
+}
+
+.play-board-row {
+  display: grid;
+  grid-template-columns: 14px minmax(0, 1fr) minmax(50px, 90px) 34px;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 0;
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  color: #9ab8a6;
+  animation: board-in 0.32s ease both;
+}
+
+.play-board-row.is-you {
+  color: #ffe08a;
+  animation: board-in 0.32s ease both, you-pulse 1.2s ease 0.3s;
+}
+
+@keyframes board-in {
+  from {
+    opacity: 0;
+    transform: translateX(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes you-pulse {
+  0%,
+  100% {
+    background: transparent;
+  }
+  40% {
+    background: rgba(255, 224, 138, 0.16);
+  }
+}
+
+.play-crowd-n {
+  opacity: 0.7;
+}
+
+.play-board-rank {
+  font-size: 0.75rem;
+  text-align: right;
+  opacity: 0.8;
+}
+
+.play-board-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.play-board-bar {
+  display: block;
+  height: 5px;
+  background: rgba(126, 160, 138, 0.22);
+}
+
+.play-board-bar i {
+  display: block;
+  height: 100%;
+  background: currentColor;
+  opacity: 0.7;
+}
+
+.play-board-row.is-you .play-board-bar i {
+  opacity: 1;
+}
+
+.play-board-pct {
+  font-size: 0.75rem;
+  text-align: right;
+  opacity: 0.85;
+}
+
+.play-board-more {
+  margin-top: 6px;
+  padding: 2px 0;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  color: #9be8b4;
+  background: none;
+  border: 0;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* --- answer bar ---------------------------------------------------------- */
+
+.play-bar {
+  width: min(720px, 100%);
+  margin: 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: rgba(6, 9, 14, 0.86);
+  border: 3px solid rgba(126, 160, 138, 0.4);
+  box-shadow: 0 6px 0 rgba(3, 6, 6, 0.5);
+  backdrop-filter: blur(4px);
+}
+
+.play-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.play-clock {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  flex: 0 0 46px;
+}
+
+.play-clock i {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(#ff9fb6 var(--p, 100%), rgba(255, 159, 182, 0.14) 0);
+  mask: radial-gradient(circle, transparent 58%, #000 59%);
+  -webkit-mask: radial-gradient(circle, transparent 58%, #000 59%);
+}
+
+.play-clock b {
+  position: relative;
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  font-weight: 400;
+  color: #f7efdb;
+}
+
+.play-clock.is-urgent i {
+  background: conic-gradient(#ff7a4d var(--p, 100%), rgba(255, 122, 77, 0.14) 0);
+}
+
+.play-clock.is-urgent b {
+  color: #ffb499;
+}
+
+.play-input {
+  flex: 1;
+  min-width: 0;
+  height: 46px;
+  padding: 0 12px;
+  font-family: var(--font-body);
+  font-size: 1.125rem;
+  color: #f7efdb;
+  background: rgba(9, 14, 20, 0.9);
+  border: 2px solid rgba(126, 160, 138, 0.4);
+  outline: none;
+}
+
+.play-input::placeholder {
+  color: rgba(247, 239, 219, 0.35);
+}
+
+.play-input:focus {
+  border-color: #9be8b4;
+  box-shadow: 0 0 0 2px rgba(155, 232, 180, 0.25);
+}
+
+.play-pass,
+.play-climb {
+  height: 46px;
+  padding: 0 16px;
+  font-family: var(--font-display);
+  font-size: 0.5rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.play-pass {
+  color: #cfd9d2;
+  background: rgba(9, 14, 20, 0.9);
+  border: 2px solid rgba(126, 160, 138, 0.4);
+}
+
+.play-pass:hover {
+  border-color: #ffd48a;
+  color: #fff;
+}
+
+.play-climb {
+  color: #2a1208;
+  background: linear-gradient(180deg, #ffcf7a 0%, #f0a24c 100%);
+  border: 2px solid #6a3a12;
+  box-shadow: 0 3px 0 #6a3a12;
+}
+
+.play-climb:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.play-climb:not(:disabled):active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 #6a3a12;
+}
+
+.play-count {
+  width: 100%;
+  padding: 12px 8px;
+  font-family: var(--font-display);
+  font-size: 0.5625rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  text-align: center;
+  color: #cfe6d6;
+}
+
+.play-bar-note {
+  flex: 1;
+  font-family: var(--font-mono);
+  font-size: 0.9375rem;
+  color: #9ab8a6;
+}
+
+.play-next {
+  margin-left: auto;
+}
+
+.play-error {
+  width: 100%;
+  margin: 2px 0 0;
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+  color: #ffb499;
+}
+
+/* --- result -------------------------------------------------------------- */
+
+.result-height {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.result-height-num {
+  font-family: var(--font-display);
+  font-size: clamp(1.8rem, 7vw, 2.6rem);
+  color: #ffe6ac;
+  text-shadow: 0 3px 0 rgba(6, 4, 14, 0.5);
+}
+
+.result-height-km {
+  font-family: var(--font-mono);
+  font-size: 1.125rem;
+  color: var(--muted);
+}
+
+/* The rating lands like a stamp. */
+.rating-word.is-stamping {
+  animation: stamp-in 0.42s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+}
+
+@keyframes stamp-in {
+  from {
+    opacity: 0;
+    transform: scale(1.6) rotate(-4deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(0);
+  }
+}
+
+.survey-confetti {
+  position: fixed;
+  z-index: 40;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rating-word.is-stamping,
+  .route-stop,
+  .route-map-rail i,
+  .stage-confetti i {
+    animation: none;
+  }
+}
+
+:root[data-motion='reduced'] .rating-word.is-stamping,
+:root[data-motion='reduced'] .route-stop,
+:root[data-motion='reduced'] .route-map-rail i,
+:root[data-motion='reduced'] .stage-confetti i {
+  animation: none;
+}
+
+@keyframes float-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  25% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-42px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .play-card.is-shaking,
+  .play-board-row,
+  .play-board-row.is-you,
+  .play-float {
+    animation: none;
+  }
+}
+
+:root[data-motion='reduced'] .play-card.is-shaking,
+:root[data-motion='reduced'] .play-board-row,
+:root[data-motion='reduced'] .play-board-row.is-you,
+:root[data-motion='reduced'] .play-float {
+  animation: none;
+}
+
+@media (max-width: 620px) {
+  .play {
+    padding: 70px 8px 8px;
+  }
+
+  .play-hud {
+    top: 8px;
+    left: 8px;
+    right: 8px;
+  }
+
+  .play-pill {
+    min-width: 0;
+    padding: 6px 8px 7px;
+  }
+
+  .play-pill b {
+    font-size: 0.9375rem;
+  }
+
+  .play-card {
+    width: calc(100% - 12px);
+    padding: 12px 14px 14px;
+    border-width: 2px;
+  }
+
+
+  .play-form {
+    flex-wrap: wrap;
+  }
+
+  .play-input {
+    flex: 1 1 100%;
+    order: 3;
+  }
+
+  .play-clock {
+    order: 2;
+  }
+
+  .play-climb {
+    order: 4;
+    flex: 1;
+  }
+
+  .play-pass {
+    order: 5;
+  }
+}

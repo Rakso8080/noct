@@ -315,6 +315,13 @@
   position: absolute;
   inset: 0 auto 0 0;
   background: #ffd48a;
+  animation: rail-grow 0.9s ease-out 0.15s both;
+}
+
+@keyframes rail-grow {
+  from {
+    width: 0;
+  }
 }
 
 .route-map-rail b {
@@ -341,6 +348,18 @@
   padding: 7px 6px 8px;
   border: 2px solid rgba(74, 63, 125, 0.7);
   background: rgba(20, 16, 40, 0.8);
+  animation: stop-in 0.36s ease both;
+}
+
+@keyframes stop-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .route-stop-num {

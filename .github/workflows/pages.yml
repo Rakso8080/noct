@@ -36,6 +36,8 @@ jobs:
         env:
           VITE_STATIC: '1'
           VITE_BASE: /noct/
+          # Optional: the crowd Worker URL. Unset builds keep the authored shares.
+          VITE_CROWD_API: ${{ vars.CROWD_API }}
         run: npm run build
 
       # Pages serves 404.html for unknown paths; a copy of index.html keeps

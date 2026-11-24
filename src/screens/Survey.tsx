@@ -1,41 +1,88 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { Countdown } from '../components/ui';
-import { Journey, distanceFor } from '../components/Journey';
+import { Climb } from '../components/Climb';
+import { StartScreen } from '../components/StartScreen';
+import { Journey } from '../components/Journey';
 import { dayNumber, dayToISO, nextResetAt } from '../../shared/dates';
 import {
-  MAX_PER_PROMPT,
+  BALLOONS,
   PROMPTS_PER_DAY,
   ROUTE_KM,
   SECONDS_PER_PROMPT,
   TIERS,
+  bandFor,
+  classicPrompts,
   dailyPrompts,
-  matchAnswer,
-  maxPointsFor,
+  difficultyFor,
+  endlessPromptAt,
+  heightFor,
+  judge,
   rankFor,
-  scoreFor,
+  type RunMode,
   type SurveyMode,
   type SurveyPrompt,
   type Tier,
 } from '../../shared/survey';
-import { bestFor, runFor, saveRun, streakFor, type LoggedAnswer, type SurveyRun } from '../lib/surveyStore';
+import {
+  bestFor,
+  classicBestRun,
+  clearEndlessState,
+  dailyRunFor,
+  drawClassicPrompts,
+  endlessBestFor,
+  endlessStateFor,
+  saveClassicRun,
+  saveDailyRun,
+  saveEndlessState,
+  startEndlessState,
+  streakFor,
+  type EndlessState,
+  type LoggedAnswer,
+  type SurveyRun,
+} from '../lib/surveyStore';
 import { sfx } from '../lib/audio';
+import { haptic, preferReducedMotion, updateSettings, useSettings } from '../lib/settings';
+import { liveCrowd, loadShares, recordAnswer, recordRun, shareOf, type CrowdPrompt } from '../lib/crowd';
+import { shareRunCard } from '../lib/shareCard';
 
-const GAMES: Record<SurveyMode, { name: string; tagline: string; rule: string; scoring: string }> = {
+const GAMES: Record<SurveyMode, { name: string; tagline: string; scoring: string }> = {
   common: {
     name: 'Common',
     tagline: 'Give the answer everybody gives.',
-    rule: `Seven prompts, ${SECONDS_PER_PROMPT} seconds each. Type the answer you think most people would give.`,
-    scoring:
-      'Answers are graded on a board of nine. The top answer is Moonrise and lifts you 100 points; lower answers lift less. Seven Moonrises is 700 points and a full 14 km route.',
+    scoring: 'The top answer on the board is Moonrise and lifts you 100 points. Off the board still counts, just less.',
   },
   rare: {
     name: 'Rare',
     tagline: 'Give the answer nobody gives.',
-    rule: `Seven prompts, ${SECONDS_PER_PROMPT} seconds each. Type the answer you think hardly anybody would give.`,
-    scoring:
-      'The board is read from the bottom: the loneliest answer on it is Moonrise and lifts you 100 points. It still has to be an answer somebody gave.',
+    scoring: 'The board is read from the bottom: the loneliest answer on it is Moonrise. Off the board still counts, just less.',
   },
 };
+
+function pad(day: number): string {
+  return String(day).padStart(3, '0');
+}
+
+function verdict(score: number, max: number): string {
+  const pct = max ? score / max : 0;
+  if (pct >= 0.85) return 'Legendary';
+  if (pct >= 0.7) return 'Excellent';
+  if (pct >= 0.55) return 'Great';
+  if (pct >= 0.35) return 'Good';
+  return 'Warming up';
+}
+
+function glyph(points: number): string {
+  if (points >= 100) return '🌕';
+  if (points >= 64) return '🟩';
+  if (points >= 32) return '🟨';
+  if (points >= 16) return '🟧';
+  if (points >= 8) return '🟫';
+  return '⬛';
+}
+
+function metres(value: number): string {
+  return `${value.toLocaleString('en-GB')} m`;
+}
 
 function useCountUp(target: number, ms = 650): number {
   const [value, setValue] = useState(target);
@@ -63,32 +110,59 @@ function useCountUp(target: number, ms = 650): number {
   return value;
 }
 
-function pad(day: number): string {
-  return String(day).padStart(3, '0');
+/* Board shares count up from zero as the row lands. */
+function useRising(target: number, ms = 420): number {
+  const [value, setValue] = useState(0);
+
+  useEffect(() => {
+    /* A hidden tab pauses rAF, so settle on the value instead of showing 0%. */
+    if (preferReducedMotion() || document.hidden) {
+      setValue(target);
+      return;
+    }
+    const start = performance.now();
+    let raf = 0;
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - start) / ms);
+      setValue(Math.round(target * (1 - Math.pow(1 - t, 3))));
+      if (t < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [target, ms]);
+
+  return value;
 }
 
-function verdict(score: number, max: number): string {
-  const pct = max ? score / max : 0;
-  if (pct >= 0.85) return 'Legendary';
-  if (pct >= 0.7) return 'Excellent';
-  if (pct >= 0.55) return 'Great';
-  if (pct >= 0.35) return 'Good';
-  return 'Warming up';
-}
-
-function glyph(points: number): string {
-  if (points >= TIERS.moonrise.points) return '🌕';
-  if (points >= TIERS.aurora.points) return '🟩';
-  if (points >= TIERS.starlit.points) return '🟨';
-  if (points >= TIERS.lantern.points) return '🟧';
-  return '⬛';
-}
-
-function shareText(run: SurveyRun): string {
-  const bars = run.answers.map((a) => glyph(a.points)).join('');
-  const label = GAMES[run.mode].name;
-  const km = distanceFor(run.max > 0 ? run.score / run.max : 0).toFixed(1);
-  return `Noct ${label} #${pad(run.day)}\n${bars}  ${km} km · ${run.score}/${run.max}\n${verdict(run.score, run.max)}\nnoct.game`;
+function BoardRow({
+  rank,
+  text,
+  share,
+  max,
+  mine,
+  index,
+}: {
+  rank: number;
+  text: string;
+  share: number;
+  max: number;
+  mine: boolean;
+  index: number;
+}) {
+  const pct = useRising(share, 460);
+  return (
+    <div
+      className={`play-board-row${mine ? ' is-you' : ''}`}
+      style={{ animationDelay: `${index * 60}ms` }}
+    >
+      <span className="play-board-rank">{rank}</span>
+      <span className="play-board-text">{text}</span>
+      <span className="play-board-bar">
+        <i style={{ width: `${Math.round((pct / Math.max(max, 1)) * 100)}%` }} />
+      </span>
+      <span className="play-board-pct">{pct}%</span>
+    </div>
+  );
 }
 
 async function copyText(text: string): Promise<boolean> {
@@ -112,413 +186,634 @@ async function copyText(text: string): Promise<boolean> {
   }
 }
 
+/*
+ * The screen: start → climb → result. Daily is one try, Classic is repeatable,
+ * Endless keeps dealing prompts until the balloons run out.
+ */
 export function Survey({ mode, navigate }: { mode: SurveyMode; navigate: (path: string) => void }) {
   const day = dayNumber();
-  const prompts = useMemo(() => dailyPrompts(day, mode), [day, mode]);
-  const [stored, setStored] = useState<SurveyRun | null>(() => runFor(mode, day));
-  const [started, setStarted] = useState(false);
+  const [screen, setScreen] = useState<'start' | 'run' | 'result'>('start');
+  const [runMode, setRunMode] = useState<RunMode>('daily');
+  const [seed, setSeed] = useState(() => Date.now());
+  const [result, setResult] = useState<SurveyRun | null>(null);
+  const [resume, setResume] = useState<EndlessState | null>(null);
+  const [drawn, setDrawn] = useState<SurveyPrompt[]>([]);
+  const daily = dailyRunFor(mode, day);
 
   useEffect(() => {
-    setStored(runFor(mode, day));
-    setStarted(false);
-  }, [mode, day]);
+    setScreen('start');
+    setResult(null);
+    setResume(null);
+  }, [mode]);
 
-  if (stored) return <SurveyResult run={stored} navigate={navigate} />;
-  if (started) {
+  function begin(chosen: RunMode): void {
+    const thisSeed = Date.now();
+    setRunMode(chosen);
+    setSeed(thisSeed);
+    setDrawn(chosen === 'classic' ? drawClassicPrompts(mode) : []);
+    if (chosen === 'endless') {
+      const saved = endlessStateFor(mode);
+      setResume(saved ?? startEndlessState(mode, thisSeed));
+    } else {
+      setResume(null);
+    }
+    sfx.unlock();
+    setScreen('run');
+  }
+
+  if (screen === 'run') {
     return (
-      <SurveyRunner
+      <ClimbRun
+        key={`${mode}-${runMode}-${seed}`}
         mode={mode}
+        runMode={runMode}
         day={day}
-        prompts={prompts}
+        seed={seed}
+        resume={resume}
+        drawn={drawn}
+        onQuit={() => setScreen('start')}
         onDone={(run) => {
-          saveRun(run);
-          setStored(run);
+          setResult(run);
+          setScreen('result');
         }}
-        onQuit={() => setStarted(false)}
       />
     );
   }
-  return <SurveyIntro mode={mode} day={day} onStart={() => setStarted(true)} navigate={navigate} />;
-}
 
-function SurveyIntro({
-  mode,
-  day,
-  onStart,
-  navigate,
-}: {
-  mode: SurveyMode;
-  day: number;
-  onStart: () => void;
-  navigate: (path: string) => void;
-}) {
-  const game = GAMES[mode];
-  const streak = streakFor(mode, day);
+  if (screen === 'result' && result) {
+    return <SurveyResult run={result} navigate={navigate} onAgain={() => setScreen('start')} />;
+  }
 
   return (
-    <main className="main">
-      <div className="wrap survey-wrap">
-        <div className="eyebrow">Survey · {mode === 'common' ? 'game one' : 'game two'}</div>
-        <h1 className="hero-title" style={{ fontSize: 'var(--step-3)', margin: '10px 0 12px' }}>
-          {game.name}
-        </h1>
-        <p className="lede">{game.tagline}</p>
-
-        <div style={{ marginTop: 20 }}>
-          <Journey progress={0} />
-        </div>
-
-        <div className="card stack gap-14">
-          <p className="par-note" style={{ margin: 0 }}>
-            {game.rule}
-          </p>
-          <p className="par-note" style={{ margin: 0 }}>
-            {game.scoring}
-          </p>
-          <div className="row gap-8" style={{ flexWrap: 'wrap' }}>
-            {(['moonrise', 'aurora', 'starlit', 'lantern', 'lost'] as Tier[]).map((t) => (
-              <span className="chip" key={t}>
-                {TIERS[t].name} <b className="mono">{TIERS[t].points}</b>
-              </span>
-            ))}
-          </div>
-          <div className="row gap-8" style={{ flexWrap: 'wrap' }}>
-            <span className="chip">{PROMPTS_PER_DAY} prompts</span>
-            <span className="chip">{SECONDS_PER_PROMPT}s each</span>
-            <span className="chip">One attempt a day</span>
-            <span className="chip chip-ember">
-              <span className="chip-dot" aria-hidden="true" />
-              {streak.current}-day streak
-            </span>
-          </div>
-          <hr className="hairline" />
-          <div className="row gap-10" style={{ flexWrap: 'wrap' }}>
-            <button className="btn btn-primary btn-lg" onClick={onStart}>
-              Begin the walk · #{pad(day)}
-            </button>
-            <button className="btn btn-ghost" onClick={() => navigate('/')}>
-              Back to menu
-            </button>
-          </div>
-          <p className="par-note" style={{ margin: 0, fontSize: '0.8125rem' }}>
-            Same prompts for everyone today. Answers are scored on this device.
-          </p>
-        </div>
-      </div>
-    </main>
+    <StartScreen
+      mode={mode}
+      streak={streakFor(mode, day).current}
+      bestDaily={bestFor(mode)}
+      bestClassic={classicBestRun(mode)?.score ?? 0}
+      endlessBest={endlessBestFor(mode)}
+      dailyDone={Boolean(daily)}
+      onBegin={begin}
+      onResume={() => {
+        if (daily) {
+          setResult(daily);
+          setScreen('result');
+        }
+      }}
+      onBack={() => navigate('/')}
+    />
   );
 }
+
+/* ------------------------------------------------------------------ climb */
 
 interface Reveal {
   given: string;
   matched: string | null;
   weight: number | null;
   points: number;
-  tier: Tier | null;
+  tier: Tier;
   rank: number | null;
-  matchedIndex: number | null;
-  timedOut: boolean;
+  height: number;
+  boardIndex: number | null;
+  miss: boolean;
 }
 
-function SurveyRunner({
-  mode,
-  day,
-  prompts,
-  onDone,
-  onQuit,
-}: {
+interface ClimbRunProps {
   mode: SurveyMode;
+  runMode: RunMode;
   day: number;
-  prompts: SurveyPrompt[];
-  onDone: (run: SurveyRun) => void;
+  seed: number;
+  resume: EndlessState | null;
+  /** Classic deals from the stored deck so the bank is used up before repeats */
+  drawn: SurveyPrompt[];
   onQuit: () => void;
-}) {
-  const [index, setIndex] = useState(0);
+  onDone: (run: SurveyRun) => void;
+}
+
+function ClimbRun({ mode, runMode, day, seed, resume, drawn, onQuit, onDone }: ClimbRunProps) {
+  const settings = useSettings();
+  const [index, setIndex] = useState(resume?.index ?? 0);
   const [input, setInput] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [countIn, setCountIn] = useState(3);
   const [leftMs, setLeftMs] = useState(SECONDS_PER_PROMPT * 1000);
   const [reveal, setReveal] = useState<Reveal | null>(null);
-  const [log, setLog] = useState<LoggedAnswer[]>([]);
+  const [log, setLog] = useState<LoggedAnswer[]>(resume?.answers ?? []);
+  const [score, setScore] = useState(resume?.score ?? 0);
+  const [balloons, setBalloons] = useState(resume?.balloons ?? BALLOONS);
+  const [showBoard, setShowBoard] = useState(false);
+  const [crowd, setCrowd] = useState<Record<string, CrowdPrompt>>({});
+  const [shake, setShake] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const startedAt = useRef(Date.now());
+  const startedAt = useRef(0);
   const locked = useRef(false);
-  const prompt = prompts[index];
+
+  const prompts = useMemo(() => {
+    if (runMode === 'daily') return dailyPrompts(day, mode);
+    if (runMode === 'classic') return drawn.length ? drawn : classicPrompts(mode, seed);
+    return [] as SurveyPrompt[];
+  }, [runMode, day, mode, seed, drawn]);
+
+  const prompt = runMode === 'endless' ? endlessPromptAt(mode, seed, index) : prompts[index];
+  const total = runMode === 'endless' ? 0 : prompts.length;
+  const progress = Math.min(1, score / (PROMPTS_PER_DAY * 100));
+  const shownHeight = useCountUp(heightFor(score));
+  const cohort = liveCrowd(crowd[prompt.id]);
+
+  /* Real shares for the prompt on screen; failures leave the authored ones in place. */
+  useEffect(() => {
+    let alive = true;
+    void loadShares([prompt.id], day).then((map) => {
+      if (alive && map) setCrowd((prev) => ({ ...map, ...prev }));
+    });
+    return () => {
+      alive = false;
+    };
+  }, [day, prompt.id]);
+
+  useEffect(() => {
+    sfx.ambience(bandFor(progress));
+    return () => sfx.ambience(null);
+  }, [progress]);
 
   useEffect(() => {
     setInput('');
+    setError(null);
     setReveal(null);
+    setShowBoard(false);
     setLeftMs(SECONDS_PER_PROMPT * 1000);
-    startedAt.current = Date.now();
+    setCountIn(3);
     locked.current = false;
-    inputRef.current?.focus();
   }, [index]);
+
+  useEffect(() => {
+    if (countIn <= 0) return;
+    const id = setTimeout(() => setCountIn((n) => n - 1), 650);
+    return () => clearTimeout(id);
+  }, [countIn]);
+
+  useEffect(() => {
+    if (countIn !== 0) return;
+    startedAt.current = Date.now();
+    inputRef.current?.focus();
+  }, [countIn, index]);
 
   const commit = useCallback(
     (raw: string, timedOut: boolean) => {
-      if (locked.current) return;
-      locked.current = true;
+      if (locked.current || countIn > 0) return;
+
       const given = raw.trim();
-      const matchedIndex = given ? matchAnswer(prompt, given) : null;
-      const answer = matchedIndex === null ? null : prompt.answers[matchedIndex];
-      const scored = answer ? scoreFor(mode, prompt, matchedIndex as number) : null;
-      const points = scored ? scored.points : 0;
+      const verdictResult = given ? judge(mode, prompt, given) : null;
+      if (verdictResult && !verdictResult.ok) {
+        setError(verdictResult.reason);
+        sfx.blocked();
+        return;
+      }
+
+      locked.current = true;
+      setError(null);
+
+      const accepted = Boolean(verdictResult && verdictResult.ok);
+      const points = accepted && verdictResult ? verdictResult.points : 0;
+      const tier: Tier = accepted && verdictResult ? verdictResult.tier : 'lost';
+      const matched =
+        accepted && verdictResult && verdictResult.index !== null
+          ? prompt.answers[verdictResult.index].text
+          : null;
+      const authored =
+        accepted && verdictResult && verdictResult.index !== null
+          ? prompt.answers[verdictResult.index].weight
+          : null;
+      /* The crowd is real when there are enough answers; otherwise the bank's share. */
+      const weight = matched === null ? null : shareOf(cohort, matched, authored ?? 0);
+
       const entry: LoggedAnswer = {
         promptId: prompt.id,
         asked: prompt.prompt,
         given,
-        matched: answer ? answer.text : null,
-        weight: answer ? answer.weight : null,
+        matched,
+        weight,
         points,
-        tier: scored ? scored.tier : null,
-        rank: scored ? scored.rank : null,
+        tier,
+        rank: accepted && verdictResult ? verdictResult.rank : null,
       };
-      setLog((prev) => [...prev, entry]);
+
+      const nextScore = score + points;
+      let nextBalloons = balloons;
+      if (!accepted) nextBalloons = Math.max(0, balloons - 1);
+      else if (tier === 'moonrise') nextBalloons = Math.min(BALLOONS, balloons + 1);
+
+      const answers = [...log, entry];
+      setLog(answers);
+      setScore(nextScore);
+      setBalloons(nextBalloons);
       setReveal({
         given,
-        matched: entry.matched,
-        weight: entry.weight,
+        matched,
+        weight,
         points,
-        tier: entry.tier ?? null,
+        tier,
         rank: entry.rank ?? null,
-        matchedIndex,
-        timedOut,
+        height: heightFor(nextScore),
+        boardIndex: accepted && verdictResult ? verdictResult.index : null,
+        miss: !accepted,
       });
-      if (timedOut) sfx.blocked();
-      else if (scored && scored.tier === 'moonrise') sfx.moonrise();
-      else if (points > 0) sfx.solve();
-      else sfx.tap();
+
+      if (runMode === 'endless') {
+        saveEndlessState({
+          mode,
+          day,
+          seed,
+          index: index + 1,
+          score: nextScore,
+          balloons: nextBalloons,
+          answers,
+          updatedAt: Date.now(),
+        });
+      }
+
+      if (given) {
+        void recordAnswer({ day, mode, promptId: prompt.id, text: given }).then((res) => {
+          if (!res) return;
+          setCrowd((prev) => ({ ...prev, [prompt.id]: res }));
+          if (!matched) return;
+          const live = liveCrowd(res);
+          setReveal((prev) =>
+            prev && prev.given === given && prev.matched === matched
+              ? { ...prev, weight: shareOf(live, matched, prev.weight ?? 0) }
+              : prev,
+          );
+        });
+      }
+
+      if (!accepted) {
+        sfx.balloonPop();
+        haptic(12);
+        setShake(true);
+        setTimeout(() => setShake(false), 340);
+        if (timedOut) sfx.blocked();
+        else sfx.tap();
+      } else if (tier === 'moonrise') {
+        sfx.rise();
+        sfx.moonrise();
+        haptic(24);
+      } else {
+        sfx.rise();
+        sfx.tier(tier);
+        haptic(6);
+      }
     },
-    [mode, prompt],
+    [balloons, cohort, countIn, day, index, log, mode, prompt, runMode, score, seed],
   );
 
   useEffect(() => {
-    if (reveal) return;
+    if (countIn !== 0 || reveal) return;
     const id = setInterval(() => {
       const left = SECONDS_PER_PROMPT * 1000 - (Date.now() - startedAt.current);
       setLeftMs(Math.max(0, left));
       if (left <= 0) commit(inputRef.current?.value ?? '', true);
     }, 100);
     return () => clearInterval(id);
-  }, [commit, reveal]);
+  }, [commit, countIn, reveal]);
+
+  function finish(): void {
+    const answers = [...log];
+    const run: SurveyRun = {
+      mode,
+      runMode,
+      day,
+      score,
+      max: (runMode === 'endless' ? answers.length : PROMPTS_PER_DAY) * 100,
+      height: heightFor(score),
+      answers,
+      finishedAt: Date.now(),
+      seed,
+    };
+    if (runMode === 'daily') saveDailyRun(run);
+    if (runMode === 'classic') saveClassicRun(run);
+    if (runMode === 'endless') clearEndlessState(mode);
+    /* Counts the climb in today's totals; silent when there is no crowd API. */
+    void recordRun({ day, mode, runMode, score, height: heightFor(score) });
+    onDone(run);
+  }
 
   function next(): void {
     if (!reveal) return;
-    if (index + 1 >= prompts.length) {
-      const answers = [...log];
-      onDone({
-        mode,
-        day,
-        score: answers.reduce((sum, a) => sum + a.points, 0),
-        max: prompts.reduce((sum, p) => sum + maxPointsFor(mode, p), 0),
-        answers,
-        finishedAt: Date.now(),
-      });
+    sfx.tap();
+    const out = runMode === 'endless' && balloons <= 0;
+    const over = runMode !== 'endless' && index + 1 >= prompts.length;
+    if (out || over) {
+      finish();
       return;
     }
     setIndex(index + 1);
   }
 
-  const last = index + 1 >= prompts.length;
-  const pct = Math.max(0, Math.min(100, (leftMs / (SECONDS_PER_PROMPT * 1000)) * 100));
-  const maxTotal = prompts.reduce((sum, p) => sum + maxPointsFor(mode, p), 0);
-  const earned = log.reduce((sum, a) => sum + a.points, 0);
-  const progress = maxTotal > 0 ? earned / maxTotal : 0;
-  const shownKm = useCountUp(distanceFor(progress));
   const secondsLeft = Math.ceil(leftMs / 1000);
-
-  const boardMax = Math.max(...prompt.answers.map((a) => a.weight), 1);
+  const pct = Math.max(0, Math.min(100, (leftMs / (SECONDS_PER_PROMPT * 1000)) * 100));
+  const urgent = !reveal && secondsLeft <= 10;
   const board = prompt.answers
     .map((a, i) => ({ text: a.text, weight: a.weight, i, rank: rankFor(mode, prompt, i) }))
-    .sort((x, y) => x.rank - y.rank)
-    .slice(0, 3);
+    .sort((x, y) => x.rank - y.rank);
+  const boardRows = showBoard ? board.slice(0, 9) : board.slice(0, 4);
+  const boardPeak = Math.max(...boardRows.map((row) => shareOf(cohort, row.text, row.weight)), 1);
 
   return (
-    <main className="stage">
-      <Journey
-        variant="stage"
+    <main className="play">
+      <Climb
         progress={progress}
+        balloons={balloons}
         moving={Boolean(reveal && reveal.points > 0)}
         answer={reveal ? reveal.matched ?? reveal.given : input}
       />
 
-      <div className="stage-hud">
-        <span className="stage-pill">
-          <em>Distance</em>
-          <b>{shownKm.toFixed(1)} km</b>
+      <div className="play-hud">
+        <span className="play-pill">
+          <em>Altitude</em>
+          <b>{metres(Math.round(shownHeight))}</b>
         </span>
-        <span className="stage-pill">
+        <span className="play-pill">
           <em>Prompt</em>
           <b>
-            {index + 1} / {prompts.length}
+            {index + 1}
+            {total ? ` / ${total}` : ''}
           </b>
         </span>
-        <span className={`stage-pill${!reveal && secondsLeft <= 5 ? ' is-urgent' : ''}`}>
-          <em>Time</em>
-          <b>{reveal ? '—' : `${secondsLeft}s`}</b>
+        <span className="play-hud-right">
+          {runMode === 'endless' ? (
+            <span className="play-pill play-lift">
+              <em>Lift</em>
+              <span className="play-balloons">
+                {Array.from({ length: BALLOONS }, (_, i) => (
+                  <i key={i} className={i < balloons ? 'is-full' : ''} />
+                ))}
+              </span>
+            </span>
+          ) : null}
+          <button
+            className="play-icon"
+            type="button"
+            onClick={() => {
+              const next = !settings.sound;
+              updateSettings({ sound: next });
+              /* Muting must silence the drone at once, unmuting must bring it back. */
+              sfx.ambience(next ? bandFor(progress) : null);
+              if (next) sfx.tap();
+            }}
+            aria-pressed={settings.sound}
+            title="Sound"
+          >
+            {settings.sound ? '♪' : '×'}
+          </button>
+          <button
+            className="play-icon is-text"
+            type="button"
+            onClick={() => {
+              sfx.tap();
+              onQuit();
+            }}
+          >
+            Quit
+          </button>
         </span>
       </div>
 
       {reveal && reveal.points > 0 ? (
-        <span key={`float-${index}`} className="stage-float" aria-hidden="true">
+        <span key={`float-${index}`} className="play-float" aria-hidden="true">
           +{reveal.points}
         </span>
       ) : null}
-      {reveal && reveal.tier === 'moonrise' ? <span key={`flash-${index}`} className="stage-flash" aria-hidden="true" /> : null}
-      {reveal && reveal.tier === 'moonrise' ? (
-        <span key={`confetti-${index}`} className="stage-confetti" aria-hidden="true">
-          {Array.from({ length: 9 }, (_, i) => (
-            <i key={i} style={{ left: `${30 + i * 4.5}%`, animationDelay: `${i * 0.035}s` }} />
-          ))}
-        </span>
-      ) : null}
 
-      <div className="stage-rail" aria-hidden="true">
-        <span className="stage-rail-line">
-          <i style={{ width: `${progress * 100}%` }} />
-          <b style={{ left: `${progress * 100}%` }} />
-        </span>
-        <span className="stage-rail-marks">
-          <span>Moss</span>
-          <span>Amber</span>
-          <span>Glass</span>
-          <span>Ember</span>
-        </span>
-      </div>
-
-      <section className="stage-panel">
-        <div className="stage-panel-head">
-          <span className="eyebrow">
-            {GAMES[mode].name} · {mode === 'common' ? 'the crowd' : 'the leftovers'}
-          </span>
-          <button className="stage-quit" type="button" onClick={onQuit}>
-            Quit
-          </button>
+      <section className={`play-card${shake ? ' is-shaking' : ''}`}>
+        <div className="play-card-head">
+          <span className="play-level">{difficultyFor(prompt)}</span>
         </div>
 
-        <h1 className="stage-prompt">{prompt.prompt}</h1>
-
-        <div className="time-bar" aria-hidden="true">
-          <i style={{ width: `${reveal ? 0 : pct}%` }} />
-        </div>
+        <h1 className="play-prompt">{prompt.prompt}</h1>
 
         {reveal ? (
-          <div className="stage-reveal" aria-live="polite">
-            <div className="stage-reveal-top">
-              <span className="stage-tier" data-tier={reveal.tier ?? 'lost'}>
-                {reveal.tier ? TIERS[reveal.tier].name : 'Lost'}
+          <div className="play-result">
+            <div className="play-result-top">
+              <span className="play-tier" data-tier={reveal.tier}>
+                {TIERS[reveal.tier].name}
               </span>
-              <span className="stage-reveal-answer">
+              <span className="play-result-answer">
                 {reveal.matched ? `“${reveal.matched}”` : reveal.given ? `“${reveal.given}”` : '—'}
               </span>
-              <span className="stage-reveal-points">+{reveal.points}</span>
-              <button className="btn btn-primary" onClick={next}>
-                {last ? 'See the map' : 'Next'}
-              </button>
+              <span className="play-result-points">+{reveal.points}</span>
             </div>
-            {reveal.matched ? null : (
-              <p className="stage-reveal-line">
-                {reveal.timedOut
-                  ? 'The clock ran out. Nothing gained on this one.'
-                  : 'Nobody on the board said that. Nothing gained.'}
-              </p>
-            )}
+            {/* Only the sentence is announced: the counting numbers would otherwise
+                be read out on every frame. */}
+            <p className="play-result-line" aria-live="polite">
+              {reveal.matched
+                ? `${reveal.weight}% of the crowd said ${reveal.matched}. You are ${metres(reveal.height)} up.`
+                : reveal.miss
+                  ? 'Nothing accepted on that one. It costs you a balloon in Endless.'
+                  : `Off the board, but it counted. You are ${metres(reveal.height)} up.`}
+            </p>
 
-            <div className="stage-board">
-              <div className="stage-board-head">
+            <div className="play-board">
+              <div className="play-board-head">
                 <span className="eyebrow">The board</span>
-                <span className="eyebrow">crowd share</span>
+                <span className="eyebrow">
+                  crowd share
+                  {cohort ? <span className="play-crowd-n"> · n={cohort.total.toLocaleString('en-GB')}</span> : null}
+                </span>
               </div>
-              {board.map((row) => (
-                <div className={`stage-board-row${row.i === reveal.matchedIndex ? ' is-you' : ''}`} key={row.text}>
-                  <span className="stage-board-rank">{row.rank}</span>
-                  <span className="stage-board-text">{row.text}</span>
-                  <span className="stage-board-bar">
-                    <i style={{ width: `${Math.round((row.weight / boardMax) * 100)}%` }} />
-                  </span>
-                  <span className="stage-board-pct">{row.weight}%</span>
-                </div>
+              {boardRows.map((row, i) => (
+                <BoardRow
+                  key={row.text}
+                  rank={row.rank}
+                  text={row.text}
+                  share={shareOf(cohort, row.text, row.weight)}
+                  max={boardPeak}
+                  mine={row.i === reveal.boardIndex}
+                  index={i}
+                />
               ))}
+              {board.length > 4 ? (
+                <button
+                  className="play-board-more"
+                  type="button"
+                  onClick={() => {
+                    sfx.tap();
+                    setShowBoard((v) => !v);
+                  }}
+                >
+                  {showBoard ? 'Show less' : `See all ${Math.min(9, board.length)}`}
+                </button>
+              ) : null}
             </div>
           </div>
         ) : (
+          <p className="play-hint">▲ common answers climb higher ▲</p>
+        )}
+      </section>
+
+      <div className="play-bar">
+        {reveal ? (
+          <>
+            <span className="play-bar-note">
+              {runMode === 'endless'
+                ? balloons > 0
+                  ? `${balloons} balloon${balloons === 1 ? '' : 's'} left`
+                  : 'Out of balloons'
+                : `${index + 1} of ${total}`}
+            </span>
+            <button className="btn btn-primary play-next" onClick={next}>
+              {runMode === 'endless' && balloons <= 0
+                ? 'See the climb'
+                : runMode !== 'endless' && index + 1 >= prompts.length
+                  ? 'See the climb'
+                  : 'Next'}
+            </button>
+          </>
+        ) : countIn > 0 ? (
+          <span className="play-count">Clock starting in {countIn}</span>
+        ) : (
           <form
-            className="stage-form"
+            className="play-form"
             onSubmit={(e) => {
               e.preventDefault();
               commit(input, false);
             }}
           >
-            <div className="stage-input-row">
-              <input
-                id="survey-answer"
-                ref={inputRef}
-                className="answer-input"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                autoComplete="off"
-                autoCorrect="off"
-                autoCapitalize="off"
-                spellCheck={false}
-                maxLength={40}
-                aria-label="Your answer"
-                placeholder={mode === 'common' ? 'What would most people say?' : 'What would nobody say?'}
-              />
-              <button className="btn btn-primary" type="submit">
-                Lock it in
-              </button>
-            </div>
-            <div className="stage-form-foot">
-              <span className="par-note" style={{ margin: 0, fontSize: '0.8125rem' }}>
-                {mode === 'common'
-                  ? 'Top of the board lifts 100 points.'
-                  : 'Bottom of the board lifts 100 points.'}
-              </span>
-              <button className="btn btn-ghost btn-sm" type="button" onClick={() => commit('', false)}>
-                Skip
-              </button>
-            </div>
+            <span className={`play-clock${urgent ? ' is-urgent' : ''}`} aria-hidden="true">
+              <i style={{ '--p': `${pct}%` } as CSSProperties} />
+              <b>{secondsLeft}</b>
+            </span>
+            <input
+              id="survey-answer"
+              ref={inputRef}
+              className="play-input"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
+              spellCheck={false}
+              maxLength={40}
+              aria-label="Your answer"
+              placeholder={mode === 'common' ? 'Type one answer…' : 'Type one answer…'}
+            />
+            <button className="play-pass" type="button" onClick={() => commit('', false)}>
+              Pass
+            </button>
+            <button className="play-climb" type="submit" disabled={!input.trim()}>
+              Climb
+            </button>
           </form>
         )}
-      </section>
+        {error ? <p className="play-error">{error}</p> : null}
+      </div>
     </main>
   );
 }
 
-function SurveyResult({ run, navigate }: { run: SurveyRun; navigate: (path: string) => void }) {
+/* ------------------------------------------------------------------ result */
+
+function shareText(run: SurveyRun): string {
+  const bars = run.answers.map((a) => glyph(a.points)).join('');
+  const label = GAMES[run.mode].name;
+  const modeLabel = run.runMode === 'daily' ? ` #${pad(run.day)}` : run.runMode === 'classic' ? ' Classic' : ' Endless';
+  const km = (run.height / 1000).toFixed(1);
+  return `Noct ${label}${modeLabel}\n${bars}  ${km} km · ${run.score} pts\n${verdict(run.score, run.max)}\nnoct.game`;
+}
+
+function SurveyResult({
+  run,
+  navigate,
+  onAgain,
+}: {
+  run: SurveyRun;
+  navigate: (path: string) => void;
+  onAgain: () => void;
+}) {
   const [copied, setCopied] = useState(false);
   const game = GAMES[run.mode];
   const other: SurveyMode = run.mode === 'common' ? 'rare' : 'common';
   const streak = streakFor(run.mode, run.day);
+  const km = (run.height / 1000).toFixed(1);
   const share = run.max > 0 ? run.score / run.max : 0;
-  const km = distanceFor(share).toFixed(1);
-  const perfect = PROMPTS_PER_DAY * MAX_PER_PROMPT;
   const best = Math.max(bestFor(run.mode), run.score);
+  const modeLabel = run.runMode === 'daily' ? 'Daily' : run.runMode === 'classic' ? 'Classic' : 'Endless';
+  const shownHeight = useRising(run.height, 900);
+  const [cardState, setCardState] = useState<'idle' | 'working' | 'shared' | 'saved' | 'failed'>('idle');
+  const moonrises = run.answers.filter((a) => a.tier === 'moonrise').length;
+  const celebrate = moonrises >= 3 || share >= 0.7;
+
+  useEffect(() => {
+    sfx.stamp();
+    haptic(8);
+  }, []);
 
   async function copy(): Promise<void> {
+    sfx.tap();
     const ok = await copyText(shareText(run));
     setCopied(ok);
     setTimeout(() => setCopied(false), 2000);
   }
 
+  async function card(): Promise<void> {
+    sfx.tap();
+    setCardState('working');
+    const outcome = await shareRunCard(
+      {
+        game: game.name,
+        modeLabel,
+        dayLabel: run.runMode === 'daily' ? `#${pad(run.day)}` : '',
+        height: metres(run.height),
+        routeKm: ROUTE_KM,
+        score: run.score,
+        verdict: verdict(run.score, run.max),
+        streak: streak.current,
+        answers: run.answers.map((a) => ({ tier: a.tier ?? 'lost', points: a.points })),
+      },
+      shareText(run),
+    );
+    setCardState(outcome === 'shared' ? 'shared' : outcome === 'saved' ? 'saved' : outcome === 'failed' ? 'failed' : 'idle');
+  }
+
+  const cardLabel =
+    cardState === 'working'
+      ? 'Making card…'
+      : cardState === 'shared'
+        ? 'Shared'
+        : cardState === 'saved'
+          ? 'Saved png'
+          : cardState === 'failed'
+            ? 'Could not share'
+            : 'Share card';
+
   return (
     <main className="main">
+      {celebrate ? (
+        <div className="stage-confetti survey-confetti" aria-hidden="true">
+          {Array.from({ length: 14 }, (_, i) => (
+            <i key={i} style={{ left: `${8 + i * 6.4}%`, animationDelay: `${i * 45}ms` }} />
+          ))}
+        </div>
+      ) : null}
       <div className="wrap survey-wrap">
         <div className="eyebrow">
-          {game.name} #{pad(run.day)} · {dayToISO(run.day)}
+          {game.name} · {modeLabel}
+          {run.runMode === 'daily' ? ` #${pad(run.day)} · ${dayToISO(run.day)}` : ''}
         </div>
-        <div className="result-score" style={{ marginTop: 10 }}>
-          <span className="score-big">{run.score}</span>
-          <span className="result-max">/ {run.max || perfect}</span>
+
+        <div className="result-height">
+          <span className="result-height-num">{metres(Math.round(shownHeight))}</span>
+          <span className="result-height-km">/ {ROUTE_KM} km</span>
         </div>
-        <div className="rating-word">{verdict(run.score, run.max)}</div>
+        <div className="rating-word is-stamping">{verdict(run.score, run.max)}</div>
+
         <div className="row gap-6" style={{ flexWrap: 'wrap' }}>
-          <span className="chip chip-ember">{km} km walked</span>
+          <span className="chip chip-ember">{run.score} points</span>
           <span className="chip">Best {best}</span>
+          {run.runMode === 'endless' ? <span className="chip">{run.answers.length} prompts</span> : null}
           <span className={`chip${streak.current > 0 ? ' chip-ember' : ''}`}>
             <span className="chip-dot" aria-hidden="true" />
             {streak.current}-day streak
           </span>
-          <span className="chip">One attempt used</span>
-          <span className="chip">{run.answers.length} prompts</span>
         </div>
 
         <div style={{ marginTop: 18 }}>
@@ -527,7 +822,7 @@ function SurveyResult({ run, navigate }: { run: SurveyRun; navigate: (path: stri
 
         <section className="route-map">
           <div className="route-map-head">
-            <span className="eyebrow">The route</span>
+            <span className="eyebrow">The climb</span>
             <span className="eyebrow">
               {km} / {ROUTE_KM} km
             </span>
@@ -538,7 +833,12 @@ function SurveyResult({ run, navigate }: { run: SurveyRun; navigate: (path: stri
           </div>
           <div className="route-map-stops">
             {run.answers.map((a, i) => (
-              <div className="route-stop" key={`${a.promptId}-${i}`} data-tier={a.tier ?? 'lost'}>
+              <div
+                className="route-stop"
+                key={`${a.promptId}-${i}`}
+                data-tier={a.tier ?? 'lost'}
+                style={{ animationDelay: `${i * 70}ms` }}
+              >
                 <span className="route-stop-num">STOP {i + 1}</span>
                 <span className="route-stop-tier">{a.tier ? TIERS[a.tier].name : 'Lost'}</span>
                 <span className="route-stop-points">+{a.points}</span>
@@ -560,8 +860,10 @@ function SurveyResult({ run, navigate }: { run: SurveyRun; navigate: (path: stri
                     {a.asked}
                   </span>
                   <span className="mono" style={{ fontSize: '0.8125rem', color: 'var(--muted)' }}>
-                    {a.given ? `“${a.given}”` : 'no answer'} ·{' '}
-                    {a.weight === null ? 'nobody said that' : `${a.weight}% said ${a.matched}`}
+                    {a.given ? `“${a.given}”` : 'no answer'}
+                    {a.given
+                      ? ` · ${a.weight === null ? 'off the board' : `${a.weight}% said ${a.matched}`}`
+                      : ''}
                   </span>
                 </div>
                 <div className="stack gap-6" style={{ alignItems: 'flex-end' }}>
@@ -576,22 +878,51 @@ function SurveyResult({ run, navigate }: { run: SurveyRun; navigate: (path: stri
         </section>
 
         <div className="row gap-10" style={{ marginTop: 18, flexWrap: 'wrap' }}>
-          <button className="btn btn-primary" onClick={() => void copy()}>
+          <button className="btn btn-primary" onClick={() => void card()} disabled={cardState === 'working'}>
+            {cardLabel}
+          </button>
+          <button className="btn" onClick={() => void copy()}>
             {copied ? 'Copied' : 'Copy result'}
           </button>
-          <button className="btn" onClick={() => navigate(`/${other}`)}>
-            Play {GAMES[other].name} today
+          {run.runMode !== 'daily' ? (
+            <button
+              className="btn"
+              onClick={() => {
+                sfx.tap();
+                onAgain();
+              }}
+            >
+              Climb again
+            </button>
+          ) : null}
+          <button
+            className="btn"
+            onClick={() => {
+              sfx.tap();
+              navigate(`/${other}`);
+            }}
+          >
+            Play {GAMES[other].name}
           </button>
-          <button className="btn btn-ghost" onClick={() => navigate('/')}>
+          <button
+            className="btn btn-ghost"
+            onClick={() => {
+              sfx.tap();
+              navigate('/');
+            }}
+          >
             Back to menu
           </button>
         </div>
 
         <p className="par-note" style={{ marginTop: 14 }}>
-          Next {game.name} in <Countdown to={nextResetAt()} />
-        </p>
-        <p className="par-note" style={{ marginTop: 4, fontSize: '0.8125rem' }}>
-          A perfect walk is {perfect} points and {ROUTE_KM} km.
+          {run.runMode === 'daily' ? (
+            <>
+              Next {game.name} in <Countdown to={nextResetAt()} />
+            </>
+          ) : (
+            <>A perfect seven-prompt climb is 700 points and 14 km.</>
+          )}
         </p>
       </div>
     </main>
