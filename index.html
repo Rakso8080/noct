@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Noct — the daily spark puzzle</title>
+    <meta
+      name="description"
+      content="One puzzle a day. Place a single spark in every row, every column and every tone — and never let two sparks touch. Two minutes, once a day."
+    />
+    <meta name="theme-color" content="#0b0d10" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#f5f2ea" media="(prefers-color-scheme: light)" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/icon.svg" />
+    <script>
+      // Set the theme before paint so there is no flash of the wrong palette.
+      try {
+        var stored = JSON.parse(localStorage.getItem('noct.settings.v1') || '{}');
+        var choice = stored.theme || 'system';
+        var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        document.documentElement.dataset.theme =
+          choice === 'dark' || (choice === 'system' && prefersDark) ? 'dark' : 'light';
+        document.documentElement.dataset.motion = stored.motion === 'reduced' ? 'reduced' : 'system';
+      } catch (e) {
+        document.documentElement.dataset.theme = 'dark';
+      }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
