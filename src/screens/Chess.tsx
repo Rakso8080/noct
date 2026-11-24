@@ -313,7 +313,8 @@ export function Chess({ navigate }: { navigate: (path: string) => void }) {
     setSelected(null);
     setPromo(null);
     setHint(null);
-    setRecorded(false);
+    /* Undo rewinds the moves, not the record: a game that already ended has
+       been scored once, and taking the move back must not let it score again. */
     sfx.remove();
     haptic(8);
   }, [records, side, thinking]);
