@@ -7,6 +7,7 @@ import { Stats } from './screens/Stats';
 import { Leaderboard } from './screens/Leaderboard';
 import { Settings } from './screens/Settings';
 import { HowTo } from './screens/HowTo';
+import { Survey } from './screens/Survey';
 import { Logo } from './components/ui';
 import { getSummary, setSummary } from './lib/results';
 import { BRAND } from './brand';
@@ -41,10 +42,14 @@ function useRoute(): [string, (to: string) => void] {
 }
 
 const NAV = [
-  { path: '/', label: 'Today', match: (s: string[]) => s.length === 0 },
-  { path: '/play', label: 'Play', match: (s: string[]) => s[0] === 'play' },
-  { path: '/archive', label: 'Archive', match: (s: string[]) => s[0] === 'archive' },
-  { path: '/leaderboard', label: 'Standings', match: (s: string[]) => s[0] === 'leaderboard' },
+  { path: '/', label: 'Menu', match: (s: string[]) => s.length === 0 },
+  { path: '/common', label: 'Common', match: (s: string[]) => s[0] === 'common' },
+  { path: '/rare', label: 'Rare', match: (s: string[]) => s[0] === 'rare' },
+  {
+    path: '/play',
+    label: 'Noct',
+    match: (s: string[]) => s[0] === 'play' || s[0] === 'practice' || s[0] === 'archive',
+  },
   { path: '/stats', label: 'Stats', match: (s: string[]) => s[0] === 'stats' },
 ];
 
@@ -77,6 +82,10 @@ export function App() {
         onTutorial={() => navigate('/how-to')}
       />
     );
+  } else if (section === 'common') {
+    page = <Survey key="common" mode="common" navigate={navigate} />;
+  } else if (section === 'rare') {
+    page = <Survey key="rare" mode="rare" navigate={navigate} />;
   } else if (section === 'practice') {
     const level = Math.max(1, Math.min(5, Number(url.searchParams.get('level') ?? 2) || 2));
     page = (

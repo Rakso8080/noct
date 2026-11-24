@@ -2,6 +2,7 @@ import { createRoot } from 'react-dom/client';
 import { App } from './App';
 import { applyTheme, watchSystemTheme } from './lib/settings';
 import './styles.css';
+import './survey.css';
 
 applyTheme();
 watchSystemTheme();

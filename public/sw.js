@@ -1,4 +1,4 @@
-const CACHE = 'noct-shell-v2';
+const CACHE = 'noct-shell-v3';
 const BASE = new URL(self.registration.scope).pathname;
 const SHELL = [
   BASE,

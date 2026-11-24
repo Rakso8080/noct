@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <title>Noct — the daily spark puzzle</title>
+    <title>Noct — three daily games in three minutes</title>
     <meta
       name="description"
-      content="One puzzle a day. Place a single spark in every row, every column and every tone — and never let two sparks touch. Two minutes, once a day."
+      content="Common: give the answer everybody gives. Rare: give the one nobody gives. Noct: one spark per row, column and tone. Three small daily games, no account."
     />
     <meta name="theme-color" content="#0b0d10" media="(prefers-color-scheme: dark)" />
     <meta name="theme-color" content="#f5f2ea" media="(prefers-color-scheme: light)" />
@@ -31,6 +31,26 @@
   </head>
   <body>
     <div id="root"></div>
+    <noscript>
+      <p style="font-family: system-ui, sans-serif; padding: 24px">
+        Noct needs JavaScript to run. Please enable it and reload.
+      </p>
+    </noscript>
+    <script>
+      // Never leave a blank page: if the bundle fails to load, say so and offer a reload.
+      window.addEventListener('load', function () {
+        setTimeout(function () {
+          var root = document.getElementById('root');
+          if (!root || root.childElementCount > 0) return;
+          root.innerHTML =
+            '<div style="font-family: system-ui, -apple-system, sans-serif; padding: 28px; max-width: 32rem; line-height: 1.5">' +
+            '<h1 style="font-size: 1.4rem; margin: 0 0 8px">Noct could not start</h1>' +
+            '<p style="margin: 0 0 16px; opacity: 0.75">The page loaded but its script did not. This is usually a stale cache.</p>' +
+            '<button onclick="location.reload()" style="font: inherit; padding: 10px 16px; border-radius: 999px; border: 1px solid currentColor; background: transparent; color: inherit; cursor: pointer">Reload</button>' +
+            '</div>';
+        }, 5000);
+      });
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
