@@ -1,4 +1,6 @@
 import type { ReactNode } from 'react';
+import { useT } from '../lib/i18n';
+import type { SightingId } from '../lib/journal';
 
 /**
  * Pixel sprites for the night scene.
@@ -161,6 +163,67 @@ export function HeroWorld() {
         <Sprite grid={WANDERER} />
         <i className="hero-wanderer-lantern" />
       </span>
+    </div>
+  );
+}
+
+interface FindSpot {
+  id: SightingId;
+  title: string;
+  left: string;
+  bottom: string;
+}
+
+/** Stood where the art already is, so the eye finds them without a label. */
+const HERO_FINDS: readonly FindSpot[] = [
+  { id: 'tower', title: 'the tower window', left: '10%', bottom: '44%' },
+  { id: 'fireflies', title: 'the fireflies', left: '30%', bottom: '39%' },
+  { id: 'deer', title: 'the stag', left: '8%', bottom: '3%' },
+  { id: 'wanderer', title: 'the wanderer', left: '84%', bottom: '15%' },
+];
+
+const STRIP_FINDS: readonly FindSpot[] = [
+  { id: 'cat', title: 'the cat', left: '58%', bottom: '26px' },
+  { id: 'snail', title: 'the snail', left: '40%', bottom: '9px' },
+];
+
+/**
+ * The six small things worth noticing. Real buttons, keyboard reachable and
+ * labelled — the art behind them stays decorative.
+ */
+export function WorldFinds({
+  variant,
+  found,
+  onFind,
+}: {
+  variant: 'hero' | 'strip';
+  found: readonly SightingId[];
+  onFind: (id: SightingId) => void;
+}) {
+  const t = useT();
+  const spots = variant === 'hero' ? HERO_FINDS : STRIP_FINDS;
+
+  return (
+    <div className={`world-finds world-finds--${variant}`}>
+      {spots.map((spot) => {
+        const seen = found.includes(spot.id);
+        return (
+          <button
+            key={spot.id}
+            type="button"
+            className="world-find"
+            data-found={seen ? 'true' : 'false'}
+            style={{ left: spot.left, bottom: spot.bottom }}
+            aria-pressed={seen}
+            aria-label={t(seen ? 'Sit with {name} again' : 'Look closer at {name}', {
+              name: t(spot.title),
+            })}
+            onClick={() => onFind(spot.id)}
+          >
+            <span aria-hidden="true" />
+          </button>
+        );
+      })}
     </div>
   );
 }

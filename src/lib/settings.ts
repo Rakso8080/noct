@@ -7,6 +7,9 @@ export interface Settings {
   sound: boolean;
   haptics: boolean;
   motion: 'system' | 'reduced';
+  /** the slow pad behind a chapter; off until asked */
+  ambience: boolean;
+  ambienceLevel: 1 | 2;
   tutorialSeen: boolean;
 }
 
@@ -17,6 +20,8 @@ const defaults: Settings = {
   sound: true,
   haptics: true,
   motion: 'system',
+  ambience: false,
+  ambienceLevel: 1,
   tutorialSeen: false,
 };
 

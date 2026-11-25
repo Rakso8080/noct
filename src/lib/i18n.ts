@@ -849,6 +849,11 @@ const NB: Record<string, string> = {
   'Your best {points} pts · {km} km': 'Din beste {points} poeng · {km} km',
   '{n} prompts · {s}s each': '{n} oppgaver · {s}s hver',
   Streak: 'Rekke',
+  evening: 'Kveld',
+  night: 'Natt',
+  'before dawn': 'Før gry',
+  day: 'Dag',
+  'Local time {time}, {phase}': 'Lokal tid {time}, {phase}',
   '{n} days': '{n} dager',
   on: 'på',
   off: 'av',
@@ -1149,4 +1154,124 @@ const NB: Record<string, string> = {
   'Deleting your data removes your results, streak, name, side-game records and Atlas seals immediately.':
     'Sletting fjerner resultatene, rekken, navnet, siderecordene og atlasseglene dine med en gang.',
   BOARD: 'BRETT',
+
+  // ---- the weather over the road
+  'Clear night': 'Klar natt',
+  Mist: 'Tåke',
+  'Meteor shower': 'Stjerneskudd',
+  'Quiet snow': 'Stille snø',
+  'The valley stands open; every window is a small lighthouse.':
+    'Dalen står åpen; hvert vindu er et lite fyrtårn.',
+  'Mist on the road; the lanterns carry further than they should.':
+    'Tåke over veien; lyktene bærer lenger enn de burde.',
+  'Old stars fall over the ridge, one every few breaths.':
+    'Gamle stjerner faller over kammen, én for hvert par åndedrag.',
+  'Snow on the valley; the boards keep their sound down.':
+    'Snø over dalen; bordene demper lyden.',
+  'Green light over the water, and the road lit from above.':
+    'Grønt lys over vannet, og veien tent ovenfra.',
+  'Tonight: {weather}': 'I natt: {weather}',
+  'Weather over the road': 'Vær over veien',
+
+  // ---- the air in each place
+  'The valley at the door, before anyone has chosen a table.':
+    'Dalen ved døren, før noen har valgt et bord.',
+  'A low chorus of sparks over the water.': 'Et lavt kor av gnister over vannet.',
+  'The hall keeps its breath; dust turns slowly in the dark.':
+    'Salen holder pusten; støv snur seg sakte i mørket.',
+  'Lantern light in four rows, and nothing in a hurry.':
+    'Lykter i fire rader, og ingenting som haster.',
+  'Candle smoke and warm wax; the keep is still awake.':
+    'Voksrøyk og varmt voks; borgen er fortsatt våken.',
+  'Ash from old stars, rising without sound.':
+    'Aske fra gamle stjerner, som stiger uten lyd.',
+  'Brass dust over the keepsake stall.': 'Messingstøv over minremarken.',
+  'Embers from twenty-five windows, drifting loose.':
+    'Glør fra tjuefem vinduer, på drift.',
+  'Glass glints among the apple rows.': 'Glassglitter mellom epleradene.',
+  'Amber sparks off the doubling lanterns.':
+    'Ravgule gnister fra doblingslyktene.',
+  'Pale petals on a cold, bright garden.':
+    'Bleke kronblader i en kald, klar hage.',
+  'Clay dust settling over the courtyard.':
+    'Leirstøv som legger seg over gårdsplassen.',
+  'Fireflies following the aqueduct down to the water.':
+    'Ildfluer som følger akvedukten ned mot vannet.',
+  'Mist on the long bridge, and the water beneath it.':
+    'Dis på den lange broen, og vannet under den.',
+  'The whole valley from the ridge, every table at once.':
+    'Hele dalen fra kammen, alle bord på én gang.',
+  'Ink, brass and a lamp left on over the map.':
+    'Blekk, messing og en lampe som står på over kartet.',
+
+  // ---- the field book
+  'Field book': 'Feltboka',
+  'Notes from the valley': 'Notater fra dalen',
+  '{n} of 19 found': '{n} av 19 funnet',
+  'Open the field book': 'Åpne feltboka',
+  'Not yet found': 'Ikke funnet ennå',
+  Sightings: 'Observasjoner',
+  'Six small things to notice around the valley. They live on the front page.':
+    'Seks små ting å legge merke til i dalen. De bor på forsiden.',
+  'Every mark is a memory, not a duty.': 'Hvert merke er et minne, ikke en plikt.',
+  'The map is drawn by walking it.': 'Kartet tegnes ved å gå det.',
+  'Look closer at {name}': 'Se nærmere på {name}',
+  'Sit with {name} again': 'Sitt med {name} igjen',
+  'the fireflies': 'ildfluene',
+  'the cat': 'katten',
+  'the snail': 'snilen',
+  'the stag': 'hjorten',
+  'the wanderer': 'vandreren',
+  'the tower window': 'tårnvinduet',
+  'The choir does not rehearse. It waits for the first answer, then follows it.':
+    'Koret øver ikke. Det venter på det første svaret, og følger det.',
+  'From the far end of the hall the same seven questions sound like new ones.':
+    'Fra den andre enden av salen høres de samme sju spørsmålene som nye.',
+  'Four grids, and not one lantern touches another. The valley sleeps in the gaps.':
+    'Fire rutenett, og ikke én lykt rører en annen. Dalen sover i mellomrommene.',
+  'The keep keeps every rule and no clock. Candlelight is the only pressure.':
+    'Borgen holder alle regler og ingen klokke. Levende lys er det eneste presset.',
+  'Ten stars fell here. The first stone you turn is always safe; the rest is arithmetic and nerve.':
+    'Ti stjerner falt her. Den første steinen du snur er alltid trygg; resten er regning og nerve.',
+  'The market remembers faces. Turn two at a time and the stall gives one honest peek.':
+    'Markedet husker ansikter. Snu to om gangen, og boden gir én ærlig titt.',
+  'Twenty-five windows. Press one and its neighbours answer; the sky comes through when all are shut.':
+    'Tjuefem vinduer. Trykk på ett, og naboene svarer; himmelen slipper inn når alle er lukket.',
+  'In the glass orchard everything grows in a straight line, until it turns.':
+    'I glasshagen vokser alt i rett linje, helt til det svinger.',
+  'Two lanterns of the same size become one. Keep doubling until the room is bright.':
+    'To lykter av samme størrelse blir én. Doble til rommet er lyst.',
+  'The garden is generous: every line you trap comes back in your own colour.':
+    'Hagen er gavmild: hver linje du fanger, kommer tilbake i din egen farge.',
+  'On warm clay a capture is compulsory, and a crown is only a longer way of walking.':
+    'På varm leire er et slag påbudt, og en krone er bare en lengre måte å gå på.',
+  'Water falls four deep in the aqueduct. Line the lanterns and the whole channel lights.':
+    'Vannet faller fire dypt i akvedukten. Still lyktene på linje, og hele kanalen lyser.',
+  'The bridge is long enough for one more tile. Empty your hand and the water stays quiet.':
+    'Broen er lang nok til én brikke til. Tøm hånden, og vannet holder seg stille.',
+  'Five small lights keep their own time above the meadow. They never land.':
+    'Fem små lys holder sin egen tid over enga. De lander aldri.',
+  'The cat on the fence has watched every table in the valley and approves of none.':
+    'Katten på gjerdet har sett hvert bord i dalen og godkjenner ingen av dem.',
+  'A snail crosses the meadow all night and arrives exactly where it meant to.':
+    'En snile krysser enga hele natten og kommer nøyaktig dit den ville.',
+  'The stag walks the ridge at his own pace, antlers first, and never hurries for anyone.':
+    'Hjorten går over kammen i sitt eget tempo, med gevir først, og haster aldri for noen.',
+  'The wanderer carries the only lantern on the road. It is always the same size as yours.':
+    'Vandreren bærer den eneste lykten på veien. Den er alltid like stor som din.',
+  'One window in the keep is lit all night. Nobody has ever been seen inside it.':
+    'Ett vindu i borgen er tent hele natten. Ingen har noen gang sett noen der inne.',
+
+  // ---- night sound
+  'Night sound': 'Nattlyd',
+  'A soft, slow pad per chapter. Off by default; nothing plays until you ask.':
+    'En myk, langsom pad per kapittel. Av som standard; ingenting spilles før du ber om det.',
+  'Hear it': 'Hør den',
+  Quiet: 'Dempet',
+  Full: 'Kraftig',
+  'Night sound level': 'Nivå for nattlyd',
+  'The field book keeps only the notes and sightings you have found, in this browser.':
+    'Feltboka tar bare vare på notatene og observasjonene du har funnet, i denne nettleseren.',
+  'Deleting your data removes your results, streak, name, side-game records, Atlas seals and field notes immediately.':
+    'Sletting fjerner resultatene, rekken, navnet, siderecordene, atlasseglene og feltnotatene dine med en gang.',
 };

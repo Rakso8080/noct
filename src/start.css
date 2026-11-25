@@ -95,6 +95,64 @@
   text-shadow: 2px 2px 0 rgba(6, 4, 14, 0.7);
 }
 
+/* The valley's own hour, kept quietly under the wordmark. */
+.start-clock {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 16px;
+  padding: 4px 11px;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  letter-spacing: 0.06em;
+  color: #d6e8da;
+  background: rgba(6, 12, 10, 0.5);
+  border: 1px solid rgba(155, 232, 180, 0.22);
+  border-radius: 999px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.7);
+}
+
+.start-clock-time {
+  font-variant-numeric: tabular-nums;
+}
+
+.start-clock-dot {
+  width: 5px;
+  height: 5px;
+  flex: 0 0 5px;
+  border-radius: 50%;
+  background: #9be8b4;
+  box-shadow: 0 0 8px rgba(155, 232, 180, 0.85);
+  animation: clock-breathe 6s ease-in-out infinite;
+}
+
+.start-clock-phase {
+  font-size: 0.625rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #9ab8a6;
+}
+
+@keyframes clock-breathe {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .start-clock-dot {
+    animation: none;
+  }
+}
+
+:root[data-motion='reduced'] .start-clock-dot {
+  animation: none;
+}
+
 .start-modes {
   display: flex;
   gap: 8px;

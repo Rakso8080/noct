@@ -2,6 +2,9 @@ import { lazy, Suspense, useCallback, useEffect, useState, type ReactNode } from
 import { Home } from './screens/Home';
 import { RouteBoundary } from './components/RouteBoundary';
 import { RealmBackdrop } from './components/RealmBackdrop';
+import { SceneLayer } from './components/SceneLayer';
+import { routeWeather, type PlaceId } from './lib/atlas';
+import type { SceneKey } from './lib/scenes';
 
 /* Every screen but the menu is its own chunk, so the first paint ships the
    menu, not all fifteen boards. */
@@ -68,7 +71,7 @@ interface NavItem {
   always?: boolean;
 }
 
-const ATLAS_PLACE_BY_SECTION: Record<string, string> = {
+const ATLAS_PLACE_BY_SECTION: Record<string, PlaceId> = {
   common: 'common',
   rare: 'rare',
   play: 'noct',
@@ -122,6 +125,16 @@ export function App() {
   const segments = url.pathname.split('/').filter(Boolean);
   const section = segments[0] ?? '';
   const atlasPlace = ATLAS_PLACE_BY_SECTION[section];
+  const scenePlace: SceneKey | null =
+    atlasPlace ??
+    (section === ''
+      ? 'home'
+      : section === 'arcade'
+        ? 'arcade'
+        : section === 'atlas'
+          ? 'atlas'
+          : null);
+  const weather = routeWeather(dayNumber());
   const atlasQuery = atlasPlace ? `?place=${atlasPlace}` : '';
   const realm =
     !section
@@ -269,8 +282,9 @@ export function App() {
   }
 
   return (
-    <div className="shell" data-realm={realm}>
+    <div className="shell" data-realm={realm} data-weather={weather.id} data-place={scenePlace ?? 'home'}>
       <RealmBackdrop key={realm} hidden={immersive} />
+      {scenePlace && !immersive ? <SceneLayer place={scenePlace} weather={weather.id} /> : null}
       <header className="site-head">
         <div className="wrap">
           <a

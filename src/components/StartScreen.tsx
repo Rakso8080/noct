@@ -5,6 +5,7 @@ import { sfx } from '../lib/audio';
 import { loadToday } from '../lib/crowd';
 import { PROMPTS_PER_DAY, SECONDS_PER_PROMPT, heightFor, type RunMode, type SurveyMode } from '../../shared/survey';
 import { useT } from '../lib/i18n';
+import { AmbientClock } from './AmbientClock';
 
 const MODES: { id: RunMode; name: string; line: string }[] = [
   { id: 'daily', name: 'Daily', line: 'Seven prompts, one try. Everybody gets the same ones today.' },
@@ -98,6 +99,7 @@ export function StartScreen({
       <div className="start-inner">
         <h1 className="start-logo">Noct</h1>
         <p className="start-sub">{t(game.line)}</p>
+        <AmbientClock />
 
         <div className="start-modes" role="tablist" aria-label={t('Choose a mode')}>
           {MODES.map((m) => {

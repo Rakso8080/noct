@@ -5,8 +5,10 @@ import {
   PLACES,
   addRouteStamp,
   clearAtlas,
+  WEATHERS,
   marksFor,
   nightRoute,
+  routeWeather,
   placeView,
   readRouteStamps,
   recordRouteStamp,
@@ -71,6 +73,21 @@ test('the nightly route is deterministic, unique and one stop per chapter', () =
   assert.deepEqual(
     surveySnapshot('common', 10),
     surveySnapshot('common', 10),
+  );
+});
+
+test('the weather is deterministic, stable and one of the five skies', () => {
+  const ids = new Set(WEATHERS.map((weather) => weather.id));
+  assert.equal(ids.size, 5);
+  for (const day of [1, 2, 10, 365, 9001]) {
+    const weather = routeWeather(day);
+    assert.ok(ids.has(weather.id));
+    assert.equal(routeWeather(day).id, weather.id);
+    assert.equal(routeWeather(day).name, weather.name);
+  }
+  assert.deepEqual(
+    routeWeather(10),
+    routeWeather(10),
   );
 });
 

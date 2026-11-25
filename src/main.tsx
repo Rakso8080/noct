@@ -13,6 +13,7 @@ import './play.css';
 import './games.css';
 import './realm.css';
 import './atlas.css';
+import './scenes.css';
 
 applyTheme();
 watchSystemTheme();

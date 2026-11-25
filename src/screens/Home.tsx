@@ -2,12 +2,21 @@ import { useEffect, useState } from 'react';
 import { api, type TodayResponse } from '../lib/api';
 import { Countdown } from '../components/ui';
 import { PlaceGlyph } from '../components/PlaceGlyph';
-import { HeroWorld, WorldStrip } from '../components/World';
+import { HeroWorld, WorldFinds, WorldStrip } from '../components/World';
 import { dailyRunFor, streakFor, type SurveyRun } from '../lib/surveyStore';
 import { dayNumber, nextResetAt } from '../../shared/dates';
 import { MAX_SCORE } from '../../shared/score';
 import { readGames, type GamesStore } from '../lib/gamesStore';
-import { nightRoute, marksFor, recordRouteStamp, surveySnapshot, type PlaceShape } from '../lib/atlas';
+import {
+  nightRoute,
+  marksFor,
+  recordRouteStamp,
+  routeWeather,
+  surveySnapshot,
+  type PlaceShape,
+} from '../lib/atlas';
+import { addSighting, readSightings, type SightingId } from '../lib/journal';
+import { sfx } from '../lib/audio';
 import { useT } from '../lib/i18n';
 
 interface HomeProps {
@@ -80,6 +89,17 @@ export function Home({ navigate, onTutorial }: HomeProps) {
 
   const day = dayNumber();
   const [games] = useState<GamesStore>(() => readGames());
+  const [sightings, setSightings] = useState<SightingId[]>(() => readSightings());
+  const weather = routeWeather(day);
+
+  useEffect(() => {
+    sfx.soundscape('atlas');
+    return () => sfx.soundscape(null);
+  }, []);
+
+  const findSighting = (id: SightingId) => {
+    if (addSighting(id)) setSightings(readSightings());
+  };
 
   useEffect(() => {
     let alive = true;
@@ -197,6 +217,7 @@ export function Home({ navigate, onTutorial }: HomeProps) {
       <div className="wrap">
         <section className="home-hero">
           <HeroWorld />
+          <WorldFinds variant="hero" found={sightings} onFind={findSighting} />
 
           <div className="home-hero-inner">
             <div className="hero-hud">
@@ -233,6 +254,10 @@ export function Home({ navigate, onTutorial }: HomeProps) {
             <div>
               <span className="eyebrow">{t('Tonight’s road')}</span>
               <h2 id="home-road-title">{t('Three stops, one night')}</h2>
+              <p className="atlas-weather-line">
+                <span className="atlas-weather-dot" data-weather={weather.id} aria-hidden="true" />
+                {t('Tonight: {weather}', { weather: t(weather.name) })}
+              </p>
             </div>
             <button className="btn btn-sm btn-ghost" onClick={() => navigate('/atlas')}>
               {t('Open the atlas')}
@@ -448,7 +473,10 @@ export function Home({ navigate, onTutorial }: HomeProps) {
           </button>
         </div>
 
-        <WorldStrip />
+        <div className="world-strip-frame">
+          <WorldStrip />
+          <WorldFinds variant="strip" found={sightings} onFind={findSighting} />
+        </div>
       </div>
     </main>
   );

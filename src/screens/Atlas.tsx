@@ -5,6 +5,15 @@ import { PlaceGlyph } from '../components/PlaceGlyph';
 import { ScreenHead, formatDay } from '../components/ui';
 import { useT } from '../lib/i18n';
 import { readGames } from '../lib/gamesStore';
+import { sfx } from '../lib/audio';
+import { sceneFor } from '../lib/scenes';
+import {
+  FIELD_NOTES,
+  SIGHTINGS,
+  journalProgress,
+  readSightings,
+  unlockedNoteIds,
+} from '../lib/journal';
 import {
   CHAPTERS,
   PLACES,
@@ -17,6 +26,7 @@ import {
   recordRouteStamp,
   routeComplete,
   routeLitCount,
+  routeWeather,
   surveySnapshot,
   type PlaceId,
   type PlaceView,
@@ -40,6 +50,13 @@ export function Atlas({ navigate }: { navigate: (path: string) => void }) {
       : nightRoute(day)[0]?.id ?? 'common';
   });
   const [stamps, setStamps] = useState<number[]>(() => readRouteStamps());
+  const [sightings] = useState(() => readSightings());
+  const weather = routeWeather(day);
+
+  useEffect(() => {
+    sfx.soundscape('atlas');
+    return () => sfx.soundscape(null);
+  }, []);
 
   useEffect(() => {
     let alive = true;
@@ -86,6 +103,9 @@ export function Atlas({ navigate }: { navigate: (path: string) => void }) {
   const keepsakeCount = views.filter((view) => view.marks.keepsake).length;
   const selectedView = viewById.get(selected) ?? views[0];
   const selectedChapter = CHAPTERS.find((chapter) => chapter.id === selectedView.chapter) ?? CHAPTERS[0];
+  const scene = sceneFor(selectedView.id);
+  const noteIds = unlockedNoteIds(sources);
+  const progress = journalProgress(sources, sightings);
   const selectedNumber = PLACES.findIndex((place) => place.id === selectedView.id) + 1;
   const selectedRouteIndex = route.findIndex((place) => place.id === selectedView.id);
 
@@ -110,11 +130,17 @@ export function Atlas({ navigate }: { navigate: (path: string) => void }) {
   return (
     <main className="main atlas-main">
       <div className="wrap">
-        <ScreenHead eyebrow="The Hollow Atlas" title="The Long Road">
-          {t(
-            'Thirteen places on one road: seven nightly boards and six side tables. The map only remembers what you have already played.',
-          )}
-        </ScreenHead>
+        <div className="atlas-plate">
+          <ScreenHead eyebrow="The Hollow Atlas" title="The Long Road">
+            {t(
+              'Thirteen places on one road: seven nightly boards and six side tables. The map only remembers what you have already played.',
+            )}
+          </ScreenHead>
+          <span className="atlas-compass" aria-hidden="true">
+            <i />
+            <i />
+          </span>
+        </div>
 
         <div className="atlas-summary" aria-label={t('The road so far')}>
           <span className="chip chip-ember">
@@ -133,6 +159,10 @@ export function Atlas({ navigate }: { navigate: (path: string) => void }) {
             <div>
               <span className="eyebrow">{t('Tonight’s road')}</span>
               <h2 id="atlas-route-title">{t('Three stops, one night')}</h2>
+              <p className="atlas-weather-line" aria-label={t('Weather over the road')}>
+                <span className="atlas-weather-dot" data-weather={weather.id} aria-hidden="true" />
+                <strong>{t(weather.name)}</strong> — {t(weather.note)}
+              </p>
             </div>
             <span className="atlas-route-count">
               {routeDone ? t('Sealed for tonight') : t('{n} of 3 lit', { n: routeLit })}
@@ -232,6 +262,7 @@ export function Atlas({ navigate }: { navigate: (path: string) => void }) {
                 );
               })}
             </div>
+            <p className="atlas-marginalia">{t('The map is drawn by walking it.')}</p>
           </section>
 
           <aside className="atlas-detail" id="atlas-detail" aria-live="polite">
@@ -242,7 +273,14 @@ export function Atlas({ navigate }: { navigate: (path: string) => void }) {
               })}
             </span>
             <div className="atlas-detail-title">
-              <span className="atlas-detail-glyph">
+              <span
+                className="atlas-art-plate"
+                data-place={selectedView.id}
+                style={{
+                  background: `linear-gradient(160deg, ${scene.sky[0]}, ${scene.sky[1]}), var(--surface-2)`,
+                }}
+              >
+                <i aria-hidden="true" />
                 <PlaceGlyph shape={selectedView.shape} size={30} />
               </span>
               <div>
@@ -326,6 +364,51 @@ export function Atlas({ navigate }: { navigate: (path: string) => void }) {
               {t('Finish all three stops on a night and the atlas keeps the seal here. No streak is lost by resting.')}
             </p>
           )}
+        </section>
+
+        <section className="atlas-journal" aria-labelledby="atlas-journal-title">
+          <div className="atlas-journal-head">
+            <div>
+              <span className="eyebrow">{t('Field book')}</span>
+              <h2 id="atlas-journal-title">{t('Notes from the valley')}</h2>
+            </div>
+            <span className="chip">
+              {t('{n} of 19 found', { n: progress.found })}
+            </span>
+          </div>
+          <details className="atlas-journal-body">
+            <summary>{t('Open the field book')}</summary>
+            <ol className="atlas-notes">
+              {PLACES.map((place) => {
+                const note = FIELD_NOTES.find((item) => item.place === place.id);
+                const found = noteIds.includes(place.id);
+                return (
+                  <li key={place.id} data-found={found ? 'true' : 'false'}>
+                    <strong>{t(place.placeName)}</strong>
+                    <small>{found && note ? t(note.text) : t('Not yet found')}</small>
+                  </li>
+                );
+              })}
+            </ol>
+            <div className="atlas-sightings">
+              <span className="eyebrow">{t('Sightings')}</span>
+              <p className="par-note atlas-sightings-note">
+                {t('Six small things to notice around the valley. They live on the front page.')}
+              </p>
+              <ul>
+                {SIGHTINGS.map((sighting) => {
+                  const seen = sightings.includes(sighting.id);
+                  return (
+                    <li key={sighting.id} data-found={seen ? 'true' : 'false'}>
+                      <strong>{t(sighting.title)}</strong>
+                      <small>{seen ? t(sighting.text) : t('Not yet found')}</small>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+            <p className="par-note atlas-journal-note">{t('Every mark is a memory, not a duty.')}</p>
+          </details>
         </section>
 
         {totalMarks === PLACES.length * 3 ? (

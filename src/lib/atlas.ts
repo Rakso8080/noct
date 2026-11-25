@@ -503,6 +503,48 @@ export function nightRoute(day: number): Place[] {
   });
 }
 
+export type WeatherId = 'clear' | 'mist' | 'meteors' | 'snow' | 'aurora';
+
+export interface RouteWeather {
+  id: WeatherId;
+  name: string;
+  note: string;
+}
+
+/** Five skies over the same road. Deterministic, so everyone shares the night. */
+export const WEATHERS: readonly RouteWeather[] = [
+  {
+    id: 'clear',
+    name: 'Clear night',
+    note: 'The valley stands open; every window is a small lighthouse.',
+  },
+  {
+    id: 'mist',
+    name: 'Mist',
+    note: 'Mist on the road; the lanterns carry further than they should.',
+  },
+  {
+    id: 'meteors',
+    name: 'Meteor shower',
+    note: 'Old stars fall over the ridge, one every few breaths.',
+  },
+  {
+    id: 'snow',
+    name: 'Quiet snow',
+    note: 'Snow on the valley; the boards keep their sound down.',
+  },
+  {
+    id: 'aurora',
+    name: 'Aurora',
+    note: 'Green light over the water, and the road lit from above.',
+  },
+];
+
+export function routeWeather(day: number): RouteWeather {
+  const rnd = mulberry32(hashSeed('atlas-weather', day));
+  return WEATHERS[Math.floor(rnd() * WEATHERS.length)] ?? WEATHERS[0];
+}
+
 export function routeComplete(views: readonly Pick<PlaceView, 'marks'>[]): boolean {
   return views.length === ROUTE_STOPS && views.every((view) => view.marks.night);
 }

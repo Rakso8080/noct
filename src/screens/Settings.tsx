@@ -6,6 +6,7 @@ import { sfx } from '../lib/audio';
 import { clearSummary } from '../lib/results';
 import { clearGames } from '../lib/gamesStore';
 import { clearAtlas } from '../lib/atlas';
+import { clearJournal } from '../lib/journal';
 import { setLang, useLang, useT, type Lang } from '../lib/i18n';
 
 export function Settings({ navigate }: { navigate: (path: string) => void }) {
@@ -54,6 +55,9 @@ export function Settings({ navigate }: { navigate: (path: string) => void }) {
       clearSummary();
       clearGames();
       clearAtlas();
+      clearJournal();
+      updateSettings({ ambience: false, ambienceLevel: 1 });
+      sfx.soundscape(null);
       setMessage(t('All your data has been deleted. You start fresh as a new guest.'));
       setConfirmDelete(false);
       setSavedName(null);
@@ -130,6 +134,60 @@ export function Settings({ navigate }: { navigate: (path: string) => void }) {
                   if (sound) {
                     sfx.unlock();
                     sfx.place();
+                    /* the pad was stopped with the sound; bring it back if asked for */
+                    sfx.soundscape('keep');
+                  } else {
+                    /* silence everything, including a pad already playing */
+                    sfx.soundscape(null);
+                  }
+                }}
+              />
+            </div>
+          </div>
+
+          <div className="setting-row">
+            <div className="setting-copy">
+              <strong>{t('Night sound')}</strong>
+              <small>
+                {t('A soft, slow pad per chapter. Off by default; nothing plays until you ask.')}
+              </small>
+            </div>
+            <div className="row gap-10" style={{ flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+              {settings.ambience ? (
+                <Segmented<'1' | '2'>
+                  label={t('Night sound level')}
+                  value={String(settings.ambienceLevel) as '1' | '2'}
+                  onChange={(level) => {
+                    updateSettings({ ambienceLevel: level === '2' ? 2 : 1 });
+                    sfx.soundscape('keep');
+                  }}
+                  options={[
+                    { value: '1', label: t('Quiet') },
+                    { value: '2', label: t('Full') },
+                  ]}
+                />
+              ) : null}
+              <button
+                className="btn btn-sm btn-ghost"
+                onClick={() => {
+                  updateSettings({ sound: true, ambience: true });
+                  sfx.unlock();
+                  sfx.soundscape('keep', true);
+                  window.setTimeout(() => sfx.soundscape(null), 3200);
+                }}
+              >
+                {t('Hear it')}
+              </button>
+              <Switch
+                label={t('Night sound')}
+                checked={settings.ambience}
+                onChange={(ambience) => {
+                  updateSettings({ ambience });
+                  if (ambience) {
+                    sfx.unlock();
+                    sfx.soundscape('keep');
+                  } else {
+                    sfx.soundscape(null);
                   }
                 }}
               />
@@ -215,7 +273,12 @@ export function Settings({ navigate }: { navigate: (path: string) => void }) {
             </li>
             <li>
               {t(
-                'Deleting your data removes your results, streak, name, side-game records and Atlas seals immediately.',
+                'The field book keeps only the notes and sightings you have found, in this browser.',
+              )}
+            </li>
+            <li>
+                              {t(
+                'Deleting your data removes your results, streak, name, side-game records, Atlas seals and field notes immediately.',
               )}
             </li>
           </ul>

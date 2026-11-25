@@ -62,6 +62,8 @@
   --accent: #c8791b;
   --accent-soft: rgba(200, 121, 27, 0.12);
   --accent-ink: #fffaf0;
+  /* small labels need more weight than the accent itself on warm paper */
+  --accent-text: #8a4f08;
   --ok: #1f8a67;
   --bad: #bf4437;
   --warn: #9a6a12;

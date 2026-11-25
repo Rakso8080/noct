@@ -1,0 +1,433 @@
+/* =========================================================================
+   The living valley — air, motes and weather over the realm backdrop.
+   Everything here is decoration: pointer-events none, aria-hidden, and only
+   transform/opacity animate. Reduced motion leaves a still wash behind.
+   ========================================================================= */
+
+.scene-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 1;
+  animation: scene-arrive 1200ms var(--ease-out) both;
+}
+
+.scene-wash,
+.scene-tint,
+.scene-haze,
+.scene-weather {
+  position: absolute;
+  inset: 0;
+  display: block;
+  pointer-events: none;
+}
+
+.scene-wash {
+  background: linear-gradient(180deg, var(--scene-top) 0%, transparent 52%, var(--scene-bottom) 100%);
+}
+
+.scene-tint {
+  background: var(--scene-tint);
+}
+
+.scene-haze {
+  background: radial-gradient(120% 74% at 50% 100%, var(--scene-glow), transparent 62%);
+  opacity: 0.08;
+}
+
+/* --------------------------------------------------------------- motes */
+
+.scene-mote {
+  position: absolute;
+  display: block;
+  border-radius: 50%;
+  background: var(--scene-glow);
+  box-shadow: 0 0 6px 1px color-mix(in srgb, var(--scene-glow) 45%, transparent);
+  will-change: transform, opacity;
+  animation-name: scene-drift;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  animation-fill-mode: both;
+}
+
+.scene-layer[data-mote='ash'] .scene-mote {
+  animation-name: scene-rise;
+  box-shadow: 0 0 4px 0 color-mix(in srgb, var(--scene-glow) 30%, transparent);
+}
+
+.scene-layer[data-mote='smoke'] .scene-mote {
+  border-radius: 40% 60% 45% 55%;
+  filter: blur(1.5px);
+  animation-name: scene-smoke;
+  box-shadow: none;
+}
+
+.scene-layer[data-mote='embers'] .scene-mote {
+  animation-name: scene-wander;
+  animation-direction: alternate;
+  animation-timing-function: ease-in-out;
+}
+
+.scene-layer[data-mote='petals'] .scene-mote {
+  border-radius: 62% 8% 62% 8%;
+  background: color-mix(in srgb, var(--scene-glow) 78%, transparent);
+  animation-name: scene-fall;
+  animation-timing-function: linear;
+  box-shadow: none;
+}
+
+.scene-layer[data-mote='snow'] .scene-mote {
+  background: #f4f0ff;
+  animation-name: scene-fall;
+}
+
+.scene-layer[data-mote='glints'] .scene-mote {
+  border-radius: 1px;
+  animation-name: scene-glint;
+  animation-timing-function: ease-in-out;
+  animation-direction: alternate;
+  box-shadow: 0 0 7px 1px color-mix(in srgb, var(--scene-glow) 55%, transparent);
+}
+
+/* A hidden tab should cost nothing. */
+.scene-layer[data-paused='true'] .scene-mote {
+  animation-play-state: paused;
+}
+
+/* ------------------------------------------------------------- weather */
+
+.scene-weather {
+  opacity: 0;
+  transition: opacity 800ms var(--ease-out);
+}
+
+.scene-layer[data-weather='mist'] .scene-weather {
+  opacity: 1;
+  background:
+    linear-gradient(180deg, rgba(196, 210, 224, 0.1) 0%, rgba(196, 210, 224, 0.03) 44%, transparent 78%),
+    radial-gradient(90% 40% at 24% 72%, rgba(210, 220, 230, 0.12), transparent 70%);
+}
+
+.scene-layer[data-weather='mist'] .scene-mote {
+  filter: blur(0.6px);
+}
+
+.scene-layer[data-weather='aurora'] .scene-weather {
+  opacity: 1;
+  background:
+    linear-gradient(
+      102deg,
+      transparent 6%,
+      rgba(126, 203, 162, 0.16) 28%,
+      rgba(150, 190, 255, 0.09) 48%,
+      transparent 72%
+    );
+  clip-path: polygon(0 12%, 14% 4%, 30% 12%, 46% 2%, 62% 10%, 80% 3%, 100% 9%, 100% 44%, 84% 34%, 66% 42%, 48% 32%, 30% 40%, 14% 30%, 0 36%);
+  animation: scene-aurora 26s ease-in-out infinite alternate;
+}
+
+.scene-layer[data-weather='snow'] .scene-weather {
+  opacity: 1;
+  background: linear-gradient(180deg, rgba(226, 232, 255, 0.08), transparent 60%);
+}
+
+.scene-layer[data-weather='meteors'] .scene-weather {
+  opacity: 1;
+  background: none;
+}
+
+.scene-layer[data-weather='meteors'] .scene-weather::after {
+  content: '';
+  position: absolute;
+  top: 9%;
+  left: 8%;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: #fff6d8;
+  box-shadow:
+    -14px -5px 0 rgba(255, 246, 216, 0.5),
+    -30px -11px 0 rgba(255, 246, 216, 0.24),
+    -48px -17px 0 rgba(255, 246, 216, 0.1);
+  opacity: 0;
+  animation: scene-shoot 17s linear infinite 3s;
+}
+
+/* ------------------------------------------------------------ keyframes */
+
+@keyframes scene-arrive {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scene-drift {
+  0% {
+    transform: translate3d(0, 0, 0);
+    opacity: 0;
+  }
+  14% {
+    opacity: 1;
+  }
+  82% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate3d(var(--mote-drift, 0px), -26vh, 0);
+    opacity: 0;
+  }
+}
+
+@keyframes scene-rise {
+  0% {
+    transform: translate3d(0, 18vh, 0);
+    opacity: 0;
+  }
+  18% {
+    opacity: 0.85;
+  }
+  100% {
+    transform: translate3d(var(--mote-drift, 0px), -108vh, 0);
+    opacity: 0;
+  }
+}
+
+@keyframes scene-smoke {
+  0% {
+    transform: translate3d(0, 16vh, 0) scale(1);
+    opacity: 0;
+  }
+  22% {
+    opacity: 0.55;
+  }
+  100% {
+    transform: translate3d(var(--mote-drift, 0px), -100vh, 0) scale(2.4);
+    opacity: 0;
+  }
+}
+
+@keyframes scene-fall {
+  0% {
+    transform: translate3d(0, -14vh, 0) rotate(0deg);
+    opacity: 0;
+  }
+  16% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate3d(var(--mote-drift, 0px), 112vh, 0) rotate(220deg);
+    opacity: 0;
+  }
+}
+
+@keyframes scene-wander {
+  0% {
+    transform: translate3d(0, 0, 0);
+    opacity: 0.15;
+  }
+  50% {
+    opacity: 0.95;
+  }
+  100% {
+    transform: translate3d(var(--mote-drift, 0px), -22px, 0);
+    opacity: 0.2;
+  }
+}
+
+@keyframes scene-glint {
+  0% {
+    transform: scale(0.4);
+    opacity: 0.08;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0.95;
+  }
+}
+
+@keyframes scene-aurora {
+  from {
+    transform: translate3d(-3%, 0, 0) skewY(0deg);
+    opacity: 0.7;
+  }
+  to {
+    transform: translate3d(3%, 1.4%, 0) skewY(-1.2deg);
+    opacity: 1;
+  }
+}
+
+@keyframes scene-shoot {
+  0%,
+  84% {
+    opacity: 0;
+    transform: translate(0, 0);
+  }
+  85% {
+    opacity: 1;
+  }
+  91% {
+    opacity: 1;
+    transform: translate(140px, 70px);
+  }
+  92%,
+  100% {
+    opacity: 0;
+    transform: translate(170px, 86px);
+  }
+}
+
+/* -------------------------------------------------------- calm and paper */
+
+[data-motion='reduced'] .scene-layer .scene-mote,
+[data-motion='reduced'] .scene-layer .scene-weather,
+[data-motion='reduced'] .scene-layer .scene-weather::after {
+  animation: none !important;
+}
+
+[data-motion='reduced'] .scene-mote {
+  display: none;
+}
+
+[data-motion='reduced'] .scene-layer[data-weather='meteors'] .scene-weather::after {
+  opacity: 0.5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scene-layer {
+    animation: none;
+  }
+
+  .scene-layer[data-mote] .scene-mote,
+  .scene-layer .scene-weather,
+  .scene-layer .scene-weather::after {
+    animation: none !important;
+  }
+
+  .scene-mote {
+    display: none;
+  }
+
+  .scene-layer[data-weather='meteors'] .scene-weather::after {
+    opacity: 0.5;
+  }
+}
+
+/* Light mode: the same air, read as ink on warm paper rather than glow. */
+[data-theme='light'] .scene-mote {
+  box-shadow: none;
+  background: color-mix(in srgb, var(--scene-glow) 70%, #6b5636);
+}
+
+[data-theme='light'] .scene-haze {
+  opacity: 0.05;
+}
+
+@media (max-width: 560px) {
+  .scene-mote:nth-child(n + 11) {
+    display: none;
+  }
+}
+
+/* ------------------------------------------------------- things to notice */
+
+.world-finds {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+/* the meadow sits 20px down inside its frame, so the overlay follows it */
+.world-finds--strip {
+  top: 20px;
+}
+
+.world-find {
+  position: absolute;
+  width: 36px;
+  height: 36px;
+  margin: 0 0 -18px -18px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  cursor: pointer;
+  pointer-events: auto;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.world-find > span {
+  width: 7px;
+  height: 7px;
+  display: block;
+  border-radius: 50%;
+  background: rgba(255, 233, 168, 0.5);
+  box-shadow: 0 0 10px 2px rgba(245, 201, 92, 0.3);
+  animation: find-breathe 4.2s ease-in-out infinite;
+}
+
+.world-find:hover > span,
+.world-find:focus-visible > span {
+  background: #ffe9a8;
+  box-shadow: 0 0 14px 4px rgba(245, 201, 92, 0.55);
+}
+
+.world-find:focus-visible {
+  outline: 2px solid #f5c95c;
+  outline-offset: 2px;
+}
+
+.world-find[data-found='true'] > span {
+  background: #fff6d8;
+  box-shadow: 0 0 12px 3px rgba(255, 246, 216, 0.5);
+  animation: none;
+}
+
+.world-find[data-found='true']::after {
+  content: '';
+  position: absolute;
+  width: 17px;
+  height: 17px;
+  border: 1px solid rgba(255, 246, 216, 0.4);
+  border-radius: 50%;
+}
+
+@keyframes find-breathe {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(0.9);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+}
+
+[data-motion='reduced'] .world-find > span {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .world-find > span {
+    animation: none;
+  }
+}
+
+@media (max-width: 560px) {
+  .world-find {
+    width: 40px;
+    height: 40px;
+    margin: 0 0 -20px -20px;
+  }
+}
+
+/* The hero and meadow stay night-dark in both themes, so the finds keep the
+   warm light they are drawn with. */
