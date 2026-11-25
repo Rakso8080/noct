@@ -164,13 +164,21 @@ export function Snake({ navigate }: { navigate: (path: string) => void }) {
     : !state.alive
       ? t('Caught in the glass')
       : t(
-          '{left} apples left · {steps} steps · head row {hr}, column {hc} · apple row {ar}, column {ac}',
-          { left: applesLeft, steps: state.steps, hr: headRow, hc: headCol, ar: foodRow, ac: foodCol },
+          '{left} apples left · {steps} steps · {facing} · head row {hr}, column {hc} · apple row {ar}, column {ac}',
+          {
+            left: applesLeft,
+            steps: state.steps,
+            facing: t(`facing ${state.dir}`),
+            hr: headRow,
+            hc: headCol,
+            ar: foodRow,
+            ac: foodCol,
+          },
         );
 
   const cellLabel = (i: number): string => {
     const parts = [t('row {r}, column {c}', { r: Math.floor(i / SNAKE_W) + 1, c: (i % SNAKE_W) + 1 })];
-    if (i === head) parts.push(t('head'));
+    if (i === head) parts.push(t('head'), t(`facing ${state.dir}`));
     else if (body.has(i)) parts.push(t('body'));
     if (i === state.food) parts.push(t('apple'));
     return parts.join(', ');

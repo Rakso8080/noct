@@ -254,8 +254,12 @@ const NB: Record<string, string> = {
   'Best {n} steps': 'Beste {n} steg',
   'Garden full in {steps} steps': 'Hagen er full etter {steps} steg',
   'Caught in the glass': 'Tatt i glasset',
-  '{left} apples left · {steps} steps · head row {hr}, column {hc} · apple row {ar}, column {ac}':
-    '{left} epler igjen · {steps} steg · hode rad {hr}, kolonne {hc} · eple rad {ar}, kolonne {ac}',
+  '{left} apples left · {steps} steps · {facing} · head row {hr}, column {hc} · apple row {ar}, column {ac}':
+    '{left} epler igjen · {steps} steg · {facing} · hode rad {hr}, kolonne {hc} · eple rad {ar}, kolonne {ac}',
+  'facing up': 'peker opp',
+  'facing down': 'peker ned',
+  'facing left': 'peker venstre',
+  'facing right': 'peker høyre',
   'Orchard cleared in {steps} steps': 'Hagen klar på {steps} steg',
   'Caught after {apples} apples · {steps} steps': 'Tatt etter {apples} epler · {steps} steg',
   'Leave the orchard?': 'Forlate hagen?',
@@ -467,7 +471,7 @@ const NB: Record<string, string> = {
     'Hvert brett gir en grunnsum pluss en tidsbonus som falmer til null ved par. Fullfør et brett uten hint for 25 ekstra. Et hint koster 80 og fjerner bonussen — prisen vises alltid før du tar det.',
   'Wrong placements cost nothing but seconds. Only the clock and your own patience decide the score, and the clock is measured by the server, not your browser.':
     'Feilplasseringer koster bare sekunder. Bare klokken og din egen tålmodighet avgjør poengene, og klokken måles av serveren, ikke nettleseren.',
-  '4 boards daily': '4 brett daglig',
+  '7 boards daily': '7 brett daglig',
   '5×5 → 7×7': '5×5 → 7×7',
   '3 hints a day': '3 hint om dagen',
   'Reset 00:00 UTC': 'Nullstilles 00:00 UTC',
@@ -619,8 +623,10 @@ const NB: Record<string, string> = {
   'Warming up': 'Varmer opp',
 
   // ---- play (lantern grid)
-  'Board #{n} is not in the archive. The drawer keeps the last 365 nights.':
-    'Brett #{n} er ikke i arkivet. Skuffen holder de siste 365 nettene.',
+  'Board #{n} is not written yet. Today’s board lives under Noct.':
+    'Brett #{n} er ikke skrevet ennå. Dagens brett ligger under Noct.',
+  'Board #{n} is outside the archive. The drawer keeps the last 365 nights.':
+    'Brett #{n} er utenfor arkivet. Skuffen holder de siste 365 nettene.',
   'You appear to be offline. The daily board needs a connection.':
     'Du ser ut til å være frakoblet. Det daglige brettet trenger en tilkobling.',
   'That board could not be opened. Try again.': 'Brettet kunne ikke åpnes. Prøv igjen.',

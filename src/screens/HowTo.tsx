@@ -129,7 +129,7 @@ export function HowTo({ navigate }: { navigate: (path: string) => void }) {
             )}
           </p>
           <div className="row gap-10" style={{ flexWrap: 'wrap' }}>
-            <span className="chip">{t('4 boards daily')}</span>
+            <span className="chip">{t('7 boards daily')}</span>
             <span className="chip">{t('5×5 → 7×7')}</span>
             <span className="chip">{t('3 hints a day')}</span>
             <span className="chip">{t('Reset 00:00 UTC')}</span>

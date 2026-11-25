@@ -7,6 +7,7 @@ import { sfx } from '../lib/audio';
 import { haptic } from '../lib/settings';
 import { HINT_COST, parMs } from '../../shared/score';
 import { useT } from '../lib/i18n';
+import { dayNumber } from '../../shared/dates';
 
 interface PlayProps {
   mode: 'daily' | 'practice' | 'archive';
@@ -89,11 +90,16 @@ export function Play({ mode, level, day, onFinish, onExit, onTutorial, onToday }
         setErrorKind(
           archiveMiss ? 'archive' : err instanceof ApiError && err.status === 0 ? 'offline' : 'generic',
         );
+        const archiveDay = day ?? 1;
         setError(
           archiveMiss
-            ? t('Board #{n} is not in the archive. The drawer keeps the last 365 nights.', {
-                n: day ?? 1,
-              })
+            ? archiveDay >= dayNumber()
+              ? t('Board #{n} is not written yet. Today’s board lives under Noct.', {
+                  n: archiveDay,
+                })
+              : t('Board #{n} is outside the archive. The drawer keeps the last 365 nights.', {
+                  n: archiveDay,
+                })
             : err instanceof ApiError && err.status === 0
               ? t('You appear to be offline. The daily board needs a connection.')
               : t('That board could not be opened. Try again.'),
