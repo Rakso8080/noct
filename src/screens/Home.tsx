@@ -52,7 +52,20 @@ interface TileProps {
   name: string;
   line: string;
   meta: string;
-  tone: 'ember' | 'moss' | 'slate' | 'violet' | 'rust' | 'teal' | 'sand' | 'orchard' | 'amber' | 'stone';
+  tone:
+    | 'ember'
+    | 'moss'
+    | 'slate'
+    | 'violet'
+    | 'rust'
+    | 'teal'
+    | 'sand'
+    | 'orchard'
+    | 'amber'
+    | 'stone'
+    | 'clay'
+    | 'channel'
+    | 'ivory';
   shape: Shape;
   status: string;
   action: string;
@@ -159,6 +172,36 @@ export function Home({ navigate, onTutorial }: HomeProps) {
           losses: games.reversi.losses,
         })
       : t('Unplayed');
+  const checkersDay = games.checkers.daily[key];
+  const connect4Day = games.connect4.daily[key];
+  const dominoesDay = games.dominoes.daily[key];
+  const checkersStatus = checkersDay
+    ? checkersDay.result === 'win'
+      ? t('Won · {n} plies', { n: checkersDay.plies })
+      : checkersDay.result === 'loss'
+        ? t('Lost today')
+        : t('Drawn today')
+    : games.checkers.wins + games.checkers.losses + games.checkers.draws
+      ? t('{wins}W · {losses}L', { wins: games.checkers.wins, losses: games.checkers.losses })
+      : t('Unplayed');
+  const connect4Status = connect4Day
+    ? connect4Day.result === 'win'
+      ? t('Won · {n} drops', { n: connect4Day.moves })
+      : connect4Day.result === 'loss'
+        ? t('Lost today')
+        : t('Drawn today')
+    : games.connect4.wins + games.connect4.losses + games.connect4.draws
+      ? t('{wins}W · {losses}L', { wins: games.connect4.wins, losses: games.connect4.losses })
+      : t('Unplayed');
+  const dominoesStatus = dominoesDay
+    ? dominoesDay.result === 'win'
+      ? t('Won · +{n}', { n: dominoesDay.margin })
+      : dominoesDay.result === 'loss'
+        ? t('Lost today')
+        : t('Drawn today')
+    : games.dominoes.wins + games.dominoes.losses + games.dominoes.draws
+      ? t('{wins}W · {losses}L', { wins: games.dominoes.wins, losses: games.dominoes.losses })
+      : t('Unplayed');
 
   return (
     <main className="main">
@@ -181,7 +224,7 @@ export function Home({ navigate, onTutorial }: HomeProps) {
             <h1 className="wordmark">Noct</h1>
             <p className="hero-line">
               {t(
-                'Seven boards for the night and three arcade tables behind them. Twenty-five seconds a prompt, one attempt each.',
+                'Seven boards for the night and six arcade tables behind them. Twenty-five seconds a prompt, one attempt each.',
               )}
             </p>
 
@@ -316,6 +359,42 @@ export function Home({ navigate, onTutorial }: HomeProps) {
             status={reversiStatus}
             action="Play"
             onPlay={() => navigate('/reversi')}
+          />
+          <GameTile
+            index="11"
+            kind="draughts"
+            name="Checkers"
+            line="The quiet draughts table: forced captures, long jump chains and a crown waiting on the far rank."
+            meta="8×8 · forced captures"
+            tone="clay"
+            shape="ring"
+            status={checkersStatus}
+            action="Play"
+            onPlay={() => navigate('/checkers')}
+          />
+          <GameTile
+            index="12"
+            kind="columns"
+            name="Connect Four"
+            line="The lantern column: drop, stack and line up four before the bot seals the middle."
+            meta="7×6 · four in a row"
+            tone="channel"
+            shape="diamond"
+            status={connect4Status}
+            action="Play"
+            onPlay={() => navigate('/connect4')}
+          />
+          <GameTile
+            index="13"
+            kind="line"
+            name="Dominoes"
+            line="The long table: match either open end, draw from the boneyard, and empty your hand first."
+            meta="double-six · one opponent"
+            tone="ivory"
+            shape="down"
+            status={dominoesStatus}
+            action="Play"
+            onPlay={() => navigate('/dominoes')}
           />
         </div>
 

@@ -23,6 +23,9 @@ function arcadeDays(store: GamesStore): number[] {
     ...Object.keys(store.snake.daily),
     ...Object.keys(store.numbers.daily),
     ...Object.keys(store.reversi.daily),
+    ...Object.keys(store.checkers.daily),
+    ...Object.keys(store.connect4.daily),
+    ...Object.keys(store.dominoes.daily),
   ].map(Number);
 }
 
@@ -162,6 +165,72 @@ const GAMES: Entry[] = [
       });
     },
   },
+  {
+    path: '/checkers',
+    name: 'Checkers',
+    kind: 'draughts',
+    line: 'The quiet draughts table: forced captures, long jump chains, crowns and a patient bot.',
+    tone: 'clay',
+    best: (s) =>
+      s.checkers.wins + s.checkers.losses + s.checkers.draws
+        ? translate('{wins}W · {losses}L · {draws}D', {
+            wins: s.checkers.wins,
+            losses: s.checkers.losses,
+            draws: s.checkers.draws,
+          })
+        : translate('Unplayed'),
+    today: (s, day) => {
+      const entry = s.checkers.daily[String(day)];
+      if (!entry) return null;
+      return translate(entry.result === 'win' ? 'Won in {plies} plies' : entry.result === 'loss' ? 'Lost today' : 'Drawn today', {
+        plies: entry.plies,
+      });
+    },
+  },
+  {
+    path: '/connect4',
+    name: 'Connect Four',
+    kind: 'columns',
+    line: 'The lantern column: gravity, seven choices, and four in a row in any direction.',
+    tone: 'channel',
+    best: (s) =>
+      s.connect4.wins + s.connect4.losses + s.connect4.draws
+        ? translate('{wins}W · {losses}L · {draws}D', {
+            wins: s.connect4.wins,
+            losses: s.connect4.losses,
+            draws: s.connect4.draws,
+          })
+        : translate('Unplayed'),
+    today: (s, day) => {
+      const entry = s.connect4.daily[String(day)];
+      if (!entry) return null;
+      return translate(entry.result === 'win' ? 'Won in {moves} drops' : entry.result === 'loss' ? 'Lost today' : 'Drawn today', {
+        moves: entry.moves,
+      });
+    },
+  },
+  {
+    path: '/dominoes',
+    name: 'Dominoes',
+    kind: 'line',
+    line: 'The long table: double-six, a boneyard, two open ends and one opponent.',
+    tone: 'ivory',
+    best: (s) =>
+      s.dominoes.wins + s.dominoes.losses + s.dominoes.draws
+        ? translate('{wins}W · {losses}L · {draws}D', {
+            wins: s.dominoes.wins,
+            losses: s.dominoes.losses,
+            draws: s.dominoes.draws,
+          })
+        : translate('Unplayed'),
+    today: (s, day) => {
+      const entry = s.dominoes.daily[String(day)];
+      if (!entry) return null;
+      return translate(entry.result === 'win' ? 'Won · +{margin}' : entry.result === 'loss' ? 'Lost today' : 'Drawn today', {
+        margin: entry.margin,
+      });
+    },
+  },
 ];
 
 export function Arcade({ navigate }: { navigate: (path: string) => void }) {
@@ -172,9 +241,9 @@ export function Arcade({ navigate }: { navigate: (path: string) => void }) {
   const played = GAMES.filter((game) => game.today(store, day) !== null).length;
 
   return (
-    <main className="main">
+    <main className="main arcade-main">
       <div className="wrap">
-        <ScreenHead eyebrow="Arcade · the side tables" title="Seven games beside the daily">
+        <ScreenHead eyebrow="Arcade · the side tables" title="Ten games beside the daily">
           Every table is played against the night, not against a scoreboard. Local records stay in this
           browser; each arcade table can reset its own best without touching the others.
         </ScreenHead>

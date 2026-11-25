@@ -1,12 +1,12 @@
 {
-  "name": "Noct — seven boards and three arcade tables",
+  "name": "Noct — seven boards and six arcade tables",
   "short_name": "Noct",
-  "description": "Seven nightly boards — Common, Rare, Noct, chess, mines, pairs and lights — plus three arcade tables: Snake, 2048 and Reversi.",
+  "description": "Seven nightly boards — Common, Rare, Noct, chess, mines, pairs and lights — plus six arcade tables: Snake, 2048, Reversi, Checkers, Connect Four and Dominoes.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#0b0d10",
-  "theme_color": "#0b0d10",
+  "background_color": "#080817",
+  "theme_color": "#080817",
   "orientation": "portrait-primary",
   "icons": [
     { "src": "./icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }

@@ -97,8 +97,6 @@ const NB: Record<string, string> = {
   'Back to the menu': 'Tilbake til menyen',
 
   // ---- home
-  'Seven boards for the night and three arcade tables behind them. Twenty-five seconds a prompt, one attempt each.':
-    'Sju brett for natten og tre arkadebord bak dem. Tjuefem sekunder per oppgave, ett forsøk hver.',
   'Play today': 'Spill i dag',
   'Choose a game': 'Velg et spill',
   Unplayed: 'Ikke spilt',
@@ -115,7 +113,6 @@ const NB: Record<string, string> = {
 
   // ---- arcade hub
   'Arcade · the side tables': 'Arkade · sidebordene',
-  'Seven games beside the daily': 'Sju spill ved siden av dagens',
   'Every table is played against the night, not against a scoreboard. Local records stay in this browser; each arcade table can reset its own best without touching the others.':
     'Hvert bord spilles mot natten, ikke mot en resultattavle. Rekordene blir i denne nettleseren; hvert arkadebord kan nullstille sitt eget beste uten å røre de andre.',
   'No arcade streak yet': 'Ingen arkaderekke ennå',
@@ -362,8 +359,6 @@ const NB: Record<string, string> = {
   'Keep my data': 'Behold dataene mine',
   'Delete my data': 'Slett dataene mine',
   About: 'Om',
-  'Noct is a small independent daily puzzle: seven boards for the night plus three arcade tables, the same for everyone, reset at 00:00 UTC. Built to be played in a queue, on a bus, or with coffee — then closed.':
-    'Noct er et lite, uavhengig daglig puslespill: sju brett for natten pluss tre arkadebord, likt for alle, nullstilt kl. 00:00 UTC. Laget for å spilles i en kø, på bussen eller med kaffe — og så lukkes.',
   'Version 0.1': 'Versjon 0.1',
   'No ads': 'Ingen reklame',
   'No tracking': 'Ingen sporing',
@@ -495,8 +490,6 @@ const NB: Record<string, string> = {
     'tolv minner med forsiden ned, ett brett om dagen. Hvert par går på hyllen over kortene.',
   'a 5×5 room, all lit. Every tap flips its neighbours too; every window you shut lets a star through.':
     'et 5×5-rom, alt tent. Hvert trykk snur naboene også; hvert vindu du lukker slipper en stjerne inn.',
-  'Three more tables wait in the {arcade}: the glass orchard (Snake), the doubling room (2048) and the turning table (Reversi). They are free play — their records live in this browser and never touch the daily streak.':
-    'Tre bord til venter i {arcade}: glasshagen (Slange), doblingsrommet (2048) og snubordet (Reversi). De er fri spill — rekordene bor i denne nettleseren og rører aldri den daglige rekken.',
   'Night choir': 'Nattkor',
   'Empty hall': 'Tom sal',
   'Lantern grid': 'Lyktnett',
@@ -938,5 +931,115 @@ const NB: Record<string, string> = {
   Free: 'Fri',
   'Noct archive': 'Noct-arkiv',
   'Noct practice': 'Noct-øving',
+  // ---- the three new side tables
+  Checkers: 'Dam',
+  'Connect Four': 'Fire på rad',
+  Dominoes: 'Domino',
+  draughts: 'dam',
+  columns: 'kolonner',
+  line: 'linje',
+  'The quiet draughts table': 'Det stille dambordet',
+  'The lantern column': 'Lyktekolonnen',
+  'The long table': 'Det lange bordet',
+  'Checkers · Night {n}': 'Dam · natt {n}',
+  'Connect Four · Night {n}': 'Fire på rad · natt {n}',
+  'Dominoes · Night {n}': 'Domino · natt {n}',
+  'English draughts on an 8×8 table. Men move forward and capture forward; kings go both ways. Captures are forced, jump chains must finish, and a man on the far rank is crowned. No pieces or no legal move loses.':
+    'Engelsk dam på et 8 × 8-bord. Brikkene går og slår fremover; konger går begge veier. Slag er påbudt, hopprekker må fullføres, og en brikke på bakerste rad blir krone. Ingen brikker eller ingen lovlige trekk taper.',
+  'Drop a lantern into one of seven columns. Four of your colour in a row — straight or diagonal — wins. The bot takes an immediate four, blocks yours, and otherwise builds toward the middle.':
+    'Slipp en lykt ned i en av sju kolonner. Fire på rad av din farge — rett eller diagonalt — vinner. Boten tar en umiddelbar firer, blokkerer din, og bygger ellers mot midten.',
+  'Double-six dominoes against one patient opponent. Match either open end, draw from the boneyard when nothing fits, and pass when it is empty. Empty your hand first; if both sides are blocked, the lower pip count wins.':
+    'Domino med dobbel-seks mot én tålmodig motstander. Match en av de åpne endene, trekk fra bunken når ingenting passer, og stå over når den er tom. Tøm hånden først; er begge sider blokkert, vinner lavest pipetall.',
+  'Bot strength': 'Botstyrke',
+  'Captures are always forced': 'Slag er alltid påbudt',
+  'Seven columns · six rows': 'Sju kolonner · seks rader',
+  'Highest double opens': 'Høyeste dobbel åpner',
+  'white men': 'hvite brikker',
+  'black men': 'svarte brikker',
+  crowns: 'kroner',
+  plies: 'trekk',
+  'Fastest win {n}': 'Raskeste seier {n}',
+  'Choose a lit square. {n} legal move(s).': 'Velg en opplyst rute. {n} lovlige trekk.',
+  'Your turn. Pick a white piece.': 'Din tur. Velg en hvit brikke.',
+  'The bot is thinking.': 'Boten tenker.',
+  'You win — the table is yours.': 'Du vinner — bordet er ditt.',
+  'The bot wins this one.': 'Boten vinner denne.',
+  'A draw. Both sides ran out of useful moves.': 'Remis. Begge sider gikk tom for nyttige trekk.',
+  'Tab moves between playable squares, Enter chooses, Escape clears the selection.':
+    'Tab flytter mellom spillbare ruter, Enter velger, Escape fjerner valget.',
+  'your discs': 'dine brikker',
+  'bot discs': 'botens brikker',
+  drops: 'slipp',
+  'Your turn. Choose a column.': 'Din tur. Velg en kolonne.',
+  'The bot is lining up four.': 'Boten stiller opp fire.',
+  'You win — four in a row.': 'Du vinner — fire på rad.',
+  'A draw. The board is full.': 'Remis. Brettet er fullt.',
+  'Drop a disc into a column': 'Slipp en brikke i en kolonne',
+  'Drop in column {n}{full}': 'Slipp i kolonne {n}{full}',
+  ', full': ', full',
+  'Connect Four board, 7 columns by 6 rows': 'Fire på rad-brett, 7 kolonner og 6 rader',
+  'your disc': 'din brikke',
+  'bot disc': 'botens brikke',
+  'Tab moves between the seven columns, Enter drops. Each column button says where it will land.':
+    'Tab flytter mellom de sju kolonnene, Enter slipper brikken. Hver kolonneknapp sier hvor den lander.',
+  'your tiles': 'dine brikker',
+  'bot tiles': 'botens brikker',
+  'in the boneyard': 'i bunken',
+  'Your pips': 'Dine pip',
+  'The domino table': 'Dominobordet',
+  'Left end': 'Venstre ende',
+  'Right end': 'Høyre ende',
+  'The line': 'Linjen',
+  'Played dominoes, left to right': 'Spilte dominobrikker, venstre mot høyre',
+  'The table is empty. Start the line with any tile.': 'Bordet er tomt. Start linjen med en valgfri brikke.',
+  'Your hand': 'Hånden din',
+  '{n} pips': '{n} pip',
+  '{tile} domino{state}': '{tile}-domino{state}',
+  ', playable': ', spillbar',
+  'Choose an open end': 'Velg en åpen ende',
+  'Start the line': 'Start linjen',
+  'Play on left · {n}': 'Spill til venstre · {n}',
+  'Play on right · {n}': 'Spill til høyre · {n}',
+  'Draw a tile · {n} left': 'Trekk en brikke · {n} igjen',
+  'Pass the table': 'Stå over',
+  'Nothing fits. Draw from the boneyard.': 'Ingenting passer. Trekk fra bunken.',
+  'Nothing fits. Pass the table.': 'Ingenting passer. Stå over.',
+  'The bot is reading the ends.': 'Boten leser endene.',
+  'Choose an end for {tile}.': 'Velg en ende for {tile}.',
+  'You win the table — the last tile is yours.': 'Du vinner bordet — den siste brikken er din.',
+  'The bot empties its hand first.': 'Boten tømmer hånden først.',
+  'A blocked table. Equal pips, equal night.': 'Et blokkert bord. Like pip, lik natt.',
+  'Every tile is a real button. Choose a lit tile, then pick the open end it should join. The line scrolls sideways if it grows past the table.':
+    'Hver brikke er en ekte knapp. Velg en opplyst brikke, og velg deretter den åpne enden den skal kobles til. Linjen ruller sidelengs hvis den vokser forbi bordet.',
+  'The side tables': 'Sidebordene',
+  'Every side table is a complete game against a bot, with two strengths and a local record. These are the rules that matter once you sit down.':
+    'Hvert sidebord er et komplett spill mot en bot, med to styrker og en lokal rekord. Dette er reglene som gjelder når du setter deg ned.',
+  'men move and capture forward; kings go both ways. Captures are forced, a jump chain must finish, and a man on the far rank is crowned. No pieces or no legal move loses.':
+    'brikkene går og slår fremover; konger går begge veier. Slag er påbudt, en hopprekke må fullføres, og en brikke på bakerste rad blir krone. Ingen brikker eller ingen lovlige trekk taper.',
+  'drop one disc into a column; it falls to the lowest free square. Four of your colour in a row, across, down or diagonally, wins. A full board is a draw.':
+    'slipp en brikke i en kolonne; den faller til laveste ledige rute. Fire på rad av din farge, bortover, nedover eller diagonalt, vinner. Et fullt brett er remis.',
+  'a double-six set, seven tiles each. Match either open end, draw from the boneyard when nothing fits, and pass when it is empty. Empty your hand to win; a blocked table goes to the lower pip count.':
+    'et dobbel-seks-sett, sju brikker hver. Match en av de åpne endene, trekk fra bunken når ingenting passer, og stå over når den er tom. Tøm hånden for å vinne; et blokkert bord går til lavest pipetall.',
+  'The quiet draughts table: forced captures, long jump chains and a crown waiting on the far rank.':
+    'Det stille dambordet: påbudte slag, lange hopprekker og en krone som venter på bakerste rad.',
+  'The lantern column: drop, stack and line up four before the bot seals the middle.':
+    'Lyktekolonnen: slipp, stable og still opp fire før boten lukker midten.',
+  'The long table: match either open end, draw from the boneyard, and empty your hand first.':
+    'Det lange bordet: match en av de åpne endene, trekk fra bunken og tøm hånden først.',
+  'The quiet draughts table: forced captures, long jump chains, crowns and a patient bot.':
+    'Det stille dambordet: påbudte slag, lange hopprekker, kroner og en tålmodig bot.',
+  'The lantern column: gravity, seven choices, and four in a row in any direction.':
+    'Lyktekolonnen: tyngdekraft, sju valg og fire på rad i alle retninger.',
+  'The long table: double-six, a boneyard, two open ends and one opponent.':
+    'Det lange bordet: dobbel-seks, en bunke, to åpne ender og én motstander.',
+  'Seven boards for the night and six arcade tables behind them. Twenty-five seconds a prompt, one attempt each.':
+    'Sju brett for natten og seks arkadebord bak dem. Tjuefem sekunder per oppgave, ett forsøk hver.',
+  'Ten games beside the daily': 'Ti spill ved siden av dagens',
+  'Six more tables wait in the {arcade}: the glass orchard (Snake), the doubling room (2048), the turning table (Reversi), the quiet draughts table (Checkers), the lantern column (Connect Four) and the long table (Dominoes). They are free play — their records live in this browser and never touch the daily streak.':
+    'Seks bord til venter i {arcade}: glasshagen (Slange), doblingsrommet (2048), snubordet (Reversi), det stille dambordet (Dam), lyktekolonnen (Fire på rad) og det lange bordet (Domino). De er fri spill — rekordene bor i denne nettleseren og rører aldri den daglige rekken.',
+  'Noct is a small independent daily puzzle: seven boards for the night plus six arcade tables, the same for everyone, reset at 00:00 UTC. Built to be played in a queue, on a bus, or with coffee — then closed.':
+    'Noct er et lite, uavhengig daglig puslespill: sju brett for natten pluss seks arkadebord, likt for alle, nullstilt kl. 00:00 UTC. Laget for å spilles i en kø, på bussen eller med kaffe — og så lukkes.',
+  'Won in {moves} drops': 'Vant på {moves} slipp',
+  'Won · +{n}': 'Vant · +{n}',
   BOARD: 'BRETT',
 };

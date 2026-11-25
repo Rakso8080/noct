@@ -1,8 +1,8 @@
 # Noct
 
 Noct is a small, account-free games site: seven nightly boards (Common, Rare, Noct,
-Chess, Mines, Pairs, Lights) and an arcade of three more tables (Snake, 2048,
-Reversi). Everything is playable in the browser; side-game records live in
+Chess, Mines, Pairs, Lights) and an arcade of six more tables (Snake, 2048,
+Reversi, Checkers, Connect Four, Dominoes). Everything is playable in the browser; side-game records live in
 `localStorage`.
 
 ## Run it
@@ -20,7 +20,7 @@ built `dist/` from the same process.
 
 ```bash
 npm run typecheck    # tsc --noEmit, tests included
-npm test             # node:test: snake, 2048, reversi, lights, chess, gamesStore
+npm test             # node:test: all rules, checkers, connect four, dominoes, gamesStore
 npm run verify       # puzzle QA over generated days
 npm run verify:prompts
 VITE_BASE=/noct/ npx vite build

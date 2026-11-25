@@ -203,7 +203,7 @@ export function HowTo({ navigate }: { navigate: (path: string) => void }) {
           </ul>
           <p className="par-note" style={{ margin: 0 }}>
             {t(
-              'Three more tables wait in the {arcade}: the glass orchard (Snake), the doubling room (2048) and the turning table (Reversi). They are free play — their records live in this browser and never touch the daily streak.',
+              'Six more tables wait in the {arcade}: the glass orchard (Snake), the doubling room (2048), the turning table (Reversi), the quiet draughts table (Checkers), the lantern column (Connect Four) and the long table (Dominoes). They are free play — their records live in this browser and never touch the daily streak.',
               { arcade: t('Arcade') },
             )}
           </p>
@@ -228,6 +228,55 @@ export function HowTo({ navigate }: { navigate: (path: string) => void }) {
             </button>
             <button className="btn btn-sm btn-ghost" onClick={() => navigate('/lights')}>
               {t('Windows')}
+            </button>
+            <button className="btn btn-sm btn-ghost" onClick={() => navigate('/arcade')}>
+              {t('Arcade')}
+            </button>
+          </div>
+        </div>
+
+        <div className="card-flat stack gap-14" style={{ marginTop: 20 }}>
+          <span className="eyebrow">{t('The side tables')}</span>
+          <p className="par-note" style={{ margin: 0 }}>
+            {t(
+              'Every side table is a complete game against a bot, with two strengths and a local record. These are the rules that matter once you sit down.',
+            )}
+          </p>
+          <ul className="rule-list">
+            <li>
+              <span>
+                <strong>{t('The quiet draughts table')}</strong> ({t('Checkers')}) —{' '}
+                {t(
+                  'men move and capture forward; kings go both ways. Captures are forced, a jump chain must finish, and a man on the far rank is crowned. No pieces or no legal move loses.',
+                )}
+              </span>
+            </li>
+            <li>
+              <span>
+                <strong>{t('The lantern column')}</strong> ({t('Connect Four')}) —{' '}
+                {t(
+                  'drop one disc into a column; it falls to the lowest free square. Four of your colour in a row, across, down or diagonally, wins. A full board is a draw.',
+                )}
+              </span>
+            </li>
+            <li>
+              <span>
+                <strong>{t('The long table')}</strong> ({t('Dominoes')}) —{' '}
+                {t(
+                  'a double-six set, seven tiles each. Match either open end, draw from the boneyard when nothing fits, and pass when it is empty. Empty your hand to win; a blocked table goes to the lower pip count.',
+                )}
+              </span>
+            </li>
+          </ul>
+          <div className="row gap-10" style={{ flexWrap: 'wrap' }}>
+            <button className="btn btn-sm" onClick={() => navigate('/checkers')}>
+              {t('Checkers')}
+            </button>
+            <button className="btn btn-sm btn-ghost" onClick={() => navigate('/connect4')}>
+              {t('Connect Four')}
+            </button>
+            <button className="btn btn-sm btn-ghost" onClick={() => navigate('/dominoes')}>
+              {t('Dominoes')}
             </button>
             <button className="btn btn-sm btn-ghost" onClick={() => navigate('/arcade')}>
               {t('Arcade')}

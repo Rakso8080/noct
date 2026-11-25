@@ -76,6 +76,16 @@ const GRASS = ['X..X..X', 'X.XX.XX', 'XXXXXXX'];
 
 const SNAIL = ['..XXX..', '.XXXXX.', 'XXXXXXX', 'XXXXXXX'];
 
+const WANDERER = [
+  '..XXX..',
+  '.XXXXX.',
+  '..XXX..',
+  '.XXXXX.',
+  '..XXX..',
+  '..X.X..',
+  '.XX.XX.',
+];
+
 /** The night scene behind the wordmark: sky, village, water and wildlife. */
 export function HeroWorld() {
   return (
@@ -103,7 +113,32 @@ export function HeroWorld() {
       <span className="hero-hill hero-hill-back" />
       <span className="hero-hill hero-hill-front" />
 
+      <svg className="hero-castle" viewBox="0 0 96 76" shapeRendering="crispEdges" focusable="false">
+        <path
+          fill="currentColor"
+          d="M4 72V36h8v-8h5v8h7v-8h5v8h7V26h7V10h6v16h7v10h7v-8h5v8h7v-8h5v8h8v36H4Z"
+        />
+        <path fill="currentColor" d="M38 72V54h20v18H38Z" />
+        <g fill="#f5c95c" opacity="0.8">
+          <rect x="15" y="46" width="4" height="6" />
+          <rect x="29" y="47" width="4" height="6" />
+          <rect x="44" y="32" width="4" height="6" />
+          <rect x="52" y="32" width="4" height="6" />
+          <rect x="66" y="46" width="4" height="6" />
+          <rect x="79" y="47" width="4" height="6" />
+        </g>
+      </svg>
+
+      <span className="hero-pines">
+        <i />
+        <i />
+        <i />
+        <i />
+        <i />
+      </span>
+
       <span className="hero-water" />
+      <span className="hero-bridge" />
       <span className="hero-fish">
         <Sprite grid={FISH} />
       </span>
@@ -121,6 +156,10 @@ export function HeroWorld() {
 
       <span className="hero-deer">
         <Sprite grid={DEER} />
+      </span>
+      <span className="hero-wanderer">
+        <Sprite grid={WANDERER} />
+        <i className="hero-wanderer-lantern" />
       </span>
     </div>
   );

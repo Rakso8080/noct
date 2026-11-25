@@ -237,7 +237,7 @@ export function Settings({ navigate }: { navigate: (path: string) => void }) {
           <span className="eyebrow">{t('About')}</span>
           <p className="par-note" style={{ margin: 0 }}>
             {t(
-              'Noct is a small independent daily puzzle: seven boards for the night plus three arcade tables, the same for everyone, reset at 00:00 UTC. Built to be played in a queue, on a bus, or with coffee — then closed.',
+              'Noct is a small independent daily puzzle: seven boards for the night plus six arcade tables, the same for everyone, reset at 00:00 UTC. Built to be played in a queue, on a bus, or with coffee — then closed.',
             )}
           </p>
           <div className="row gap-10" style={{ flexWrap: 'wrap' }}>

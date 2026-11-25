@@ -1,6 +1,7 @@
 import { lazy, Suspense, useCallback, useEffect, useState, type ReactNode } from 'react';
 import { Home } from './screens/Home';
 import { RouteBoundary } from './components/RouteBoundary';
+import { RealmBackdrop } from './components/RealmBackdrop';
 
 /* Every screen but the menu is its own chunk, so the first paint ships the
    menu, not all fifteen boards. */
@@ -19,6 +20,9 @@ const Lights = lazy(() => import('./screens/Lights').then((m) => ({ default: m.L
 const Snake = lazy(() => import('./screens/Snake').then((m) => ({ default: m.Snake })));
 const Numbers = lazy(() => import('./screens/Numbers').then((m) => ({ default: m.Numbers })));
 const Reversi = lazy(() => import('./screens/Reversi').then((m) => ({ default: m.Reversi })));
+const Checkers = lazy(() => import('./screens/Checkers').then((m) => ({ default: m.Checkers })));
+const Connect4 = lazy(() => import('./screens/Connect4').then((m) => ({ default: m.Connect4 })));
+const Dominoes = lazy(() => import('./screens/Dominoes').then((m) => ({ default: m.Dominoes })));
 const Arcade = lazy(() => import('./screens/Arcade').then((m) => ({ default: m.Arcade })));
 import { Logo } from './components/ui';
 import { getSummary, setSummary } from './lib/results';
@@ -98,6 +102,20 @@ export function App() {
   const url = new URL(path, window.location.origin);
   const segments = url.pathname.split('/').filter(Boolean);
   const section = segments[0] ?? '';
+  const realm =
+    !section
+      ? 'home'
+      : section === 'play' || section === 'practice' || section === 'results'
+        ? 'noct'
+        : section === 'archive' && segments[1]
+          ? 'noct'
+          : section;
+  const immersive =
+    section === 'common' ||
+    section === 'rare' ||
+    section === 'play' ||
+    section === 'practice' ||
+    (section === 'archive' && Boolean(segments[1]));
 
   const finish = useCallback(
     (summary: Parameters<typeof setSummary>[0]) => {
@@ -193,6 +211,12 @@ export function App() {
     page = <Numbers key="numbers" navigate={navigate} />;
   } else if (section === 'reversi') {
     page = <Reversi key="reversi" navigate={navigate} />;
+  } else if (section === 'checkers') {
+    page = <Checkers key="checkers" navigate={navigate} />;
+  } else if (section === 'connect4') {
+    page = <Connect4 key="connect4" navigate={navigate} />;
+  } else if (section === 'dominoes') {
+    page = <Dominoes key="dominoes" navigate={navigate} />;
   } else if (section === 'arcade') {
     page = <Arcade key="arcade" navigate={navigate} />;
   } else if (section === 'stats') {
@@ -222,7 +246,8 @@ export function App() {
   }
 
   return (
-    <div className="shell">
+    <div className="shell" data-realm={realm}>
+      <RealmBackdrop key={realm} hidden={immersive} />
       <header className="site-head">
         <div className="wrap">
           <a
