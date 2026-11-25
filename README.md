@@ -51,11 +51,23 @@ and is stored in `localStorage` (`noct.lang.v1`). Copy lives in `src/lib/i18n.ts
 with English as the key, so an untranslated string falls back to English instead
 of breaking a screen.
 
+## Chess with a friend
+
+Open **Chess → A friend → Create a private table** and send the invite link.
+The creator plays White and the friend plays Black. Rooms are capped at two
+players and use Trystero's public relays only for discovery; the moves travel
+directly between the two browsers. There is no account, game server, ranking or
+saved online history. Both players must be online at the same time, and a very
+restrictive network may block the direct WebRTC connection.
+
 ## Known limitations
 
 - Standings and global counts are local on the static build (no shared table).
 - The archive holds the last 365 nights; today's board lives under Noct.
-- Chess, Mines, Pairs, Lights, Snake, 2048 and Reversi never leave the device.
+- Bot and daily chess, Mines, Pairs, Lights, Snake, 2048 and Reversi never leave
+  the device; only an online chess table sends moves to the invited friend.
+- Online chess has no server-side referee, so it trusts the two browsers to send
+  legal moves; it is for playing a friend, not for ranked or adversarial matches.
 - Cloudflare Workers/D1 deployment for the crowd is intentionally not configured.
 - Fonts (Press Start 2P, VT323) are self-hosted under `src/assets/fonts` and are
   licensed under the SIL Open Font License.

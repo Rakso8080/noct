@@ -33,6 +33,15 @@ import {
 } from '../lib/gamesStore';
 import { ScreenHead, Segmented } from '../components/ui';
 import { useT } from '../lib/i18n';
+import {
+  findOnlineMove,
+  makeRoomCode,
+  normalizeRoomCode,
+  replayOnlineMoves,
+  roomFromLocation,
+  roomLink,
+} from '../lib/chessOnline';
+import { useChessRoom } from '../lib/useChessRoom';
 
 /** Filled glyphs for both colours; CSS gives them their ink. */
 const GLYPH: Record<Kind, string> = { k: '♚', q: '♛', r: '♜', b: '♝', n: '♞', p: '♟' };
@@ -78,6 +87,18 @@ export function Chess({ navigate }: { navigate: (path: string) => void }) {
     const saved = store.saved;
     /* /chess?fen=… opens a shared position as a free game; &side=w|b picks a seat. */
     const params = new URLSearchParams(window.location.search);
+    const online = roomFromLocation(window.location.href);
+    if (online) {
+      return {
+        mode: 'online' as const,
+        level: store.level,
+        side: online.seat,
+        moves: [] as ChessMove[],
+        fen: null,
+        finished: false,
+        room: online.room,
+      };
+    }
     const shared = params.get('fen');
     const parsed = shared ? parseFen(shared) : null;
     /* A saved game wins unless the link asks for a different position. */
@@ -90,6 +111,7 @@ export function Chess({ navigate }: { navigate: (path: string) => void }) {
         moves: saved.moves,
         fen: saved.fen ?? null,
         finished: saved.finished ?? false,
+        room: null,
       };
     }
     if (shared && parsed) {
@@ -102,6 +124,7 @@ export function Chess({ navigate }: { navigate: (path: string) => void }) {
         moves: [] as ChessMove[],
         fen: shared,
         finished: false,
+        room: null,
       };
     }
     return {
@@ -111,13 +134,18 @@ export function Chess({ navigate }: { navigate: (path: string) => void }) {
       moves: [] as ChessMove[],
       fen: null,
       finished: false,
+      room: null,
     };
   }, [day]);
 
-  const [mode, setMode] = useState<'daily' | 'free'>(initial.mode);
+  const [mode, setMode] = useState<'daily' | 'free' | 'online'>(initial.mode);
   const [level, setLevel] = useState<ChessLevel>(initial.level);
   const [side, setSide] = useState<'w' | 'b'>(initial.side);
   const [fen, setFen] = useState<string | null>(initial.fen);
+  const [onlineRoom, setOnlineRoom] = useState<string | null>(initial.room);
+  const [onlineInput, setOnlineInput] = useState('');
+  const [copied, setCopied] = useState(false);
+  const [resigned, setResigned] = useState<'w' | 'b' | null>(null);
   const startState = useMemo(
     () => (fen ? parseFen(fen) ?? initialState() : initialState()),
     [fen],
@@ -155,8 +183,7 @@ export function Chess({ navigate }: { navigate: (path: string) => void }) {
   }, [records, state, startState]);
 
   const result = useMemo(() => outcome(state, repetition), [state, repetition]);
-  const over = result.kind !== 'playing';
-  const myTurn = !over && state.turn === side;
+  const over = result.kind !== 'playing' || resigned !== null;
   const checked = !over && inCheck(state);
 
   const selectedMoves = useMemo(
@@ -198,6 +225,7 @@ export function Chess({ navigate }: { navigate: (path: string) => void }) {
   );
 
   useEffect(() => {
+    if (mode === 'online') return;
     saveChessGame({
       day,
       mode,
@@ -235,9 +263,49 @@ export function Chess({ navigate }: { navigate: (path: string) => void }) {
     [records, startState],
   );
 
+  const online = useChessRoom({
+    active: mode === 'online' && onlineRoom !== null,
+    roomId: onlineRoom,
+    moves: records.map((record) => record.move),
+    onMove: (wire) => {
+      if (state.turn === side || over) return;
+      const move = findOnlineMove(state, wire);
+      if (move) commit(move, true);
+    },
+    onSync: (wires) => {
+      const rebuilt = replayOnlineMoves(wires);
+      if (!rebuilt || rebuilt.length <= records.length) return;
+      setRecords(rebuilt);
+      setSelected(null);
+      setPromo(null);
+      setHint(null);
+      setResigned(null);
+      setRecorded(false);
+    },
+    onRestart: () => {
+      setRecords([]);
+      setSelected(null);
+      setPromo(null);
+      setHint(null);
+      setResigned(null);
+      setRecorded(false);
+      setCoronation(null);
+    },
+    onResign: (who) => {
+      setResigned(who);
+      setSelected(null);
+      setPromo(null);
+      sfx.tier('lost');
+      haptic(12);
+    },
+  });
+
+  const myTurn =
+    !over && state.turn === side && (mode !== 'online' || online.status === 'connected');
+
   /* The bot answers on its own turn, once the board has painted. */
   useEffect(() => {
-    if (over || state.turn === side) return;
+    if (mode === 'online' || over || state.turn === side) return;
     let cancelled = false;
     setThinking(true);
     const timer = setTimeout(() => {
@@ -263,7 +331,7 @@ export function Chess({ navigate }: { navigate: (path: string) => void }) {
   }, [records.length]);
 
   useEffect(() => {
-    if (!over || recorded) return;
+    if (mode === 'online' || !over || recorded) return;
     setRecorded(true);
     const outcomeValue: ChessResult =
       result.kind === 'checkmate' ? (result.winner === side ? 'win' : 'loss') : 'draw';
@@ -277,17 +345,19 @@ export function Chess({ navigate }: { navigate: (path: string) => void }) {
     } else {
       sfx.tap();
     }
-  }, [over, recorded, result, side, level, records.length, day]);
+  }, [mode, over, recorded, result, side, level, records.length, day]);
 
   const resetGame = useCallback(
     (opts: { mode?: 'daily' | 'free'; level?: ChessLevel; side?: 'w' | 'b' } = {}) => {
-      const nextMode = opts.mode ?? mode;
+      const nextMode = opts.mode ?? (mode === 'online' ? 'free' : mode);
       const nextSide = opts.side ?? side;
       const nextLevel = opts.level ?? level;
       setMode(nextMode);
       setSide(nextSide);
       setLevel(nextLevel);
       setFen(null);
+      setOnlineRoom(null);
+      setResigned(null);
       setRecords([]);
       setSelected(null);
       setPromo(null);
@@ -295,16 +365,112 @@ export function Chess({ navigate }: { navigate: (path: string) => void }) {
       setRecorded(false);
       setFlipped(nextSide === 'b');
       saveChessGame({ day, mode: nextMode, level: nextLevel, side: nextSide, moves: [], finished: false });
-      /* A new game is a normal game: drop the shared-position link from the address. */
-      if (fen) {
-        const url = new URL(window.location.href);
-        url.searchParams.delete('fen');
-        url.searchParams.delete('side');
-        window.history.replaceState({}, '', url);
-      }
+      /* A new game is a normal game: drop any shared-position or room link. */
+      const url = new URL(window.location.href);
+      url.searchParams.delete('fen');
+      url.searchParams.delete('side');
+      url.searchParams.delete('room');
+      url.searchParams.delete('seat');
+      window.history.replaceState({}, '', url);
     },
-    [mode, side, level, day, fen],
+    [mode, side, level, day],
   );
+
+  const startOnlineTable = useCallback(
+    (room: string, seat: 'w' | 'b') => {
+      setMode('online');
+      setOnlineRoom(room);
+      setSide(seat);
+      setFlipped(seat === 'b');
+      setFen(null);
+      setRecords([]);
+      setSelected(null);
+      setPromo(null);
+      setHint(null);
+      setResigned(null);
+      setRecorded(false);
+      setOnlineInput('');
+      setCopied(false);
+      window.history.replaceState({}, '', roomLink(room, seat, window.location.href));
+      sfx.tap();
+    },
+    [],
+  );
+
+  const createOnlineTable = () => {
+    startOnlineTable(makeRoomCode(), 'w');
+  };
+
+  const openOnlineLobby = () => {
+    setMode('online');
+    setOnlineRoom(null);
+    setResigned(null);
+    setRecords([]);
+    setSelected(null);
+    setPromo(null);
+    setHint(null);
+    setRecorded(false);
+    setFen(null);
+    const url = new URL(window.location.href);
+    url.searchParams.delete('room');
+    url.searchParams.delete('seat');
+    window.history.replaceState({}, '', url);
+  };
+
+  const joinOnlineTable = () => {
+    const code = normalizeRoomCode(onlineInput);
+    if (!code) return;
+    startOnlineTable(code, 'b');
+  };
+
+  const leaveOnlineTable = useCallback(() => {
+    setMode('free');
+    setOnlineRoom(null);
+    setResigned(null);
+    setRecords([]);
+    setSelected(null);
+    setPromo(null);
+    setHint(null);
+    setRecorded(false);
+    const url = new URL(window.location.href);
+    url.searchParams.delete('room');
+    url.searchParams.delete('seat');
+    window.history.replaceState({}, '', url);
+    sfx.tap();
+  }, []);
+
+  const rematchOnline = () => {
+    setRecords([]);
+    setSelected(null);
+    setPromo(null);
+    setHint(null);
+    setResigned(null);
+    setRecorded(false);
+    online.restart();
+    sfx.tap();
+  };
+
+  const resignOnline = () => {
+    if (over) return;
+    setResigned(side);
+    setSelected(null);
+    setPromo(null);
+    online.resign(side);
+    sfx.tier('lost');
+    haptic(12);
+  };
+
+  const copyInvite = async () => {
+    if (!onlineRoom) return;
+    const link = roomLink(onlineRoom, 'b', window.location.href);
+    try {
+      await navigator.clipboard.writeText(link);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1800);
+    } catch {
+      /* The link is visible in the card, so copy failure is not fatal. */
+    }
+  };
 
   const undo = useCallback(() => {
     if (thinking) return;
@@ -339,6 +505,7 @@ export function Chess({ navigate }: { navigate: (path: string) => void }) {
         return;
       }
       commit(targets[0]);
+      if (mode === 'online') online.sendMove(targets[0]);
       return;
     }
     if (piece && piece.c === side) {
@@ -371,7 +538,10 @@ export function Chess({ navigate }: { navigate: (path: string) => void }) {
   const choosePromotion = (kind: Kind) => {
     if (!promo) return;
     const move = legal.find((m) => m.from === promo.from && m.to === promo.to && m.promo === kind);
-    if (move) commit(move);
+    if (move) {
+      commit(move);
+      if (mode === 'online') online.sendMove(move);
+    }
   };
 
   const order = useMemo(
@@ -403,15 +573,29 @@ export function Chess({ navigate }: { navigate: (path: string) => void }) {
     return kingSquare(state.board, state.turn);
   }, [checked, state]);
 
+  const resultLine = resigned
+    ? resigned === side
+      ? t('You resigned.')
+      : t('Your friend resigned.')
+    : t(outcomeText(result, side));
+
   const statusLine = over
-    ? t(outcomeText(result, side))
+    ? resultLine
+    : mode === 'online' && online.status === 'connecting'
+      ? t('Opening the room…')
+      : mode === 'online' && online.status === 'error'
+        ? t('The room is unavailable.')
+        : mode === 'online' && online.peers === 0
+          ? t('Waiting for your friend…')
     : thinking
       ? t('The bot is thinking…')
       : checked
         ? t('You are in check.')
         : myTurn
           ? t('Your move.')
-          : t('Bot to move.');
+          : mode === 'online'
+            ? t('Friend to move.')
+            : t('Bot to move.');
 
   return (
     <main className="main">
@@ -421,14 +605,17 @@ export function Chess({ navigate }: { navigate: (path: string) => void }) {
           title={t('The quiet board')}
         >
           {t(
-            'The whole game, no clock. Every rule is in: castling, en passant, promotion, draws. The daily bot answers the same way for everyone.',
+            'The whole game, no clock. Every rule is in: castling, en passant, promotion, draws. Play the daily bot, or open a private table and invite a friend with a code.',
           )}
         </ScreenHead>
 
         <div className="chess-layout">
           <div className="chess-main">
             <div className="chess-bar">
-              <div className="chess-captured" aria-label={t('Pieces the bot has taken')}>
+              <div
+                className="chess-captured"
+                aria-label={t(mode === 'online' ? 'Pieces your friend has taken' : 'Pieces the bot has taken')}
+              >
                 <span className="chess-tray-label">{t('Lost')}</span>
                 {captured.b.length ? (
                   captured.b.map((k, i) => (
@@ -544,27 +731,44 @@ export function Chess({ navigate }: { navigate: (path: string) => void }) {
               {over ? (
                 <div className="chess-over" role="status">
                   <span className="chess-over-eyebrow">
-                    {result.kind === 'checkmate'
+                    {resigned
+                      ? t('Resignation')
+                      : result.kind === 'checkmate'
                       ? t('Checkmate')
                       : result.kind === 'stalemate'
                         ? t('Stalemate')
                         : t('Draw')}
                   </span>
-                  <strong>{t(outcomeText(result, side))}</strong>
+                  <strong>{resultLine}</strong>
                   <span className="chess-over-note">
-                    {t('{n} plies · level {level} · {mode}', {
-                      n: records.length,
-                      level,
-                      mode: mode === 'daily' ? t('daily') : t('free play'),
-                    })}
+                    {mode === 'online'
+                      ? t('{n} plies · with a friend', { n: records.length })
+                      : t('{n} plies · level {level} · {mode}', {
+                          n: records.length,
+                          level,
+                          mode: mode === 'daily' ? t('daily') : t('free play'),
+                        })}
                   </span>
                   <div className="row gap-10" style={{ flexWrap: 'wrap', justifyContent: 'center' }}>
-                    <button className="btn btn-sm btn-primary" onClick={() => resetGame()}>
-                      {t('Play again')}
-                    </button>
-                    <button className="btn btn-sm btn-ghost" onClick={undo}>
-                      {t('Undo')}
-                    </button>
+                    {mode === 'online' ? (
+                      <>
+                        <button className="btn btn-sm btn-primary" onClick={rematchOnline}>
+                          {t('Rematch')}
+                        </button>
+                        <button className="btn btn-sm btn-ghost" onClick={leaveOnlineTable}>
+                          {t('Leave room')}
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button className="btn btn-sm btn-primary" onClick={() => resetGame()}>
+                          {t('Play again')}
+                        </button>
+                        <button className="btn btn-sm btn-ghost" onClick={undo}>
+                          {t('Undo')}
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
               ) : null}
@@ -572,15 +776,28 @@ export function Chess({ navigate }: { navigate: (path: string) => void }) {
 
             <div className="chess-under">
               <div className="row gap-10" style={{ flexWrap: 'wrap' }}>
-                <button className="btn btn-sm" onClick={() => resetGame()} disabled={thinking}>
-                  {t('New game')}
-                </button>
-                <button className="btn btn-sm btn-ghost" onClick={undo} disabled={!records.length || thinking}>
-                  {t('Undo')}
-                </button>
-                <button className="btn btn-sm btn-ghost" onClick={requestHint} disabled={!myTurn || thinking}>
-                  {t('Hint')}
-                </button>
+                {mode === 'online' ? (
+                  <>
+                    <button className="btn btn-sm" onClick={rematchOnline} disabled={online.status !== 'connected'}>
+                      {t('Rematch')}
+                    </button>
+                    <button className="btn btn-sm btn-ghost" onClick={resignOnline} disabled={over}>
+                      {t('Resign')}
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button className="btn btn-sm" onClick={() => resetGame()} disabled={thinking}>
+                      {t('New game')}
+                    </button>
+                    <button className="btn btn-sm btn-ghost" onClick={undo} disabled={!records.length || thinking}>
+                      {t('Undo')}
+                    </button>
+                    <button className="btn btn-sm btn-ghost" onClick={requestHint} disabled={!myTurn || thinking}>
+                      {t('Hint')}
+                    </button>
+                  </>
+                )}
                 <button
                   className={`btn btn-sm${threats ? ' btn-primary' : ' btn-ghost'}`}
                   aria-pressed={threats}
@@ -599,7 +816,9 @@ export function Chess({ navigate }: { navigate: (path: string) => void }) {
                 </button>
               </div>
               <span className="chess-note">
-                {fen
+                {mode === 'online'
+                  ? t('Private table · no clock')
+                  : fen
                   ? t('Shared position · free play')
                   : mode === 'daily'
                     ? t('Daily bot · same reply for everyone today')
@@ -619,41 +838,133 @@ export function Chess({ navigate }: { navigate: (path: string) => void }) {
                   options={[
                     { value: 'daily', label: 'Daily' },
                     { value: 'free', label: 'Free play' },
+                    { value: 'online', label: 'A friend' },
                   ]}
-                  onChange={(value) => resetGame({ mode: value })}
+                  onChange={(value) => {
+                    if (value === 'online') openOnlineLobby();
+                    else resetGame({ mode: value });
+                  }}
                 />
               </div>
-              <div className="stack gap-6">
-                <span className="chess-field-label">{t('Bot')}</span>
-                <Segmented
-                  label={t('Bot level')}
-                  value={String(level)}
-                  options={[
-                    { value: '1', label: 'Novice' },
-                    { value: '2', label: 'Steady' },
-                    { value: '3', label: 'Sharp' },
-                  ]}
-                  onChange={(value) => setLevel(Number(value) as ChessLevel)}
-                />
-              </div>
-              <div className="stack gap-6">
-                <span className="chess-field-label">{t('You play')}</span>
-                <Segmented
-                  label={t('Your side')}
-                  value={side}
-                  options={[
-                    { value: 'w', label: 'White' },
-                    { value: 'b', label: 'Black' },
-                  ]}
-                  onChange={(value) => resetGame({ side: value as 'w' | 'b' })}
-                />
-              </div>
-              <p className="par-note" style={{ margin: 0 }}>
-                {t(
-                  'Level {level} · {label}. Changing side starts a new game; the bot level can change mid-game.',
-                  { level, label: t(LEVEL_LABEL[level]) },
-                )}
-              </p>
+              {mode === 'online' ? (
+                <div className="chess-online stack gap-10">
+                  {onlineRoom ? (
+                    <>
+                      <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span className="chess-field-label">{t('Private table')}</span>
+                        <span className={`online-dot is-${online.status}`} aria-hidden="true" />
+                      </div>
+                      <div className="row gap-10" style={{ flexWrap: 'wrap', alignItems: 'baseline' }}>
+                        <strong className="online-code">{onlineRoom}</strong>
+                        <span className="chip">{side === 'w' ? t('You play White') : t('You play Black')}</span>
+                      </div>
+                      <p className="par-note" style={{ margin: 0 }} aria-live="polite">
+                        {online.status === 'connected'
+                          ? t('Your friend is here.')
+                          : online.status === 'waiting'
+                            ? t('Waiting for your friend to join.')
+                            : online.status === 'error'
+                              ? t(online.error || 'The room is unavailable.')
+                              : t('Connecting to the room…')}
+                      </p>
+                      <label className="chess-field-label" htmlFor="chess-invite">
+                        {t('Invite link')}
+                      </label>
+                      <input
+                        id="chess-invite"
+                        className="online-link"
+                        readOnly
+                        value={roomLink(onlineRoom, 'b', window.location.href)}
+                        onFocus={(event) => event.currentTarget.select()}
+                      />
+                      <div className="row gap-10" style={{ flexWrap: 'wrap' }}>
+                        <button className="btn btn-sm" onClick={() => void copyInvite()}>
+                          {copied ? t('Copied') : t('Copy invite link')}
+                        </button>
+                        <button className="btn btn-sm btn-ghost" onClick={leaveOnlineTable}>
+                          {t('Leave room')}
+                        </button>
+                      </div>
+                      <p className="par-note" style={{ margin: 0 }}>
+                        {t('Your friend opens the link and plays Black. Keep this tab open while you play.')}
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="par-note" style={{ margin: 0 }}>
+                        {t('Open a private table and send the link to a friend. No account, no clock.')}
+                      </p>
+                      <button className="btn btn-sm" onClick={createOnlineTable}>
+                        {t('Create a private table')}
+                      </button>
+                      <form
+                        className="stack gap-6"
+                        onSubmit={(event) => {
+                          event.preventDefault();
+                          joinOnlineTable();
+                        }}
+                      >
+                        <label className="chess-field-label" htmlFor="chess-join">
+                          {t('Join with a code')}
+                        </label>
+                        <div className="row gap-6">
+                          <input
+                            id="chess-join"
+                            className="online-code-input"
+                            value={onlineInput}
+                            onChange={(event) => setOnlineInput(event.target.value.toUpperCase())}
+                            maxLength={6}
+                            autoComplete="off"
+                            spellCheck={false}
+                            placeholder="ABC234"
+                          />
+                          <button
+                            type="submit"
+                            className="btn btn-sm btn-ghost"
+                            disabled={!normalizeRoomCode(onlineInput)}
+                          >
+                            {t('Join')}
+                          </button>
+                        </div>
+                      </form>
+                    </>
+                  )}
+                </div>
+              ) : (
+                <>
+                  <div className="stack gap-6">
+                    <span className="chess-field-label">{t('Bot')}</span>
+                    <Segmented
+                      label={t('Bot level')}
+                      value={String(level)}
+                      options={[
+                        { value: '1', label: 'Novice' },
+                        { value: '2', label: 'Steady' },
+                        { value: '3', label: 'Sharp' },
+                      ]}
+                      onChange={(value) => setLevel(Number(value) as ChessLevel)}
+                    />
+                  </div>
+                  <div className="stack gap-6">
+                    <span className="chess-field-label">{t('You play')}</span>
+                    <Segmented
+                      label={t('Your side')}
+                      value={side}
+                      options={[
+                        { value: 'w', label: 'White' },
+                        { value: 'b', label: 'Black' },
+                      ]}
+                      onChange={(value) => resetGame({ side: value as 'w' | 'b' })}
+                    />
+                  </div>
+                  <p className="par-note" style={{ margin: 0 }}>
+                    {t(
+                      'Level {level} · {label}. Changing side starts a new game; the bot level can change mid-game.',
+                      { level, label: t(LEVEL_LABEL[level]) },
+                    )}
+                  </p>
+                </>
+              )}
             </div>
 
             <div className="card-flat stack gap-10 chess-material">

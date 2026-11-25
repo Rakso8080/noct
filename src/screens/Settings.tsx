@@ -203,7 +203,7 @@ export function Settings({ navigate }: { navigate: (path: string) => void }) {
             <li>{t('No advertising, no third-party trackers, no analytics profiles.')}</li>
             <li>
               {t(
-                'Chess, mines, pairs, lights, snake, 2048 and reversi are kept only in this browser; they never leave it.',
+              'Bot and daily chess, mines, pairs, lights, snake, 2048 and reversi are kept only in this browser. An online chess table sends moves directly to the friend you invite; no server keeps them.',
               )}
             </li>
             <li>

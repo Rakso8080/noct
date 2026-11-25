@@ -126,8 +126,8 @@ const NB: Record<string, string> = {
   'Best {n}': 'Beste {n}',
   'Play {name}': 'Spill {name}',
   'Play {name} again': 'Spill {name} igjen',
-  'The quiet board: every rule, a material bar, threats and a bot on three levels.':
-    'Det stille brettet: alle regler, materiellmåler, trusler og en bot på tre nivåer.',
+  'The quiet board: every rule, a material bar, threats, a bot on three levels and private tables for a friend.':
+    'Det stille brettet: alle regler, materiellmåler, trusler, en bot på tre nivåer og private bord for en venn.',
   'The buried sky: ten fallen stars, a safe first tap, chording and a take-back.':
     'Den begravde himmelen: ti falt stjerner, et trygt første trykk, chording og angre.',
   'The keepsake table: twelve pairs, a shelf for every match, one honest peek.':
@@ -198,8 +198,8 @@ const NB: Record<string, string> = {
     'Den tomme salen: én stemme i mørket. Det mest sjeldne svaret lønner seg mest.',
   'The lantern grid: four boards of dark windows. One spark per row, column and tone; never let two touch.':
     'Lyktenettet: fire brett med mørke vinduer. Én gnist per rad, kolonne og tone; aldri to som rører hverandre.',
-  'Every rule, no clock. Threats, captures and a bot that answers the same for all of us tonight.':
-    'Alle regler, ingen klokke. Trusler, fangster og en bot som svarer likt for alle i natt.',
+  'Every rule, no clock. Face tonight’s bot, or open a private table and send a friend the code.':
+    'Alle regler, ingen klokke. Møt nattens bot, eller åpne et privat bord og send koden til en venn.',
   'Ten fallen stars under a 9×9 field. The first tap is always safe.':
     'Ti falt stjerner under et 9×9-felt. Det første trykket er alltid trygt.',
   'Twelve keepsakes face down. Turn two; a match goes on the shelf.':
@@ -210,7 +210,7 @@ const NB: Record<string, string> = {
     'Glasshagen: ett trykk, ett steg. Tolv epler før veggene eller halen tar deg.',
   '7 prompts · 25s': '7 oppgaver · 25s',
   '4 boards · 2 min': '4 brett · 2 min',
-  'daily bot · 3 levels': 'daglig bot · 3 nivåer',
+  'bot · private room': 'bot · privat bord',
   '9×9 · 10 buried stars': '9×9 · 10 begravde stjerner',
   '24 cards · 12 keepsakes': '24 kort · 12 minner',
   '5×5 · clear the sky': '5×5 · klar himmelen',
@@ -352,8 +352,8 @@ const NB: Record<string, string> = {
     'En tilfeldig enhets-ID og brettene dine er de eneste dataene som lagres.',
   'No advertising, no third-party trackers, no analytics profiles.':
     'Ingen reklame, ingen tredjepartssporing, ingen analyseprofiler.',
-  'Chess, mines, pairs, lights, snake, 2048 and reversi are kept only in this browser; they never leave it.':
-    'Sjakk, mines, par, lys, slange, 2048 og reversi lagres bare i denne nettleseren; de forlater den aldri.',
+  'Bot and daily chess, mines, pairs, lights, snake, 2048 and reversi are kept only in this browser. An online chess table sends moves directly to the friend you invite; no server keeps them.':
+    'Bot- og daglig sjakk, mines, par, lys, slange, 2048 og reversi lagres bare i denne nettleseren. Et online-sjakkbord sender trekkene direkte til vennen du inviterer; ingen server beholder dem.',
   'Deleting your data removes your results, streak, name and side-game records immediately.':
     'Sletting fjerner resultatene, rekken, navnet og siderecordene dine med en gang.',
   'This deletes your streak, scores and history. It cannot be undone.':
@@ -744,6 +744,44 @@ const NB: Record<string, string> = {
   'Draw: fifty moves without a capture.': 'Remis: femti trekk uten fangst.',
   'Draw by repetition.': 'Remis ved gjentakelse.',
 
+  // ---- online chess
+  'A friend': 'En venn',
+  'Private table': 'Privat bord',
+  'Private table · no clock': 'Privat bord · ingen klokke',
+  'Create a private table': 'Lag et privat bord',
+  'Open a private table and send the link to a friend. No account, no clock.':
+    'Åpne et privat bord og send lenken til en venn. Ingen konto, ingen klokke.',
+  'Join with a code': 'Bli med med en kode',
+  Join: 'Bli med',
+  'Invite link': 'Invitasjonslenke',
+  'Copy invite link': 'Kopier invitasjonslenke',
+  'Leave room': 'Forlat rommet',
+  'Your friend is here.': 'Vennen din er her.',
+  'Waiting for your friend to join.': 'Venter på at vennen din skal bli med.',
+  'Connecting to the room…': 'Kobler til rommet…',
+  'Waiting for your friend…': 'Venter på vennen din…',
+  'Friend to move.': 'Vennen din skal trekke.',
+  'You play White': 'Du spiller hvit',
+  'You play Black': 'Du spiller svart',
+  'Your friend opens the link and plays Black. Keep this tab open while you play.':
+    'Vennen din åpner lenken og spiller svart. La denne fanen stå åpen mens dere spiller.',
+  'Pieces your friend has taken': 'Brikker vennen din har tatt',
+  '{n} plies · with a friend': '{n} trekk · med en venn',
+  Resignation: 'Oppgivelse',
+  Resign: 'Gi opp',
+  Rematch: 'Omkamp',
+  'You resigned.': 'Du trakk deg.',
+  'Your friend resigned.': 'Vennen din trakk seg.',
+  'Opening the room…': 'Åpner rommet…',
+  'The room is unavailable.': 'Rommet er utilgjengelig.',
+  'Could not open the room.': 'Kunne ikke åpne rommet.',
+  'That table already has two players.': 'Det bordet har allerede to spillere.',
+  'The two browsers could not reach each other. Try another network.':
+    'Nettleserne fikk ikke kontakt. Prøv et annet nettverk.',
+  'The room connection failed.': 'Romtilkoblingen feilet.',
+  'Could not reach the room relays. Check the connection and try again.':
+    'Fikk ikke kontakt med romformidlerne. Sjekk tilkoblingen og prøv igjen.',
+
   // ---- survey
   Altitude: 'Høyde',
   Prompt: 'Oppgave',
@@ -891,8 +929,8 @@ const NB: Record<string, string> = {
     'Arkivet holder de siste 365 nettene. Denne adressen ligger utenfor.',
   'Play today’s board': 'Spill dagens brett',
   'Chess · Night {n}': 'Sjakk · natt {n}',
-  'The whole game, no clock. Every rule is in: castling, en passant, promotion, draws. The daily bot answers the same way for everyone.':
-    'Hele spillet, ingen klokke. Alle reglene er med: rokade, en passant, forvandling og alle remisvarianter. Den daglige boten svarer likt for alle.',
+  'The whole game, no clock. Every rule is in: castling, en passant, promotion, draws. Play the daily bot, or open a private table and invite a friend with a code.':
+    'Hele spillet, ingen klokke. Alle reglene er med: rokade, en passant, forvandling og alle remisvarianter. Spill mot dagens bot, eller åpne et privat bord og inviter en venn med en kode.',
   Noct: 'Noct',
   Mines: 'Mines',
   Pairs: 'Par',

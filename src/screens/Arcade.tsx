@@ -31,7 +31,7 @@ const GAMES: Entry[] = [
     path: '/chess',
     name: 'Chess',
     kind: 'board',
-    line: 'The quiet board: every rule, a material bar, threats and a bot on three levels.',
+    line: 'The quiet board: every rule, a material bar, threats, a bot on three levels and private tables for a friend.',
     tone: 'violet',
     best: (s) =>
       s.chess.wins + s.chess.losses + s.chess.draws

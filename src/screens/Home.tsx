@@ -237,8 +237,8 @@ export function Home({ navigate, onTutorial }: HomeProps) {
             index="04"
             kind="board"
             name="Chess"
-            line="Every rule, no clock. Threats, captures and a bot that answers the same for all of us tonight."
-            meta="daily bot · 3 levels"
+            line="Every rule, no clock. Face tonight’s bot, or open a private table and send a friend the code."
+            meta="bot · private room"
             tone="violet"
             shape="ring"
             status={chessStatus}
