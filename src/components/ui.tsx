@@ -262,5 +262,6 @@ export function formatDate(iso: string): string {
 
 export function formatDay(dateIso: string): string {
   const d = new Date(`${dateIso}T00:00:00Z`);
-  return new Intl.DateTimeFormat(undefined, { day: 'numeric', month: 'short', timeZone: 'UTC' }).format(d);
+  const locale = document.documentElement.lang === 'nb' ? 'nb-NO' : 'en-US';
+  return new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short', timeZone: 'UTC' }).format(d);
 }

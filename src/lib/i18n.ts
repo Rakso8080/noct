@@ -247,7 +247,7 @@ const NB: Record<string, string> = {
   apples: 'epler',
   steps: 'steg',
   long: 'lang',
-  'Snake · Night {n}': 'Snake · natt {n}',
+  'Snake · Night {n}': 'Slange · natt {n}',
   'Best {n} steps': 'Beste {n} steg',
   'Garden full in {steps} steps': 'Hagen er full etter {steps} steg',
   'Caught in the glass': 'Tatt i glasset',
@@ -542,7 +542,7 @@ const NB: Record<string, string> = {
   'Pairs mode': 'Par-modus',
 
   // ---- mines
-  'Mines · Night {n}': 'Mines · natt {n}',
+  'Mines · Night {n}': 'Minesveiper · natt {n}',
   'Ten fallen stars are buried under the field. Clear every other square; the first tap is always safe, so a blind start never costs you. Long-press (or right-click) plants a lantern.':
     'Ti falt stjerner er begravd under feltet. Åpne hver andre rute; det første trykket er alltid trygt, så en blind start koster deg ingenting. Langt trykk (eller høyreklikk) planter en lykt.',
   'Fresh board every reset': 'Nytt brett hver nullstilling',
@@ -925,7 +925,8 @@ const NB: Record<string, string> = {
   'The whole game, no clock. Every rule is in: castling, en passant, promotion, draws. Play the daily bot, or open a private table and invite a friend with a code.':
     'Hele spillet, ingen klokke. Alle reglene er med: rokade, en passant, forvandling og alle remisvarianter. Spill mot dagens bot, eller åpne et privat bord og inviter en venn med en kode.',
   Noct: 'Noct',
-  Mines: 'Mines',
+  Mines: 'Minesveiper',
+  Snake: 'Slange',
   Pairs: 'Par',
   Lights: 'Lys',
   Free: 'Fri',
