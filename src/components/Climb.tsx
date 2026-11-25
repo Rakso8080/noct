@@ -118,6 +118,16 @@ export function Climb({
         <Sprite grid={MOON} />
       </div>
       <div className="climb-space" aria-hidden="true" />
+      <div className="climb-atlas" aria-hidden="true">
+        <span className="climb-atlas-island" />
+        <span className="climb-atlas-keep" />
+        <span className="climb-atlas-flies">
+          <i />
+          <i />
+          <i />
+          <i />
+        </span>
+      </div>
 
       <div className="climb-clouds" aria-hidden="true">
         <span className="climb-cloud climb-cloud--a" />

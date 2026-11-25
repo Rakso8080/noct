@@ -242,6 +242,12 @@ export function Arcade({ navigate }: { navigate: (path: string) => void }) {
 
   return (
     <main className="main arcade-main">
+      <span className="arcade-camp" aria-hidden="true">
+        <i className="arcade-post" />
+        <i className="arcade-sign arcade-sign--a" />
+        <i className="arcade-sign arcade-sign--b" />
+        <i className="arcade-fire" />
+      </span>
       <div className="wrap">
         <ScreenHead eyebrow="Arcade · the side tables" title="Ten games beside the daily">
           Every table is played against the night, not against a scoreboard. Local records stay in this

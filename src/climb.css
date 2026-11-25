@@ -898,6 +898,16 @@
 }
 
 :root[data-motion='reduced'] .climb,
+:root[data-motion='reduced'] .climb-scroll,
+:root[data-motion='reduced'] .climb-cloud,
+:root[data-motion='reduced'] .climb-stars,
+:root[data-motion='reduced'] .climb-weather::before,
+:root[data-motion='reduced'] .climb-pond,
+:root[data-motion='reduced'] .climb-reed,
+:root[data-motion='reduced'] .climb-figure,
+:root[data-motion='reduced'] .climb-frame--a,
+:root[data-motion='reduced'] .climb-frame--b,
+:root[data-motion='reduced'] .climb-balloon,
 :root[data-motion='reduced'] .climb-look,
 :root[data-motion='reduced'] .climb-dust i,
 :root[data-motion='reduced'] .climb-balloon.is-popping,

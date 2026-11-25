@@ -609,8 +609,15 @@
 
 [data-motion='reduced'] .journey-back,
 [data-motion='reduced'] .journey-track,
+[data-motion='reduced'] .journey-scatter,
 [data-motion='reduced'] .journey-stars,
 [data-motion='reduced'] .journey-cloud,
+[data-motion='reduced'] .journey-bird,
+[data-motion='reduced'] .journey-water,
+[data-motion='reduced'] .journey-weather::before,
+[data-motion='reduced'] .journey-frame--a,
+[data-motion='reduced'] .journey-frame--b,
+[data-motion='reduced'] .journey-lantern,
 [data-motion='reduced'] .journey-traveller,
 [data-motion='reduced'] .journey-traveller.is-moving {
   animation: none;

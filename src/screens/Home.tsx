@@ -13,7 +13,20 @@ interface HomeProps {
   onTutorial: () => void;
 }
 
-type Shape = 'up' | 'down' | 'diamond' | 'ring';
+type Shape =
+  | 'up'
+  | 'down'
+  | 'diamond'
+  | 'ring'
+  | 'rook'
+  | 'star'
+  | 'cards'
+  | 'window'
+  | 'apple'
+  | 'spark'
+  | 'crown'
+  | 'drop'
+  | 'domino';
 
 /** Tiny 8×8 pixel glyphs, so the tiles read like a cartridge menu. */
 const SHAPES: Record<Shape, number[][]> = {
@@ -33,6 +46,95 @@ const SHAPES: Record<Shape, number[][]> = {
     [1, 5, 2],
     [5, 5, 2],
     [2, 6, 4],
+  ],
+  rook: [
+    [1, 1, 1],
+    [6, 1, 1],
+    [1, 2, 1],
+    [6, 2, 1],
+    [1, 3, 6],
+    [1, 4, 6],
+    [2, 5, 4],
+    [1, 6, 6],
+  ],
+  star: [
+    [5, 0, 2],
+    [4, 1, 3],
+    [3, 2, 4],
+    [2, 3, 4],
+    [1, 4, 3],
+    [0, 5, 2],
+  ],
+  cards: [
+    [1, 0, 3],
+    [1, 1, 3],
+    [1, 2, 3],
+    [4, 2, 3],
+    [4, 3, 3],
+    [4, 4, 3],
+    [1, 5, 3],
+    [1, 6, 3],
+  ],
+  window: [
+    [1, 1, 6],
+    [1, 2, 2],
+    [5, 2, 2],
+    [1, 3, 6],
+    [1, 4, 2],
+    [5, 4, 2],
+    [1, 5, 6],
+  ],
+  apple: [
+    [3, 0, 2],
+    [5, 1, 1],
+    [2, 1, 4],
+    [1, 2, 6],
+    [1, 3, 6],
+    [1, 4, 6],
+    [2, 5, 4],
+    [3, 6, 2],
+  ],
+  spark: [
+    [3, 0, 2],
+    [3, 1, 2],
+    [1, 2, 2],
+    [5, 2, 2],
+    [0, 3, 8],
+    [1, 4, 2],
+    [5, 4, 2],
+    [3, 5, 2],
+    [3, 6, 2],
+  ],
+  crown: [
+    [0, 2, 2],
+    [3, 0, 2],
+    [6, 2, 2],
+    [0, 3, 8],
+    [0, 4, 8],
+    [1, 5, 6],
+    [0, 6, 8],
+  ],
+  drop: [
+    [3, 0, 2],
+    [3, 1, 2],
+    [2, 2, 4],
+    [1, 3, 6],
+    [1, 4, 6],
+    [2, 5, 4],
+    [3, 6, 2],
+  ],
+  domino: [
+    [1, 0, 2],
+    [1, 1, 2],
+    [1, 2, 2],
+    [1, 3, 2],
+    [1, 4, 2],
+    [1, 5, 2],
+    [1, 6, 2],
+    [4, 0, 2],
+    [4, 3, 2],
+    [4, 4, 2],
+    [4, 6, 2],
   ],
 };
 
@@ -283,7 +385,7 @@ export function Home({ navigate, onTutorial }: HomeProps) {
             line="Every rule, no clock. Face tonight’s bot, or open a private table and send a friend the code."
             meta="bot · private room"
             tone="violet"
-            shape="ring"
+            shape="rook"
             status={chessStatus}
             action={chessDay || (chessSaved && chessSaved.moves.length) ? 'Open' : 'Play'}
             onPlay={() => navigate('/chess')}
@@ -295,7 +397,7 @@ export function Home({ navigate, onTutorial }: HomeProps) {
             line="Ten fallen stars under a 9×9 field. The first tap is always safe."
             meta="9×9 · 10 buried stars"
             tone="rust"
-            shape="diamond"
+            shape="star"
             status={minesStatus}
             action={minesDay ? 'Play again' : 'Play'}
             onPlay={() => navigate('/mines')}
@@ -307,7 +409,7 @@ export function Home({ navigate, onTutorial }: HomeProps) {
             line="Twelve keepsakes face down. Turn two; a match goes on the shelf."
             meta="24 cards · 12 keepsakes"
             tone="teal"
-            shape="down"
+            shape="cards"
             status={pairsStatus}
             action={pairsDay ? 'Play again' : 'Play'}
             onPlay={() => navigate('/pairs')}
@@ -319,7 +421,7 @@ export function Home({ navigate, onTutorial }: HomeProps) {
             line="Twenty-five lit windows. Every press flips its neighbours too; each one shut lets a star through."
             meta="5×5 · clear the sky"
             tone="sand"
-            shape="up"
+            shape="window"
             status={lightsStatus}
             action={lightsDay ? 'Play again' : 'Play'}
             onPlay={() => navigate('/lights')}
@@ -331,7 +433,7 @@ export function Home({ navigate, onTutorial }: HomeProps) {
             line="The glass orchard: one press, one step. Twelve apples before the walls or your tail."
             meta="15×11 · 12 apples"
             tone="orchard"
-            shape="up"
+            shape="apple"
             status={snakeStatus}
             action="Play"
             onPlay={() => navigate('/snake')}
@@ -343,7 +445,7 @@ export function Home({ navigate, onTutorial }: HomeProps) {
             line="The doubling room: slide the lanterns, fuse equals, light a 512 tile."
             meta="4×4 · goal 512"
             tone="amber"
-            shape="diamond"
+            shape="spark"
             status={numbersStatus}
             action="Play"
             onPlay={() => navigate('/numbers')}
@@ -367,7 +469,7 @@ export function Home({ navigate, onTutorial }: HomeProps) {
             line="The quiet draughts table: forced captures, long jump chains and a crown waiting on the far rank."
             meta="8×8 · forced captures"
             tone="clay"
-            shape="ring"
+            shape="crown"
             status={checkersStatus}
             action="Play"
             onPlay={() => navigate('/checkers')}
@@ -379,7 +481,7 @@ export function Home({ navigate, onTutorial }: HomeProps) {
             line="The lantern column: drop, stack and line up four before the bot seals the middle."
             meta="7×6 · four in a row"
             tone="channel"
-            shape="diamond"
+            shape="drop"
             status={connect4Status}
             action="Play"
             onPlay={() => navigate('/connect4')}
@@ -391,7 +493,7 @@ export function Home({ navigate, onTutorial }: HomeProps) {
             line="The long table: match either open end, draw from the boneyard, and empty your hand first."
             meta="double-six · one opponent"
             tone="ivory"
-            shape="down"
+            shape="domino"
             status={dominoesStatus}
             action="Play"
             onPlay={() => navigate('/dominoes')}

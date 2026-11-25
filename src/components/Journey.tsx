@@ -158,6 +158,15 @@ export function Journey({ progress, moving = false, variant = 'strip', answer = 
       </div>
 
       <div className="journey-glow" />
+      <div className="journey-atlas" aria-hidden="true">
+        <span className="journey-atlas-island" />
+        <span className="journey-atlas-keep" />
+        <span className="journey-atlas-flies">
+          <i />
+          <i />
+          <i />
+        </span>
+      </div>
       <div className="journey-far" />
       <div className="journey-mid" />
       <div className="journey-ground" />

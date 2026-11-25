@@ -64,6 +64,7 @@ export function RealmBackdrop({ hidden = false }: { hidden?: boolean }) {
         <span
           key={`pine-${index}`}
           className={`realm-pine${index % 3 === 0 ? ' is-lit' : ''}`}
+          data-pine={index + 1}
           style={{
             left: pine.left,
             width: pine.width,
