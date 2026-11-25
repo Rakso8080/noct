@@ -38,7 +38,9 @@ export function useCountUp(target: number, duration = 800): number {
   const fromRef = useRef(0);
 
   useEffect(() => {
-    if (preferReducedMotion()) {
+    /* A hidden tab pauses rAF; settle on the real score instead of showing 0. */
+    if (preferReducedMotion() || document.hidden) {
+      fromRef.current = target;
       setValue(target);
       return;
     }

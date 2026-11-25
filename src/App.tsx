@@ -68,6 +68,23 @@ interface NavItem {
   always?: boolean;
 }
 
+const ATLAS_PLACE_BY_SECTION: Record<string, string> = {
+  common: 'common',
+  rare: 'rare',
+  play: 'noct',
+  practice: 'noct',
+  chess: 'chess',
+  mines: 'mines',
+  pairs: 'pairs',
+  lights: 'lights',
+  snake: 'snake',
+  numbers: 'numbers',
+  reversi: 'reversi',
+  checkers: 'checkers',
+  connect4: 'connect4',
+  dominoes: 'dominoes',
+};
+
 const NAV: NavItem[] = [
   { path: '/', label: 'Menu', match: (s: string[]) => s.length === 0 },
   { path: '/common', label: 'Common', match: (s: string[]) => s[0] === 'common' },
@@ -104,6 +121,8 @@ export function App() {
   const url = new URL(path, window.location.origin);
   const segments = url.pathname.split('/').filter(Boolean);
   const section = segments[0] ?? '';
+  const atlasPlace = ATLAS_PLACE_BY_SECTION[section];
+  const atlasQuery = atlasPlace ? `?place=${atlasPlace}` : '';
   const realm =
     !section
       ? 'home'
@@ -359,6 +378,15 @@ export function App() {
               }}
             >
               {t('How to play')}
+            </a>
+            <a
+              href={`${BASE}/atlas${atlasQuery}`}
+              onClick={(e) => {
+                e.preventDefault();
+                navigate(`/atlas${atlasQuery}`);
+              }}
+            >
+              {t('Atlas')}
             </a>
             <a
               href={`${BASE}/stats`}

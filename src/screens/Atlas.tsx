@@ -8,6 +8,7 @@ import { readGames } from '../lib/gamesStore';
 import {
   CHAPTERS,
   PLACES,
+  PLACE_BY_ID,
   allPlaceViews,
   nightRoute,
   noctSnapshot,
@@ -32,7 +33,12 @@ export function Atlas({ navigate }: { navigate: (path: string) => void }) {
   const [games] = useState(() => readGames());
   const [today, setToday] = useState<TodayResponse | null>(null);
   const [stats, setStats] = useState<StatsResponse | null>(null);
-  const [selected, setSelected] = useState<PlaceId>(() => nightRoute(day)[0]?.id ?? 'common');
+  const [selected, setSelected] = useState<PlaceId>(() => {
+    const requested = new URLSearchParams(window.location.search).get('place');
+    return requested && requested in PLACE_BY_ID
+      ? (requested as PlaceId)
+      : nightRoute(day)[0]?.id ?? 'common';
+  });
   const [stamps, setStamps] = useState<number[]>(() => readRouteStamps());
 
   useEffect(() => {
@@ -88,12 +94,16 @@ export function Atlas({ navigate }: { navigate: (path: string) => void }) {
     if (recordRouteStamp(day)) setStamps(readRouteStamps());
   }, [day, routeDone]);
 
+  useEffect(() => {
+    const requested = new URLSearchParams(window.location.search).get('place');
+    if (!requested || !window.matchMedia('(max-width: 760px)').matches) return;
+    document.getElementById('atlas-detail')?.scrollIntoView({ block: 'start', behavior: 'auto' });
+  }, []);
+
   const selectPlace = (id: PlaceId) => {
     setSelected(id);
     if (window.matchMedia('(max-width: 760px)').matches) {
-      window.requestAnimationFrame(() => {
-        document.getElementById('atlas-detail')?.scrollIntoView({ block: 'start', behavior: 'auto' });
-      });
+      document.getElementById('atlas-detail')?.scrollIntoView({ block: 'start', behavior: 'auto' });
     }
   };
 
