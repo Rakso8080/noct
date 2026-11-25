@@ -283,6 +283,20 @@ export function HowTo({ navigate }: { navigate: (path: string) => void }) {
             </button>
           </div>
         </div>
+
+        <div className="card-flat stack gap-14" style={{ marginTop: 20 }}>
+          <span className="eyebrow">{t('The Long Road')}</span>
+          <p className="par-note" style={{ margin: 0 }}>
+            {t(
+              'The Hollow Atlas gathers all thirteen places into one road. Each place keeps three marks: a waymark for a first visit, a night mark for today, and a keepsake for a personal record. The nightly route suggests three stops, but it never locks a door or breaks a streak.',
+            )}
+          </p>
+          <div className="row gap-10" style={{ flexWrap: 'wrap' }}>
+            <button className="btn btn-sm" onClick={() => navigate('/atlas')}>
+              {t('Open the atlas')}
+            </button>
+          </div>
+        </div>
       </div>
     </main>
   );

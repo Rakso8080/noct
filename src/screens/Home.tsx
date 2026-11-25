@@ -1,151 +1,18 @@
 import { useEffect, useState } from 'react';
 import { api, type TodayResponse } from '../lib/api';
 import { Countdown } from '../components/ui';
+import { PlaceGlyph } from '../components/PlaceGlyph';
 import { HeroWorld, WorldStrip } from '../components/World';
 import { dailyRunFor, streakFor, type SurveyRun } from '../lib/surveyStore';
 import { dayNumber, nextResetAt } from '../../shared/dates';
 import { MAX_SCORE } from '../../shared/score';
 import { readGames, type GamesStore } from '../lib/gamesStore';
+import { nightRoute, marksFor, recordRouteStamp, surveySnapshot, type PlaceShape } from '../lib/atlas';
 import { useT } from '../lib/i18n';
 
 interface HomeProps {
   navigate: (path: string) => void;
   onTutorial: () => void;
-}
-
-type Shape =
-  | 'up'
-  | 'down'
-  | 'diamond'
-  | 'ring'
-  | 'rook'
-  | 'star'
-  | 'cards'
-  | 'window'
-  | 'apple'
-  | 'spark'
-  | 'crown'
-  | 'drop'
-  | 'domino';
-
-/** Tiny 8×8 pixel glyphs, so the tiles read like a cartridge menu. */
-const SHAPES: Record<Shape, number[][]> = {
-  up: [[3, 0, 2], [2, 1, 4], [1, 2, 6], [0, 3, 8], [3, 4, 2], [3, 5, 2], [3, 6, 2]],
-  down: [[3, 0, 2], [3, 1, 2], [3, 2, 2], [0, 3, 8], [1, 4, 6], [2, 5, 4], [3, 6, 2]],
-  diamond: [[3, 0, 2], [2, 1, 4], [1, 2, 6], [0, 3, 8], [1, 4, 6], [2, 5, 4], [3, 6, 2]],
-  ring: [
-    [2, 0, 4],
-    [1, 1, 2],
-    [5, 1, 2],
-    [1, 2, 2],
-    [5, 2, 2],
-    [1, 3, 2],
-    [5, 3, 2],
-    [1, 4, 2],
-    [5, 4, 2],
-    [1, 5, 2],
-    [5, 5, 2],
-    [2, 6, 4],
-  ],
-  rook: [
-    [1, 1, 1],
-    [6, 1, 1],
-    [1, 2, 1],
-    [6, 2, 1],
-    [1, 3, 6],
-    [1, 4, 6],
-    [2, 5, 4],
-    [1, 6, 6],
-  ],
-  star: [
-    [5, 0, 2],
-    [4, 1, 3],
-    [3, 2, 4],
-    [2, 3, 4],
-    [1, 4, 3],
-    [0, 5, 2],
-  ],
-  cards: [
-    [1, 0, 3],
-    [1, 1, 3],
-    [1, 2, 3],
-    [4, 2, 3],
-    [4, 3, 3],
-    [4, 4, 3],
-    [1, 5, 3],
-    [1, 6, 3],
-  ],
-  window: [
-    [1, 1, 6],
-    [1, 2, 2],
-    [5, 2, 2],
-    [1, 3, 6],
-    [1, 4, 2],
-    [5, 4, 2],
-    [1, 5, 6],
-  ],
-  apple: [
-    [3, 0, 2],
-    [5, 1, 1],
-    [2, 1, 4],
-    [1, 2, 6],
-    [1, 3, 6],
-    [1, 4, 6],
-    [2, 5, 4],
-    [3, 6, 2],
-  ],
-  spark: [
-    [3, 0, 2],
-    [3, 1, 2],
-    [1, 2, 2],
-    [5, 2, 2],
-    [0, 3, 8],
-    [1, 4, 2],
-    [5, 4, 2],
-    [3, 5, 2],
-    [3, 6, 2],
-  ],
-  crown: [
-    [0, 2, 2],
-    [3, 0, 2],
-    [6, 2, 2],
-    [0, 3, 8],
-    [0, 4, 8],
-    [1, 5, 6],
-    [0, 6, 8],
-  ],
-  drop: [
-    [3, 0, 2],
-    [3, 1, 2],
-    [2, 2, 4],
-    [1, 3, 6],
-    [1, 4, 6],
-    [2, 5, 4],
-    [3, 6, 2],
-  ],
-  domino: [
-    [1, 0, 2],
-    [1, 1, 2],
-    [1, 2, 2],
-    [1, 3, 2],
-    [1, 4, 2],
-    [1, 5, 2],
-    [1, 6, 2],
-    [4, 0, 2],
-    [4, 3, 2],
-    [4, 4, 2],
-    [4, 6, 2],
-  ],
-};
-
-function PixelIcon({ shape }: { shape: Shape }) {
-  return (
-    <svg viewBox="0 0 8 8" width="26" height="26" shapeRendering="crispEdges" aria-hidden="true" focusable="false">
-      {SHAPES[shape].map(([x, y, w], i) => (
-        <rect key={i} x={x} y={y} width={w} height={1} fill="currentColor" />
-      ))}
-    </svg>
-  );
 }
 
 interface TileProps {
@@ -168,7 +35,7 @@ interface TileProps {
     | 'clay'
     | 'channel'
     | 'ivory';
-  shape: Shape;
+  shape: PlaceShape;
   status: string;
   action: string;
   onPlay: () => void;
@@ -186,7 +53,7 @@ function GameTile({ index, kind, name, line, meta, tone, shape, status, action, 
       </div>
       <div className="row gap-10" style={{ alignItems: 'center' }}>
         <span className="game-icon">
-          <PixelIcon shape={shape} />
+          <PlaceGlyph shape={shape} />
         </span>
         <h2 className="game-name">{t(name)}</h2>
       </div>
@@ -305,6 +172,26 @@ export function Home({ navigate, onTutorial }: HomeProps) {
       ? t('{wins}W · {losses}L', { wins: games.dominoes.wins, losses: games.dominoes.losses })
       : t('Unplayed');
 
+  const route = nightRoute(day);
+  const routeSources = {
+    day,
+    games,
+    common: surveySnapshot('common', day),
+    rare: surveySnapshot('rare', day),
+    noct: {
+      playedToday: Boolean(today?.played),
+      activeToday: Boolean(today?.active),
+      bestScore: null,
+      completedDays: 0,
+    },
+  };
+  const routeMarks = route.map((place) => marksFor(place.id, routeSources));
+  const routeDone = routeMarks.every((marks) => marks.night);
+
+  useEffect(() => {
+    if (routeDone) recordRouteStamp(day);
+  }, [day, routeDone]);
+
   return (
     <main className="main">
       <div className="wrap">
@@ -326,7 +213,7 @@ export function Home({ navigate, onTutorial }: HomeProps) {
             <h1 className="wordmark">Noct</h1>
             <p className="hero-line">
               {t(
-                'Seven boards for the night and six arcade tables behind them. Twenty-five seconds a prompt, one attempt each.',
+                'Thirteen places on one road: seven nightly boards and six side tables. Twenty-five seconds a prompt, one attempt each.',
               )}
             </p>
 
@@ -339,6 +226,46 @@ export function Home({ navigate, onTutorial }: HomeProps) {
               </button>
             </div>
           </div>
+        </section>
+
+        <section className={`home-road${routeDone ? ' is-complete' : ''}`} aria-labelledby="home-road-title">
+          <div className="home-road-head">
+            <div>
+              <span className="eyebrow">{t('Tonight’s road')}</span>
+              <h2 id="home-road-title">{t('Three stops, one night')}</h2>
+            </div>
+            <button className="btn btn-sm btn-ghost" onClick={() => navigate('/atlas')}>
+              {t('Open the atlas')}
+            </button>
+          </div>
+          <ol className="home-road-list">
+            {route.map((place, index) => {
+              const marks = routeMarks[index];
+              const lit = Boolean(marks?.night);
+              return (
+                <li key={place.id}>
+                  <button
+                    type="button"
+                    className={`home-road-stop${lit ? ' is-lit' : ''}`}
+                    onClick={() => navigate(place.path)}
+                    aria-label={`${t('Open {name}', { name: t(place.name) })} — ${t(lit ? 'Lit' : 'Not yet')}`}
+                  >
+                    <span className="home-road-number">0{index + 1}</span>
+                    <span className="home-road-copy">
+                      <strong>{t(place.name)}</strong>
+                      <small>{t(place.placeName)}</small>
+                    </span>
+                    <span className="home-road-state">{t(lit ? 'Lit' : 'Not yet')}</span>
+                  </button>
+                </li>
+              );
+            })}
+          </ol>
+          <p className="par-note home-road-note">
+            {routeDone
+              ? t('The road is sealed for tonight. It will be a different three stops tomorrow.')
+              : t('A suggestion, not a duty: no streak, no lock, no penalty. Play one stop or all three.')}
+          </p>
         </section>
 
         <div className="menu-grid" style={{ marginTop: 20 }} aria-label={t('Choose a game')}>
@@ -501,6 +428,9 @@ export function Home({ navigate, onTutorial }: HomeProps) {
         </div>
 
         <div className="menu-row">
+          <button className="tab" onClick={() => navigate('/atlas')}>
+            {t('Atlas')}
+          </button>
           <button className="tab" onClick={() => navigate('/practice?level=2')}>
             {t('Practice')}
           </button>

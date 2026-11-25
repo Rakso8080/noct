@@ -1041,5 +1041,111 @@ const NB: Record<string, string> = {
     'Noct er et lite, uavhengig daglig puslespill: sju brett for natten pluss seks arkadebord, likt for alle, nullstilt kl. 00:00 UTC. Laget for å spilles i en kø, på bussen eller med kaffe — og så lukkes.',
   'Won in {moves} drops': 'Vant på {moves} slipp',
   'Won · +{n}': 'Vant · +{n}',
+
+  // ---- the long road
+  Atlas: 'Atlas',
+  'The Hollow Atlas': 'Det hule atlaset',
+  'The Long Road': 'Den lange veien',
+  'Thirteen places on one road: seven nightly boards and six side tables. The map only remembers what you have already played.':
+    'Tretten steder på én vei: sju nattlige brett og seks sidebord. Kartet husker bare det du allerede har spilt.',
+  'The road so far': 'Veien så langt',
+  marks: 'merker',
+  'lit tonight': 'tent i natt',
+  'Tonight’s road': 'Kveldens rute',
+  'Three stops, one night': 'Tre stopp, én natt',
+  'Sealed for tonight': 'Forseglet for i natt',
+  '{n} of 3 lit': '{n} av 3 tent',
+  Lit: 'Tent',
+  'Not yet': 'Ikke ennå',
+  'The road is sealed for tonight. It will be a different three stops tomorrow.':
+    'Veien er forseglet for i natt. Det blir tre nye stopp i morgen.',
+  'A suggestion, not a duty: no streak, no lock, no penalty. Play one stop or all three.':
+    'Et forslag, ikke en plikt: ingen rekke, ingen lås, ingen straff. Spill ett stopp eller alle tre.',
+  'The map of thirteen places': 'Kartet over tretten steder',
+  Chapter: 'Kapittel',
+  'The Night Choir': 'Nattkoret',
+  'The Empty Hall': 'Den tomme salen',
+  'The Lantern Grid': 'Lyktnettet',
+  'The Candle Keep': 'Lysborgen',
+  'The Side Tables': 'Sidebordene',
+  'The Fallen Star Field': 'Stjernefallet',
+  'The Keepsake Market': 'Minremarken',
+  'The Crooked Cottage': 'Det skjeve huset',
+  'The Glass Orchard': 'Glasshagen',
+  'The Doubling Room': 'Doblingsrommet',
+  'The Moon Garden': 'Månehagen',
+  'The Clay Courtyard': 'Leirgården',
+  'The Lantern Aqueduct': 'Lykteakvedukten',
+  'The Long Bridge': 'Den lange broen',
+  'Where the valley sings the same note into the dark.':
+    'Der dalen synger samme tone inn i mørket.',
+  'The old keep above the water, where every table keeps a light.':
+    'Den gamle borgen over vannet, der hvert bord holder en lykt tent.',
+  'Inns, orchards and quiet rooms along the last stretch of road.':
+    'Kroer, hager og stille rom langs den siste delen av veien.',
+  'A chorus in the valley: seven prompts, one loud answer at a time.':
+    'Et kor i dalen: sju oppgaver, ett høyt svar om gangen.',
+  'The same seven prompts from the far end, where the quietest answer carries.':
+    'De samme sju oppgavene fra den andre enden, der det stilleste svaret bærer.',
+  'Four boards of dark windows, one spark in every row, column and tone.':
+    'Fire brett med mørke vinduer, én gnist i hver rad, kolonne og tone.',
+  'Walnut, stone and candlelight; every rule, and a friend across the table.':
+    'Valnøtt, stein og levende lys; alle regler, og en venn over bordet.',
+  'A stall of face-down keepsakes, with one honest peek for the road.':
+    'En bod med minner med forsiden ned, og én ærlig titt for veien.',
+  'Twenty-five leaded windows; shut them all and let the stars through.':
+    'Tjuefem blyglassvinduer; lukk alle og slipp stjernene inn.',
+  'One press, one step through the glass rows, twelve apples before the walls.':
+    'Ett trykk, ett steg gjennom glassradene, tolv epler før veggene.',
+  'Slide the lanterns, fuse equals, and light a 512 tile before the room fills.':
+    'Skyv lyktene, smelt like sammen og tenn en 512-brikke før rommet fylles.',
+  'Bone and obsidian discs turn under the moon; trap a line and take the garden.':
+    'Bein- og obsidianbrikker snur under månen; fang en linje og ta hagen.',
+  'Forced captures and long jumps on warm clay, with a crown waiting at the far rank.':
+    'Påbudte slag og lange hopp på varm leire, med en krone som venter bakerst.',
+  'Drop a lantern down the aqueduct; four in a row lights the whole channel.':
+    'Slipp en lykt ned akvedukten; fire på rad tenner hele kanalen.',
+  'Bone, rosewood and brass on a bridge over black water; empty your hand first.':
+    'Bein, rosentre og messing på en bro over svart vann; tøm hånden først.',
+  '{n} of 3 marks': '{n} av 3 merker',
+  'Place {n} · {chapter}': 'Sted {n} · {chapter}',
+  'The record': 'Rekorden',
+  'No record yet': 'Ingen rekord ennå',
+  'Played tonight': 'Spilt i natt',
+  Waymark: 'Veimerke',
+  Night: 'Natt',
+  Keepsake: 'Minne',
+  'A record exists in this place.': 'Det finnes en registrering på dette stedet.',
+  'Played today, before the reset.': 'Spilt i dag, før nullstillingen.',
+  'A personal best, win or comparable mark.':
+    'En personlig rekord, seier eller tilsvarende merke.',
+  'This is stop {n} of tonight’s road.': 'Dette er stopp {n} på kveldens rute.',
+  'Open {name}': 'Åpne {name}',
+  'Night seals': 'Nattsegl',
+  'The road keeps its evenings': 'Veien tar vare på kveldene',
+  '{n} sealed': '{n} forseglet',
+  'No seals yet': 'Ingen segl ennå',
+  'The last seven night seals': 'De sju siste nattseglene',
+  'Finish all three stops on a night and the atlas keeps the seal here. No streak is lost by resting.':
+    'Fullfør alle tre stoppene på en natt, og atlaset tar vare på seglet her. Ingen rekke går tapt av å hvile.',
+  'All thirty-nine marks': 'Alle trettini merkene',
+  'Atlas Keeper': 'Atlasvokter',
+  'You have walked every place in the valley and kept something from each one. The road is yours now.':
+    'Du har gått gjennom hvert sted i dalen og tatt vare på noe fra hver av dem. Veien er din nå.',
+  'Best {n} points': 'Beste {n} poeng',
+  'Best {n} / {max}': 'Beste {n} / {max}',
+  '{n} boards finished': '{n} brett fullført',
+  'Open the atlas': 'Åpne atlaset',
+  'Ten tables, four of them nightly boards': 'Ti bord, fire av dem nattlige brett',
+  'Four of these tables are also nightly boards. The atlas gathers all thirteen places and keeps the road between them.':
+    'Fire av disse bordene er også nattlige brett. Atlaset samler alle tretten steder og holder veien mellom dem.',
+  'Thirteen places on one road: seven nightly boards and six side tables. Twenty-five seconds a prompt, one attempt each.':
+    'Tretten steder på én vei: sju nattlige brett og seks sidebord. Tjuefem sekunder per oppgave, ett forsøk hver.',
+  'The Hollow Atlas gathers all thirteen places into one road. Each place keeps three marks: a waymark for a first visit, a night mark for today, and a keepsake for a personal record. The nightly route suggests three stops, but it never locks a door or breaks a streak.':
+    'Det hule atlaset samler alle tretten steder på én vei. Hvert sted har tre merker: et veimerke for første besøk, et nattmerke for i dag og et minne for en personlig rekord. Kveldens rute foreslår tre stopp, men låser aldri en dør eller bryter en rekke.',
+  'The Long Road is a map over records already kept in this browser. It has no account and sends nothing anywhere.':
+    'Den lange veien er et kart over rekorder som allerede ligger i denne nettleseren. Den har ingen konto og sender ingenting videre.',
+  'Deleting your data removes your results, streak, name, side-game records and Atlas seals immediately.':
+    'Sletting fjerner resultatene, rekken, navnet, siderecordene og atlasseglene dine med en gang.',
   BOARD: 'BRETT',
 };

@@ -248,6 +248,17 @@ a {
   color: var(--text);
 }
 
+/* The hero art is always night-dark, even in the light morning palette. */
+.home-hero .btn-ghost {
+  color: #f4ecd8;
+  border-color: rgba(244, 236, 216, 0.45);
+}
+
+.home-hero .btn-ghost:hover:not(:disabled) {
+  color: #fff8e8;
+  background: rgba(244, 236, 216, 0.12);
+}
+
 .btn-lg {
   font-size: 1.25rem;
   padding: 16px 24px;

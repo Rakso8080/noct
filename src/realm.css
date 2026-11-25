@@ -482,6 +482,19 @@
   --r-water: #3a2b51;
 }
 
+.shell[data-realm='atlas'] .realm-backdrop {
+  --r-sky-a: #0b0e1c;
+  --r-sky-b: #252b48;
+  --r-glow: #e8c57d;
+  --r-aurora: #9cbf9f;
+  --r-far: #33364f;
+  --r-mid: #1b2037;
+  --r-pine: #0c1020;
+  --r-castle: #26243e;
+  --r-house: #342b44;
+  --r-water: #273c50;
+}
+
 .shell[data-realm='archive'] .realm-backdrop,
 .shell[data-realm='stats'] .realm-backdrop,
 .shell[data-realm='leaderboard'] .realm-backdrop,

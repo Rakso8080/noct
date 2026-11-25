@@ -249,12 +249,12 @@ export function Arcade({ navigate }: { navigate: (path: string) => void }) {
         <i className="arcade-fire" />
       </span>
       <div className="wrap">
-        <ScreenHead eyebrow="Arcade · the side tables" title="Ten games beside the daily">
+        <ScreenHead eyebrow="Arcade · the side tables" title="Ten tables, four of them nightly boards">
           Every table is played against the night, not against a scoreboard. Local records stay in this
           browser; each arcade table can reset its own best without touching the others.
         </ScreenHead>
 
-        <div className="row gap-10" style={{ flexWrap: 'wrap', marginBottom: 16 }}>
+        <div className="row gap-10 arcade-atlas-row" style={{ flexWrap: 'wrap', marginBottom: 16 }}>
           <span className="chip chip-ember">
             {streak > 0
               ? t('{n}-day arcade streak', { n: streak })
@@ -264,7 +264,16 @@ export function Arcade({ navigate }: { navigate: (path: string) => void }) {
             {t('{n} of {total} played today', { n: played, total: GAMES.length })}
           </span>
           <span className="chip">{t('Today and all-time, side by side')}</span>
+          <button className="btn btn-sm btn-ghost" onClick={() => navigate('/atlas')}>
+            {t('Open the atlas')}
+          </button>
         </div>
+
+        <p className="par-note arcade-atlas-note">
+          {t(
+            'Four of these tables are also nightly boards. The atlas gathers all thirteen places and keeps the road between them.',
+          )}
+        </p>
 
         <div className="menu-grid arcade-grid">
           {GAMES.map((game, i) => (

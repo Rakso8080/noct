@@ -5,6 +5,7 @@ import { haptic, updateSettings, useSettings, type Theme } from '../lib/settings
 import { sfx } from '../lib/audio';
 import { clearSummary } from '../lib/results';
 import { clearGames } from '../lib/gamesStore';
+import { clearAtlas } from '../lib/atlas';
 import { setLang, useLang, useT, type Lang } from '../lib/i18n';
 
 export function Settings({ navigate }: { navigate: (path: string) => void }) {
@@ -52,6 +53,7 @@ export function Settings({ navigate }: { navigate: (path: string) => void }) {
       await api.deleteMe();
       clearSummary();
       clearGames();
+      clearAtlas();
       setMessage(t('All your data has been deleted. You start fresh as a new guest.'));
       setConfirmDelete(false);
       setSavedName(null);
@@ -208,7 +210,12 @@ export function Settings({ navigate }: { navigate: (path: string) => void }) {
             </li>
             <li>
               {t(
-                'Deleting your data removes your results, streak, name and side-game records immediately.',
+                'The Long Road is a map over records already kept in this browser. It has no account and sends nothing anywhere.',
+              )}
+            </li>
+            <li>
+              {t(
+                'Deleting your data removes your results, streak, name, side-game records and Atlas seals immediately.',
               )}
             </li>
           </ul>

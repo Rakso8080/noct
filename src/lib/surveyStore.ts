@@ -1,4 +1,4 @@
-import { dayNumber } from '../../shared/dates';
+import { dayNumber } from '../../shared/dates.ts';
 import {
   BALLOONS,
   classicDeck,
@@ -6,7 +6,7 @@ import {
   type SurveyMode,
   type SurveyPrompt,
   type Tier,
-} from '../../shared/survey';
+} from '../../shared/survey.ts';
 
 export interface LoggedAnswer {
   promptId: string;
