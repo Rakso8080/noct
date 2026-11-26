@@ -26,6 +26,12 @@ function arcadeDays(store: GamesStore): number[] {
     ...Object.keys(store.checkers.daily),
     ...Object.keys(store.connect4.daily),
     ...Object.keys(store.dominoes.daily),
+    ...Object.keys(store.word.daily),
+    ...Object.keys(store.bell.daily),
+    ...Object.keys(store.mancala.daily),
+    ...Object.keys(store.pegs.daily),
+    ...Object.keys(store.crates.daily),
+    ...Object.keys(store.boxes.daily),
   ].map(Number);
 }
 
@@ -210,6 +216,83 @@ const GAMES: Entry[] = [
     },
   },
   {
+    path: '/wordwell',
+    name: 'Word Well',
+    kind: 'words',
+    line: 'The word well: five letters, six guesses, green for place and amber for presence.',
+    tone: 'moss',
+    best: (s) =>
+      s.word.bestGuesses == null
+        ? translate('Unplayed')
+        : translate('Best {n} guesses', { n: s.word.bestGuesses }),
+    today: (s, day) => {
+      const entry = s.word.daily[String(day)];
+      if (!entry) return null;
+      return entry.won
+        ? translate('Drawn up in {n}', { n: entry.guesses })
+        : translate('The well kept it: {answer}', { answer: entry.answer });
+    },
+  },
+  {
+    path: '/memorybell',
+    name: 'Memory Bell',
+    kind: 'bells',
+    line: 'The memory tower: four bells, one order, one more note every round.',
+    tone: 'amber',
+    best: (s) =>
+      s.bell.bestLevel == null
+        ? translate('Unplayed')
+        : translate('Best {n} rounds', { n: s.bell.bestLevel }),
+    today: (s, day) => {
+      const entry = s.bell.daily[String(day)];
+      return entry ? translate('{n} rounds held', { n: entry.level }) : null;
+    },
+  },
+  {
+    path: '/mancala',
+    name: 'Mancala',
+    kind: 'stones',
+    line: 'The stone circle: sow four stones, keep the extra turn, and take the opposite cup.',
+    tone: 'sand',
+    best: (s) =>
+      s.mancala.bestStones == null
+        ? translate('Unplayed')
+        : translate('Best {n} stones · {wins}W', {
+            n: s.mancala.bestStones,
+            wins: s.mancala.wins,
+          }),
+    today: (s, day) => {
+      const entry = s.mancala.daily[String(day)];
+      if (!entry) return null;
+      return translate(
+        entry.result === 'win' ? 'Won · {n} stones' : entry.result === 'loss' ? 'Lost today' : 'Drawn today',
+        { n: entry.stones },
+      );
+    },
+  },
+  {
+    path: '/pegs',
+    name: 'Peg Solitaire',
+    kind: 'solitaire',
+    line: 'The hermit’s cross: jump a peg over its neighbour, remove it, and try to leave one.',
+    tone: 'moss',
+    best: (s) =>
+      s.pegs.bestPegs == null
+        ? translate('Unplayed')
+        : s.pegs.bestPegs === 1
+          ? translate('Best 1 peg')
+          : translate('Best {n} pegs', { n: s.pegs.bestPegs }),
+    today: (s, day) => {
+      const entry = s.pegs.daily[String(day)];
+      if (!entry) return null;
+      return entry.cleared
+        ? translate('One peg left')
+        : entry.pegs === 1
+          ? translate('1 peg left')
+          : translate('{n} pegs left', { n: entry.pegs });
+    },
+  },
+  {
     path: '/dominoes',
     name: 'Dominoes',
     kind: 'line',
@@ -225,6 +308,43 @@ const GAMES: Entry[] = [
         : translate('Unplayed'),
     today: (s, day) => {
       const entry = s.dominoes.daily[String(day)];
+      if (!entry) return null;
+      return translate(entry.result === 'win' ? 'Won · +{margin}' : entry.result === 'loss' ? 'Lost today' : 'Drawn today', {
+        margin: entry.margin,
+      });
+    },
+  },
+  {
+    path: '/crates',
+    name: 'Crates',
+    kind: 'crates',
+    line: 'The crate yard: walk freely, push one crate at a time, and cover every chalk mark without pulling anything back.',
+    tone: 'clay',
+    best: (s) => {
+      const best = s.crates.bestMoves ?? s.crates.bestFreeMoves;
+      return best === null ? translate('Unplayed') : translate('Best {n} moves', { n: best });
+    },
+    today: (s, day) => {
+      const entry = s.crates.daily[String(day)];
+      return entry ? translate('Best today {n} moves', { n: entry.moves }) : null;
+    },
+  },
+  {
+    path: '/boxes',
+    name: 'Dots & Boxes',
+    kind: 'threads',
+    line: 'The thread loom: draw one line between two dots, close a box to keep the turn, and leave the loom with fewer rooms.',
+    tone: 'teal',
+    best: (s) =>
+      s.boxes.wins + s.boxes.losses + s.boxes.draws
+        ? translate('{wins}W · {losses}L · {draws}D', {
+            wins: s.boxes.wins,
+            losses: s.boxes.losses,
+            draws: s.boxes.draws,
+          })
+        : translate('Unplayed'),
+    today: (s, day) => {
+      const entry = s.boxes.daily[String(day)];
       if (!entry) return null;
       return translate(entry.result === 'win' ? 'Won · +{margin}' : entry.result === 'loss' ? 'Lost today' : 'Drawn today', {
         margin: entry.margin,
@@ -249,7 +369,7 @@ export function Arcade({ navigate }: { navigate: (path: string) => void }) {
         <i className="arcade-fire" />
       </span>
       <div className="wrap">
-        <ScreenHead eyebrow="Arcade · the side tables" title="Ten tables, four of them nightly boards">
+        <ScreenHead eyebrow="Arcade · the side tables" title="Sixteen tables, four of them nightly boards">
           Every table is played against the night, not against a scoreboard. Local records stay in this
           browser; each arcade table can reset its own best without touching the others.
         </ScreenHead>
@@ -271,7 +391,7 @@ export function Arcade({ navigate }: { navigate: (path: string) => void }) {
 
         <p className="par-note arcade-atlas-note">
           {t(
-            'Four of these tables are also nightly boards. The atlas gathers all thirteen places and keeps the road between them.',
+            'Four of these tables are also nightly boards. The atlas gathers all nineteen places and keeps the road between them.',
           )}
         </p>
 

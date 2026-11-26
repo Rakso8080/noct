@@ -1836,3 +1836,29 @@
 [data-motion='reduced'] .realm-shooting-star {
   display: none;
 }
+
+.shell[data-realm='crates'] .realm-backdrop {
+  --r-sky-a: #150d0b;
+  --r-sky-b: #44261a;
+  --r-glow: #f3b46e;
+  --r-aurora: #cf8357;
+  --r-far: #4a2d20;
+  --r-mid: #281812;
+  --r-pine: #120a08;
+  --r-castle: #27150f;
+  --r-house: #342017;
+  --r-water: #3b2d3f;
+}
+
+.shell[data-realm='boxes'] .realm-backdrop {
+  --r-sky-a: #061614;
+  --r-sky-b: #123b36;
+  --r-glow: #9fe0c8;
+  --r-aurora: #72c7b0;
+  --r-far: #1b4a40;
+  --r-mid: #0d2b25;
+  --r-pine: #061713;
+  --r-castle: #102c26;
+  --r-house: #18342c;
+  --r-water: #16504f;
+}

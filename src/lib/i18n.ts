@@ -1274,4 +1274,368 @@ const NB: Record<string, string> = {
     'Feltboka tar bare vare på notatene og observasjonene du har funnet, i denne nettleseren.',
   'Deleting your data removes your results, streak, name, side-game records, Atlas seals and field notes immediately.':
     'Sletting fjerner resultatene, rekken, navnet, siderecordene, atlasseglene og feltnotatene dine med en gang.',
+
+  // ---- deep night: places, dispatch, word well, memory bell
+  'Word Well': 'Ordkilden',
+  'The Word Well': 'Ordkilden',
+  'Memory Bell': 'Minneklokken',
+  'The Memory Bell': 'Minneklokken',
+  words: 'ord',
+  bells: 'klokker',
+  'Seventeen places on one road: seven nightly boards and ten side tables. A new board every night, one attempt each.':
+    'Sytten steder på én vei: sju nattlige brett og ti sidebord. Et nytt brett hver natt, ett forsøk hver.',
+  'Seventeen places on one road: seven nightly boards and ten side tables. The map only remembers what you have already played.':
+    'Sytten steder på én vei: sju nattlige brett og ti sidebord. Kartet husker bare det du allerede har spilt.',
+  'Five letters are lowered into the well each night. Six guesses bring them up; green is the right letter in the right place.':
+    'Fem bokstaver fires ned i brønnen hver natt. Seks gjetninger henter dem opp; grønt er riktig bokstav på riktig sted.',
+  '5 letters · 6 guesses': '5 bokstaver · 6 gjetninger',
+  'Four bells keep the order they were rung. Repeat it until the wooden tower runs out of notes.':
+    'Fire klokker holder rekkefølgen de ble ringt i. Gjenta den til tretårnet går tom for toner.',
+  '4 bells · 12 rounds': '4 klokker · 12 runder',
+  'Best {n} rounds': 'Beste {n} runder',
+  'Best {n} guesses': 'Beste {n} gjetninger',
+  'Bell {n} steps': 'Klokke {n} trinn',
+  'The Word Well note': 'En steinbrønn under furuene, og fem bokstaver på vannet.',
+  'Five letters are lowered into the well each night; six guesses bring them back.':
+    'Fem bokstaver fires ned i brønnen hver natt; seks gjetninger henter dem opp.',
+  'Four bells keep the order they were rung; repeat it until the tower forgets you.':
+    'Fire klokker holder rekkefølgen de ble ringt i; gjenta den til tårnet glemmer deg.',
+  'Word Well · Night {n}': 'Ordkilden · Natt {n}',
+  'Memory Bell · Night {n}': 'Minneklokken · Natt {n}',
+  'Five letters are lowered into the well each night. Six guesses bring them back; green is the right letter in the right place, amber is the right letter in the wrong one.':
+    'Fem bokstaver fires ned i brønnen hver natt. Seks gjetninger henter dem opp; grønt er riktig bokstav på riktig sted, gult er riktig bokstav på feil sted.',
+  'Word Well mode': 'Modus for Ordkilden',
+  'The same five letters for everyone today': 'De samme fem bokstavene for alle i dag',
+  'Today’s word was {answer} — {n} guesses.': 'Dagens ord var {answer} — {n} gjetninger.',
+  'A fresh word, not counted in the daily record': 'Et nytt ord, utenom dagsrekorden',
+  Guess: 'Gjetning',
+  'Six tries, one word': 'Seks forsøk, ett ord',
+  'Drawn up in {n}': 'Heist opp på {n}',
+  'The well keeps it: {answer}': 'Brønnen beholder det: {answer}',
+  'Word Well board, six guesses of five letters': 'Ordkilden-brett, seks gjetninger på fem bokstaver',
+  hit: 'riktig sted',
+  near: 'riktig bokstav',
+  miss: 'ikke i ordet',
+  'Five letters, no more and no less.': 'Fem bokstaver, ikke mer og ikke mindre.',
+  'The well does not know that word.': 'Brønnen kjenner ikke det ordet.',
+  'Today’s word is already drawn. Free play is open.': 'Dagens ord er allerede hentet opp. Fritt spill er åpent.',
+  '“{answer}” came up in {n} guesses.': '«{answer}» kom opp på {n} gjetninger.',
+  'The word was “{answer}”. The well is patient; come back at midnight.':
+    'Ordet var «{answer}». Brønnen er tålmodig; kom tilbake ved midnatt.',
+  'Copy the grid': 'Kopier rutenettet',
+  'Copied — the grid leaves the answers out.': 'Kopiert — rutenettet utelater svarene.',
+  'The clipboard is closed in this browser.': 'Utklippstavlen er stengt i denne nettleseren.',
+  'Letter keyboard': 'Bokstavtastatur',
+  Enter: 'Send',
+  Erase: 'Slett',
+  'New word': 'Nytt ord',
+  'Tonight’s dispatch': 'Nattens sending',
+  'Memory Bell description': 'Fire klokker i et tretårn. Tårnet ringer en kort rekkefølge; gjenta den. Hver runde legger til én tone, og én feil klokke avslutter natten.',
+  Round: 'Runde',
+  Notes: 'Toner',
+  'Today: {n} rounds': 'I dag: {n} runder',
+  'Listen: the tower is ringing {n} notes.': 'Lytt: tårnet ringer {n} toner.',
+  'Your turn: repeat the {n} notes.': 'Din tur: gjenta de {n} tonene.',
+  'The tower bows. {n} rounds held.': 'Tårnet bukker. {n} runder holdt.',
+  'A wrong bell. The tower forgets you at {n} rounds.': 'Feil klokke. Tårnet glemmer deg ved {n} runder.',
+  'Four bells, one order. Begin when you are ready.': 'Fire klokker, én rekkefølge. Begynn når du er klar.',
+  'Four bells': 'Fire klokker',
+  'the low bell': 'den lave klokken',
+  'the reed bell': 'rørklokken',
+  'the glass bell': 'glassklokken',
+  'the high bell': 'den høye klokken',
+  'All twelve rounds held. The tower has nothing left to teach you.':
+    'Alle tolv runder holdt. Tårnet har ingenting mer å lære deg.',
+  '{n} rounds held. The order was {seq}.': '{n} runder holdt. Rekkefølgen var {seq}.',
+  'Ring again': 'Ring igjen',
+  'The arcade': 'Arkaden',
+  Restart: 'Start på nytt',
+  'Sound is the tower’s real language; the lights only help. Turn sound on in Settings to hear the notes.':
+    'Lyd er tårnets egentlige språk; lysene hjelper bare. Slå på lyd i Innstillinger for å høre tonene.',
+  'The Long Road · Volume {season} · Night {n}': 'Den lange veien · Bind {season} · Natt {n}',
+  'Tonight’s three stops': 'Nattens tre stopp',
+  'Your line': 'Din linje',
+  'You lit {lit} of 3 stops tonight': 'Du tente {lit} av 3 stopp i natt',
+  '{n} points across the night': '{n} poeng gjennom natten',
+  'You have not lit a stop tonight. The road is still open until midnight.':
+    'Du har ikke tent et stopp i natt. Veien er åpen til midnatt.',
+  'This night kept {lit} lit stops in this browser. The dispatch stays the same; only your line changes.':
+    'Denne natten hadde {lit} tente stopp i denne nettleseren. Sendingen er den samme; bare din linje endres.',
+  'Enter the choir': 'Gå inn i koret',
+  'The season': 'Sesongen',
+  'Volume {season} · {n} of {total} nights written': 'Bind {season} · {n} av {total} netter skrevet',
+  'The last seven nights': 'De siste sju nettene',
+  'Dispatches are written from the night, not from your score: the same date reads the same everywhere. Your line is the only part that is yours.':
+    'Sendingene er skrevet fra natten, ikke fra poengsummen din: samme dato leses likt overalt. Bare din linje er din.',
+  'This is the first night of the road.': 'Dette er veiens første natt.',
+  'Written by the keeper': 'Skrevet av vokteren',
+  'Carried in from the road': 'Båret inn fra veien',
+  'Sung at the far end': 'Sunget i den andre enden',
+  'Long rain': 'Langt regn',
+  'Rising wind': 'Stigende vind',
+  'Fireflies': 'Ildfluer',
+  'Storm': 'Storm',
+  'Still air': 'Stille luft',
+  'Warm air over the water; the valley stays out a little longer.':
+    'Varm luft over vannet; dalen blir ute litt lenger.',
+  'Rain and a low sky; the lightning reads the rooftops once.':
+    'Regn og lav himmel; lynet leser takene én gang.',
+  'Rain on every roof; the boards keep their own dry hour.':
+    'Regn på hvert tak; brettene holder sin egen tørre time.',
+  'Wind in the pines, and the lanterns leaning away from it.':
+    'Vind i furuene, og lyktene som lener seg bort fra den.',
+  'No weather at all; the valley holds its breath until dawn.':
+    'Ikke noe vær i det hele tatt; dalen holder pusten til daggry.',
+  'Four bells in a wooden tower. The tower rings a short order; repeat it back. Every round adds one note, and one wrong bell ends the night.':
+    'Fire klokker i et tretårn. Tårnet ringer en kort rekkefølge; gjenta den. Hver runde legger til én tone, og én feil klokke avslutter natten.',
+  'Five letters are lowered into the well each night; six guesses bring them back. Green is place, amber is presence.':
+    'Fem bokstaver fires ned i brønnen hver natt; seks gjetninger henter dem opp. Grønt er sted, gult er tilstedeværelse.',
+  'The word well: five letters, six guesses, green for place and amber for presence.':
+    'Ordkilden: fem bokstaver, seks gjetninger, grønt for sted og gult for tilstedeværelse.',
+  'The memory tower: four bells, one order, one more note every round.':
+    'Minnetårnet: fire klokker, én rekkefølge, én tone mer for hver runde.',
+  '{n} rounds held': '{n} runder holdt',
+
+  // ---- first night
+  'First night': 'Første natt',
+  'Step 1 of 3 · The light': 'Steg 1 av 3 · Lyset',
+  'Step 2 of 3 · One rule': 'Steg 2 av 3 · Én regel',
+  'Step 3 of 3 · Tonight': 'Steg 3 av 3 · I natt',
+  'Noct is read at night. Pick the light you want to sit in; it can change any time in Settings, along with sound and motion.':
+    'Noct leses om natten. Velg lyset du vil sitte i; det kan endres når som helst i Innstillinger, sammen med lyd og bevegelse.',
+  'On tonight’s table: {score} · #{rank}': 'På kveldens bord: {score} · #{rank}',
+  'A shared night': 'En delt natt',
+  '{name} scored {score} — beat it.': '{name} fikk {score} — slå den.',
+  Dismiss: 'Lukk',
+  'A player': 'En spiller',
+  '{name} scored {score}. Beat it: {link}': '{name} fikk {score}. Slå den: {link}',
+  'Send the night': 'Send natten',
+  'A link to today’s board with your score on it. Whoever opens it sees the line, not your streak.':
+    'En lenke til dagens brett med poengsummen din. Den som åpner den ser linjen, ikke streaken din.',
+  'Copy challenge link': 'Kopier utfordringslenke',
+  'Link copied': 'Lenke kopiert',
+  Nightly: 'Nattlige',
+  'No scores on this table tonight': 'Ingen poeng på dette bordet i natt',
+  'Finish a Word Well or a Memory Bell run today and it lands here, with the board it was played on.':
+    'Fullfør en Word Well- eller Memory Bell-runde i dag, så lander den her, med brettet den ble spilt på.',
+  'Play this table': 'Spill dette bordet',
+  'Side tables': 'Sidebord',
+  'Kept with your player, not just this browser.': 'Lagret med spilleren din, ikke bare i denne nettleseren.',
+  '{n} plays': '{n} spill',
+  'best {n}': 'beste {n}',
+  'See the side tables': 'Se sidebordene',
+  On: 'På',
+  Off: 'Av',
+  'Four boards of lanterns. One spark per row, column and tone — and never two touching, not even diagonally. Locked sparks are part of the answer.':
+    'Fire brett med lykter. Én gnist per rad, kolonne og tone — og aldri to som rører hverandre, ikke engang diagonalt. Låste gnister er en del av svaret.',
+  'A solved five by five board': 'Et løst fem ganger fem-brett',
+  'Seven nightly boards and ten side tables. Play one, or all seventeen; nothing is lost by resting. The road on the front page is a suggestion, not a duty.':
+    'Sju nattlige brett og ti sidebord. Spill ett, eller alle sytten; ingenting går tapt av å hvile. Veien på forsiden er et forslag, ikke en plikt.',
+  'At midnight UTC the boards change. Until then, one attempt each.':
+    'Ved midnatt UTC skifter brettene. Inntil da: ett forsøk hver.',
+
+  /* The stone circle and the hermit's cross. */
+  Mancala: 'Mancala',
+  'Peg Solitaire': 'Pinnespill',
+  'The Stone Circle': 'Steinsirkelen',
+  'The Hermit’s Cross': 'Eremittkorset',
+  'The stone circle': 'Steinsirkelen',
+  'The hermit’s cross': 'Eremittkorset',
+  stones: 'steiner',
+  solitaire: 'solitaire',
+  'Mancala · Night {n}': 'Mancala · Natt {n}',
+  'Peg solitaire · Night {n}': 'Pinnespill · Natt {n}',
+  'Sow stones counter-clockwise from one of your six cups. The last stone in your own store buys another turn; the last stone in an empty cup takes the opposite cup. When one side runs dry, the fuller store wins.':
+    'Så steiner mot klokken fra en av de seks koppene dine. Den siste steinen i din egen skål gir en ny tur; den siste steinen i en tom kopp tar koppen rett overfor. Når én side går tom, vinner den fyldigste skålen.',
+  'A jump takes one peg over its neighbour and into an empty hole, removing the jumped peg. Clear the cross down to a single peg. The centre starts empty; the rest is patience.':
+    'Et hopp tar en pinne over naboen og inn i et tomt hull, og fjerner pinnen som ble hoppet over. Tøm korset ned til én pinne. Midten starter tom; resten er tålmodighet.',
+  'Six cups each · four stones': 'Seks kopper hver · fire steiner',
+  'your store': 'din skål',
+  'bot store': 'botens skål',
+  sowings: 'såinger',
+  'Best {n} stones': 'Beste {n} steiner',
+  'Best {n} pegs': 'Beste {n} pinner',
+  'Best 1 peg': 'Beste 1 pinne',
+  '1 peg left': '1 pinne igjen',
+  '1 perfect cross': '1 perfekt kors',
+  'Best {n} stones · {wins}W': 'Beste {n} steiner · {wins}V',
+  'Sow cup {n}: {count} stones': 'Så kopp {n}: {count} steiner',
+  'Restart the circle': 'Start sirkelen på nytt',
+  'Extra turn — the last stone reached your store.': 'Ekstra tur — den siste steinen nådde skålen din.',
+  'Your store is fuller. The circle is yours.': 'Skålen din er fyldigst. Sirkelen er din.',
+  'The bot keeps the fuller store.': 'Boten beholder den fyldigste skålen.',
+  'Two even stores. The stones call it a draw.': 'To jevne skåler. Steinene kaller det uavgjort.',
+  'Your turn. Choose one of your six cups.': 'Din tur. Velg en av de seks koppene dine.',
+  'The bot is sowing.': 'Boten sår.',
+  'Mancala board': 'Mancala-brett',
+  'Four stones in every cup when the circle opens. The daily circle is kept in this browser.':
+    'Fire steiner i hver kopp når sirkelen åpner. Den daglige sirkelen lagres i denne nettleseren.',
+  'pegs left': 'pinner igjen',
+  jumps: 'hopp',
+  'perfect crosses': 'perfekte kors',
+  'One peg left. The hermit would approve.': 'Én pinne igjen. Eremitten ville nikke.',
+  'No more jumps. {n} pegs remain.': 'Ingen flere hopp. {n} pinner igjen.',
+  'Choose a peg, then an empty hole two steps away.': 'Velg en pinne, deretter et tomt hull to steg unna.',
+  '{n} jumps open from this peg.': '{n} hopp åpner seg fra denne pinnen.',
+  'Peg solitaire cross': 'Pinnespill-kors',
+  'Peg at row {row}, column {col}': 'Pinne i rad {row}, kolonne {col}',
+  'Empty hole at row {row}, column {col}': 'Tomt hull i rad {row}, kolonne {col}',
+  'The hermit keeps only your best cross in this browser.': 'Eremitten beholder bare ditt beste kors i denne nettleseren.',
+  'Back to the arcade': 'Tilbake til arcaden',
+  'One peg left': 'Én pinne igjen',
+  '{n} pegs left': '{n} pinner igjen',
+  'The stone circle: sow four stones, keep the extra turn, and take the opposite cup.':
+    'Steinsirkelen: så fire steiner, behold ekstraturen og ta koppen rett overfor.',
+  'The hermit’s cross: jump a peg over its neighbour, remove it, and try to leave one.':
+    'Eremittkorset: hopp en pinne over naboen, fjern den, og prøv å la én bli igjen.',
+  'The stone circle: sow four stones around twelve cups, keep the extra turn and take the opposite cup.':
+    'Steinsirkelen: så fire steiner rundt tolv kopper, behold ekstraturen og ta koppen rett overfor.',
+  'The hermit’s cross: jump a peg over its neighbour, remove it, and leave only one on the stone cross.':
+    'Eremittkorset: hopp en pinne over naboen, fjern den, og la bare én bli igjen på steinkorset.',
+  '12 cups · four stones': '12 kopper · fire steiner',
+  '33 holes · one peg': '33 hull · én pinne',
+  'Won · {n} stones': 'Vant · {n} steiner',
+  'Four stones in every cup; sow the circle, take the extra turn, and keep the fuller store.':
+    'Fire steiner i hver kopp; så rundt sirkelen, ta ekstraturen og behold den fyldigste skålen.',
+  'Thirty-two pegs on a stone cross; jump until one is left and the hermit nods.':
+    'Trettito pinner på et steinkors; hopp til én er igjen og eremitten nikker.',
+  'Ten more tables wait in the {arcade}: the glass orchard (Snake), the doubling room (2048), the turning table (Reversi), the quiet draughts table (Checkers), the lantern column (Connect Four), the long table (Dominoes), the word well (Word Well), the memory bell (Memory Bell), the stone circle (Mancala) and the hermit’s cross (Peg Solitaire). Their records live in this browser and never touch the daily streak.':
+    'Ti flere bord venter i {arcade}: glasslunden (Snake), doblingsrommet (2048), vendebordet (Reversi), det stille damspillet (Checkers), lyktesøylen (Connect Four), langbordet (Dominoes), ordbrønnen (Word Well), minnebjellen (Memory Bell), steinsirkelen (Mancala) og eremittkorset (Peg Solitaire). Rekordene deres lever i denne nettleseren og rører aldri den daglige rekken.',
+  'Most side tables are complete games against a bot, with a local record. The hermit’s cross is a solo puzzle. These are the rules that matter once you sit down.':
+    'De fleste sidebord er komplette spill mot en bot, med lokal rekord. Eremittkorset er et solopuzzle. Dette er reglene som betyr noe når du først sitter ned.',
+  'sow counter-clockwise from one of your six cups. The last stone in your store buys another turn; the last stone in an empty cup takes the opposite cup. When one side runs dry, the fuller store wins.':
+    'så mot klokken fra en av de seks koppene dine. Den siste steinen i skålen din gir en ny tur; den siste steinen i en tom kopp tar koppen rett overfor. Når én side går tom, vinner den fyldigste skålen.',
+  'a jump removes the peg it passes over. Clear the stone cross down to one peg; the centre starts empty, and undo is free.':
+    'et hopp fjerner pinnen det hopper over. Tøm steinkorset ned til én pinne; midten starter tom, og angre er gratis.',
+  'Four of these tables are also nightly boards. The atlas gathers all seventeen places and keeps the road between them.':
+    'Fire av disse bordene er også nattlige brett. Atlaset samler alle sytten stedene og holder veien mellom dem.',
+  'Won · {n} drops': 'Vant · {n} dråper',
+  'The map of seventeen places': 'Kartet over sytten steder',
+
+  /* Shared side-table cards. */
+  'A shared circle': 'En delt sirkel',
+  'A shared cross': 'Et delt kors',
+  '{level} bot': '{level} bot',
+  'Classic cross': 'Klassisk kors',
+  'Shared circle · {level} bot': 'Delt sirkel · {level} bot',
+  '1 stone': '1 stein',
+  '{n} stones': '{n} steiner',
+  '1 sowing': '1 såing',
+  '{n} sowings': '{n} såinger',
+  '1 jump': '1 hopp',
+  '{n} jumps': '{n} hopp',
+  '1 peg': '1 pinne',
+  '{n} pegs': '{n} pinner',
+  '{name} kept {stones} in {moves}.': '{name} beholdt {stones} på {moves}.',
+  '{name} left {pegs} in {moves}.': '{name} lot {pegs} stå på {moves}.',
+  '{name} kept {stones} in {moves} — beat it.': '{name} beholdt {stones} på {moves} — slå den.',
+  '{name} left {pegs} in {moves} — beat it.': '{name} lot {pegs} stå på {moves} — slå den.',
+  'You beat {name}’s circle': 'Du slo sirkelen til {name}',
+  '{name} still holds it': '{name} holder den fortsatt',
+  'A dead heat': 'Dødt løp',
+  'You beat {name}’s cross': 'Du slo korset til {name}',
+  '{name}’s cross still stands': 'Korset til {name} står fortsatt',
+  'Friendly replay · today’s record is unchanged.':
+    'Vennlig omspill · dagens rekord er uendret.',
+  'Result · Night {n}': 'Resultat · Natt {n}',
+  'Result card': 'Resultatkort',
+  'Noct · {game} · Night {n}': 'Noct · {game} · Natt {n}',
+  '{moves} · {result}': '{moves} · {result}',
+  '{moves} · perfect cross': '{moves} · perfekt kors',
+  '{moves} · {pegs} left': '{moves} · {pegs} igjen',
+  'Beat it: {link}': 'Slå den: {link}',
+  'Challenge a friend: {link}': 'Utfordre en venn: {link}',
+
+  /* ---- crates */
+  Crates: 'Kasser',
+  crates: 'kasser',
+  'The crate yard': 'Krattegården',
+  'The Crate Yard': 'Krattegården',
+  'Crates · Night {n}': 'Kasser · Natt {n}',
+  'Crates mode': 'Kassemodus',
+  'The same yard for everyone today': 'Samme gård for alle i dag',
+  'A fresh yard every restart': 'En ny gård ved hver start',
+  pushes: 'dytt',
+  'marks left': 'merker igjen',
+  'Best today {n} moves': 'Beste i dag: {n} trekk',
+  'Yard {n}': 'Gård {n}',
+  'Crate yard, 7 by 7': 'Krattegård, 7 × 7',
+  'crate on a mark': 'kasse på merke',
+  crate: 'kasse',
+  'chalk mark': 'krittmerke',
+  wall: 'vegg',
+  floor: 'gulv',
+  'Move the crate keeper': 'Flytt kassevokteren',
+  'Move up': 'Gå opp',
+  'Move down': 'Gå ned',
+  'Move left': 'Gå til venstre',
+  'Move right': 'Gå til høyre',
+  'Yard cleared in {moves} moves and {pushes} pushes.': 'Gården er ryddet på {moves} trekk og {pushes} dytt.',
+  '{n} marks still waiting. Arrow keys or WASD move; Z undoes.': '{n} merker venter fortsatt. Piltastene eller WASD flytter; Z angrer.',
+  'Next yard': 'Neste gård',
+  'New yard': 'Ny gård',
+  'The crate yard: walk freely, push one crate at a time, and cover every chalk mark without pulling anything back.':
+    'Krattegården: gå fritt, dytt én kasse om gangen og dekk hvert krittmerke uten å dra noe tilbake.',
+  'Chalk marks, stacked crates and a keeper who can push but never pull.':
+    'Krittmerker, stablet kasser og en vokter som kan dytte, men aldri dra.',
+  'walk freely, but push only one crate at a time. A crate cannot be pulled, so plan the corners before you commit. Cover every chalk mark; undo and restart are free.':
+    'gå fritt, men dytt bare én kasse om gangen. En kasse kan ikke dras, så planlegg hjørnene før du bestemmer deg. Dekk hvert krittmerke; angre og start på nytt er gratis.',
+  'Push every crate onto a chalk mark. You can walk around freely, but you can only push, never pull. Undo is free; the daily yard is the same for everyone.':
+    'Dytt hver kasse inn på et krittmerke. Du kan gå fritt rundt, men du kan bare dytte, aldri dra. Angre er gratis; dagens gård er den samme for alle.',
+  '7×7 · push only': '7×7 · bare dytt',
+
+  /* ---- dots & boxes */
+  'Dots & Boxes': 'Prikker og ruter',
+  threads: 'tråder',
+  'The thread loom': 'Trådveven',
+  'The Thread Loom': 'Trådveven',
+  'Dots & Boxes · Night {n}': 'Prikker og ruter · Natt {n}',
+  'Dots & Boxes mode': 'Prikker og ruter-modus',
+  'The same loom for everyone today': 'Samme vev for alle i dag',
+  yours: 'dine',
+  loom: 'veven',
+  'threads left': 'tråder igjen',
+  'Today {n} boxes': 'I dag: {n} ruter',
+  'Final {you}–{loom}': 'Slutt {you}–{loom}',
+  'Best +{n}': 'Beste +{n}',
+  'Dots & Boxes board, four by four boxes': 'Prikker og ruter-brett, fire ganger fire ruter',
+  'Horizontal thread at row {row}, column {col}': 'Vannrett tråd i rad {row}, kolonne {col}',
+  'Vertical thread at row {row}, column {col}': 'Loddrett tråd i rad {row}, kolonne {col}',
+  'The loom is thinking.': 'Veven tenker.',
+  'Your turn. Draw a line; close a box to keep the turn.': 'Din tur. Trekk en linje; lukk en rute for å beholde turen.',
+  'You win the loom, {you}–{loom}.': 'Du vinner over veven, {you}–{loom}.',
+  'The loom wins this one, {loom}–{you}.': 'Veven vinner denne, {loom}–{you}.',
+  'A draw at {you}–{loom}. The last thread belongs to neither of you.':
+    'Uavgjort {you}–{loom}. Den siste tråden tilhører ingen av dere.',
+  'You win {you}–{loom} · margin +{margin}': 'Du vinner {you}–{loom} · margin +{margin}',
+  'The loom wins {loom}–{you}': 'Veven vinner {loom}–{you}',
+  'A draw at {you}–{loom}': 'Uavgjort {you}–{loom}',
+  'New cloth': 'Nytt stoff',
+  'The thread loom: draw one line between two dots, close a box to keep the turn, and leave the loom with fewer rooms.':
+    'Trådveven: trekk én linje mellom to prikker, lukk en rute for å beholde turen og la veven sitte igjen med færre rom.',
+  'Forty threads between twenty-five dots; close a box and keep the shuttle.':
+    'Førti tråder mellom tjuefem prikker; lukk en rute og behold skyttelen.',
+  'draw one line between two neighbouring dots. Close the fourth side of a box to claim it and keep your turn. The loom answers on its own; the fuller side of the finished cloth wins.':
+    'trekk én linje mellom to naboprikker. Lukk den fjerde siden av en rute for å ta den og beholde turen. Veven svarer selv; den fyldigste siden av det ferdige stoffet vinner.',
+  'Draw one thread between two dots. Close the fourth side of a box to claim it and take another turn. The loom answers in kind; the fuller side of the cloth wins.':
+    'Trekk én tråd mellom to prikker. Lukk den fjerde siden av en rute for å ta den og få en ny tur. Veven svarer på samme måte; den fyldigste siden av stoffet vinner.',
+  '5×5 dots · 4×4 boxes': '5×5 prikker · 4×4 ruter',
+
+  /* ---- updated catalogue counts */
+  'Nineteen places on one road: seven nightly boards and twelve side tables. A new board every night, one attempt each.':
+    'Nitten steder på én vei: sju nattlige brett og tolv sidebord. Et nytt brett hver natt, ett forsøk hver.',
+  'Nineteen places on one road: seven nightly boards and twelve side tables. The map only remembers what you have already played.':
+    'Nitten steder på én vei: sju nattlige brett og tolv sidebord. Kartet husker bare det du allerede har spilt.',
+  'Seven nightly boards and twelve side tables. Play one, or all nineteen; nothing is lost by resting. The road on the front page is a suggestion, not a duty.':
+    'Sju nattlige brett og tolv sidebord. Spill ett, eller alle nitten; ingenting går tapt av å hvile. Veien på forsiden er et forslag, ikke en plikt.',
+  'The map of nineteen places': 'Kartet over nitten steder',
+  'Sixteen tables, four of them nightly boards': 'Seksten bord, fire av dem nattlige brett',
+  'Four of these tables are also nightly boards. The atlas gathers all nineteen places and keeps the road between them.':
+    'Fire av disse bordene er også nattlige brett. Atlaset samler alle nitten stedene og holder veien mellom dem.',
+  'Twelve more tables wait in the {arcade}: the glass orchard (Snake), the doubling room (2048), the turning table (Reversi), the quiet draughts table (Checkers), the lantern column (Connect Four), the long table (Dominoes), the word well (Word Well), the memory bell (Memory Bell), the stone circle (Mancala), the hermit’s cross (Peg Solitaire), the crate yard (Crates) and the thread loom (Dots & Boxes). Their records live in this browser and never touch the daily streak.':
+    'Tolv flere bord venter i {arcade}: glasslunden (Snake), doblingsrommet (2048), vendebordet (Reversi), det stille damspillet (Checkers), lyktesøylen (Connect Four), langbordet (Dominoes), ordbrønnen (Word Well), minnebjellen (Memory Bell), steinsirkelen (Mancala), eremittkorset (Peg Solitaire), krattegården (Crates) og trådveven (Dots & Boxes). Rekordene deres lever i denne nettleseren og rører aldri den daglige rekken.',
+  'Most side tables are complete games against a bot, with a local record. The hermit’s cross and the crate yard are solo puzzles. These are the rules that matter once you sit down.':
+    'De fleste sidebord er komplette spill mot en bot, med lokal rekord. Eremittkorset og krattegården er solopuzzle. Dette er reglene som betyr noe når du først sitter ned.',
+  'The Hollow Atlas gathers all nineteen places into one road. Each place keeps three marks: a waymark for a first visit, a night mark for today, and a keepsake for a personal record. The nightly route suggests three stops, but it never locks a door or breaks a streak.':
+    'Det hule atlaset samler alle nitten stedene til én vei. Hvert sted holder tre merker: et veimerke for første besøk, et nattmerke for i dag og et minne for en personlig rekord. Den nattlige ruten foreslår tre stopp, men låser aldri en dør eller bryter en rekke.',
 };

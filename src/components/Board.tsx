@@ -54,8 +54,10 @@ export function Board({
   const t = useT();
   const [focus, setFocus] = useState(0);
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
+  const frame = useRef<HTMLDivElement | null>(null);
   const longPress = useRef<{ cell: number; timer: ReturnType<typeof setTimeout> } | null>(null);
   const suppressClick = useRef(false);
+  const drag = useRef<{ active: boolean; cell: number; moved: boolean }>({ active: false, cell: -1, moved: false });
 
   const conflicts = useMemo(() => findConflicts(size, region, sparks), [size, region, sparks]);
   const sparkSet = useMemo(() => new Set(sparks), [sparks]);
@@ -67,8 +69,15 @@ export function Board({
   }, [size]);
 
   useEffect(() => {
+    const stop = () => {
+      drag.current.active = false;
+    };
+    window.addEventListener('pointerup', stop);
+    window.addEventListener('pointercancel', stop);
     return () => {
       if (longPress.current) clearTimeout(longPress.current.timer);
+      window.removeEventListener('pointerup', stop);
+      window.removeEventListener('pointercancel', stop);
     };
   }, []);
 
@@ -116,11 +125,15 @@ export function Board({
     }
   }
 
-  function startPress(cell: number): void {
+  function startPress(cell: number, event: { button?: number }): void {
     if (locked) return;
+    /* Right-click keeps its own meaning; dragging is a left-button gesture. */
+    if (event.button !== undefined && event.button !== 0) return;
     suppressClick.current = false;
+    drag.current = { active: true, cell, moved: false };
     const timer = setTimeout(() => {
       suppressClick.current = true;
+      drag.current.active = false;
       onExclude(cell);
     }, 420);
     longPress.current = { cell, timer };
@@ -133,11 +146,35 @@ export function Board({
     }
   }
 
+  /**
+   * Dragging lights every empty cell it passes over; the click that follows is
+   * swallowed. Touch pointers are captured by the cell that received the press,
+   * so the cell under the finger is found by position, not by enter events.
+   */
+  function movePress(event: { clientX: number; clientY: number }): void {
+    const current = drag.current;
+    if (!current.active || locked) return;
+    const hit = document.elementFromPoint(event.clientX, event.clientY)?.closest<HTMLElement>('[data-cell]');
+    if (!hit || !frame.current?.contains(hit)) return;
+    const cell = Number(hit.dataset.cell);
+    if (!Number.isInteger(cell) || cell === current.cell) return;
+    current.cell = cell;
+    current.moved = true;
+    suppressClick.current = true;
+    if (longPress.current) {
+      clearTimeout(longPress.current.timer);
+      longPress.current = null;
+    }
+    if (!sparkSet.has(cell) && !givens.includes(cell)) onToggle(cell);
+  }
+
   return (
     <div className="board-frame">
       <div
+        ref={frame}
         className={`board${solved ? ' is-solved' : ''}`}
         style={{ ['--n' as string]: size }}
+        onPointerMove={movePress}
         role="grid"
         aria-label={label ?? t('{size} by {size} board', { size })}
         aria-rowcount={size}
@@ -187,7 +224,8 @@ export function Board({
               disabled={locked && !hasSpark}
               onFocus={() => setFocus(cell)}
               onKeyDown={(e) => handleKey(e, cell)}
-              onPointerDown={() => startPress(cell)}
+              data-cell={cell}
+              onPointerDown={(event) => startPress(cell, event)}
               onPointerUp={endPress}
               onPointerLeave={endPress}
               onPointerCancel={endPress}

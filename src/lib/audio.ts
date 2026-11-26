@@ -358,4 +358,16 @@ export const sfx = {
     voice(784, 0.1, 'triangle', 0.05);
     voice(1046.5, 0.14, 'triangle', 0.04, 0.06);
   },
+  /** One struck bell, for the memory tower. */
+  bell(hz: number, ms = 420): void {
+    if (!enabled()) return;
+    voice(hz, ms / 1000, 'sine', 0.06);
+    voice(hz * 2, ms / 1500, 'triangle', 0.02, 0.008);
+  },
+  /** A missed bell: low, short, never harsh. */
+  bellMiss(): void {
+    if (!enabled()) return;
+    voice(174.61, 0.22, 'sine', 0.045);
+    voice(146.83, 0.26, 'sine', 0.03, 0.04);
+  },
 };

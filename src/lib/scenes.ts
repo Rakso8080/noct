@@ -7,7 +7,7 @@
  */
 import type { PlaceId } from './atlas.ts';
 
-/** The thirteen places, plus the two rooms that look out over them all. */
+/** The nineteen places, plus the two rooms that look out over them all. */
 export type SceneKey = PlaceId | 'home' | 'arcade' | 'atlas';
 
 export type MoteKind = 'motes' | 'petals' | 'ash' | 'embers' | 'snow' | 'glints' | 'smoke';
@@ -66,12 +66,12 @@ export const SCENES: Record<SceneKey, SceneSpec> = {
     note: 'Lantern light in four rows, and nothing in a hurry.',
   },
   chess: {
-    sky: ['rgba(122, 84, 44, 0.14)', 'rgba(16, 10, 22, 0.26)'],
+    sky: ['rgba(52, 82, 158, 0.2)', 'rgba(6, 10, 30, 0.34)'],
     glow: '#f0b464',
     mote: 'smoke',
     density: 9,
     drift: 30,
-    tint: 'rgba(200, 140, 70, 0.06)',
+    tint: 'rgba(96, 126, 216, 0.05)',
     note: 'Candle smoke and warm wax; the keep is still awake.',
   },
   mines: {
@@ -154,6 +154,60 @@ export const SCENES: Record<SceneKey, SceneSpec> = {
     drift: 34,
     tint: 'rgba(190, 190, 200, 0.04)',
     note: 'Mist on the long bridge, and the water beneath it.',
+  },
+  wordwell: {
+    sky: ['rgba(46, 96, 72, 0.13)', 'rgba(6, 16, 14, 0.26)'],
+    glow: '#9fe0b0',
+    mote: 'glints',
+    density: 11,
+    drift: 30,
+    tint: 'rgba(110, 190, 140, 0.05)',
+    note: 'A stone well under the pines, and five letters on the water.',
+  },
+  memorybell: {
+    sky: ['rgba(128, 96, 44, 0.13)', 'rgba(14, 10, 20, 0.26)'],
+    glow: '#ffd08a',
+    mote: 'motes',
+    density: 9,
+    drift: 26,
+    tint: 'rgba(220, 170, 90, 0.06)',
+    note: 'Four bells in a wooden tower, still warm from the last ring.',
+  },
+  mancala: {
+    sky: ['rgba(124, 88, 54, 0.13)', 'rgba(16, 10, 18, 0.27)'],
+    glow: '#ffc878',
+    mote: 'embers',
+    density: 9,
+    drift: 24,
+    tint: 'rgba(222, 160, 88, 0.06)',
+    note: 'Four stones in every cup, warm from the hand that last sowed them.',
+  },
+  pegs: {
+    sky: ['rgba(70, 92, 104, 0.12)', 'rgba(8, 12, 20, 0.27)'],
+    glow: '#d8c79e',
+    mote: 'motes',
+    density: 8,
+    drift: 30,
+    tint: 'rgba(180, 172, 140, 0.05)',
+    note: 'One lamp over the hermit’s cross, and a cat pretending not to watch.',
+  },
+  crates: {
+    sky: ['rgba(126, 72, 42, 0.14)', 'rgba(18, 9, 8, 0.28)'],
+    glow: '#f3b46e',
+    mote: 'embers',
+    density: 10,
+    drift: 22,
+    tint: 'rgba(220, 140, 78, 0.06)',
+    note: 'Warm rust and chalk dust; a lantern leans over the stacked crates.',
+  },
+  boxes: {
+    sky: ['rgba(40, 104, 92, 0.13)', 'rgba(5, 18, 17, 0.27)'],
+    glow: '#9fe0c8',
+    mote: 'glints',
+    density: 12,
+    drift: 18,
+    tint: 'rgba(100, 210, 180, 0.05)',
+    note: 'Green thread and moth wings; the loom trades one small breeze for another.',
   },
   arcade: {
     sky: ['rgba(64, 70, 128, 0.12)', 'rgba(8, 8, 22, 0.24)'],

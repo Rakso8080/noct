@@ -25,9 +25,15 @@ const {
   clearSnakeRound,
   dayStreak,
   readGames,
+  recordBoxes,
+  recordCrates,
+  recordMancala,
   recordNumbers,
+  recordPegs,
   recordReversi,
   recordSnake,
+  resetBoxes,
+  resetCrates,
   resetNumbers,
   resetReversi,
   resetSnake,
@@ -73,6 +79,70 @@ test('records from the previous payload survive and gain the new per-day shape',
   assert.equal(store.reversi.bestMargin, 30);
   assert.equal(store.reversi.losses, 1);
   assert.deepEqual(store.reversi.daily, {});
+});
+
+test('the stone circle and the hermit’s cross keep their own local records', () => {
+  recordMancala(7, 'loss', 18, 20);
+  recordMancala(7, 'win', 24, 22);
+  recordMancala(8, 'draw', 20, 30);
+  const mancala = readGames().mancala;
+  assert.equal(mancala.bestStones, 24);
+  assert.equal(mancala.wins, 1);
+  assert.equal(mancala.losses, 1);
+  assert.equal(mancala.draws, 1);
+  assert.deepEqual(mancala.daily['7'], { result: 'win', stones: 24, moves: 22 });
+  assert.deepEqual(mancala.daily['8'], { result: 'draw', stones: 20, moves: 30 });
+
+  recordPegs(7, 4, 30, false);
+  recordPegs(7, 1, 44, true);
+  recordPegs(8, 2, 38, false);
+  const pegs = readGames().pegs;
+  assert.equal(pegs.bestPegs, 1);
+  assert.equal(pegs.bestMoves, 44);
+  assert.equal(pegs.wins, 1);
+  assert.deepEqual(pegs.daily['7'], { pegs: 1, moves: 44, cleared: true });
+  assert.deepEqual(pegs.daily['8'], { pegs: 2, moves: 38, cleared: false });
+});
+
+test('crates keep a daily best and free-play best separately', () => {
+  recordCrates(7, 18, 5);
+  recordCrates(7, 15, 4);
+  recordCrates(8, 21, 6);
+  recordCrates(8, 9, 2, 'free');
+  const crates = readGames().crates;
+  assert.equal(crates.bestMoves, 15);
+  assert.equal(crates.bestFreeMoves, 9);
+  assert.equal(crates.solved, 4);
+  assert.deepEqual(crates.daily['7'], { moves: 15, pushes: 4 });
+  assert.deepEqual(crates.daily['8'], { moves: 21, pushes: 6 });
+  resetCrates();
+  assert.deepEqual(readGames().crates, {
+    bestMoves: null,
+    bestFreeMoves: null,
+    solved: 0,
+    daily: {},
+  });
+});
+
+test('dots and boxes records each day and the all-time table', () => {
+  recordBoxes(7, 'loss', -2, 6);
+  recordBoxes(7, 'win', 3, 9);
+  recordBoxes(8, 'draw', 0, 8);
+  const boxes = readGames().boxes;
+  assert.equal(boxes.wins, 1);
+  assert.equal(boxes.losses, 1);
+  assert.equal(boxes.draws, 1);
+  assert.equal(boxes.bestMargin, 3);
+  assert.deepEqual(boxes.daily['7'], { result: 'win', margin: 3, boxes: 9 });
+  assert.deepEqual(boxes.daily['8'], { result: 'draw', margin: 0, boxes: 8 });
+  resetBoxes();
+  assert.deepEqual(readGames().boxes, {
+    wins: 0,
+    losses: 0,
+    draws: 0,
+    bestMargin: null,
+    daily: {},
+  });
 });
 
 test('broken JSON falls back to an empty store instead of throwing', () => {

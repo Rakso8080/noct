@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { preferReducedMotion } from '../lib/settings';
 import { useT } from '../lib/i18n';
 
@@ -117,7 +118,9 @@ export function Modal({
 
   if (!open) return null;
 
-  return (
+  // A portal keeps the fixed backdrop tied to the viewport even when the modal
+  // is rendered inside an animated page container.
+  return createPortal(
     <div className="modal-backdrop" role="presentation" onClick={onClose}>
       <div
         className="modal"
@@ -138,7 +141,8 @@ export function Modal({
         </div>
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 

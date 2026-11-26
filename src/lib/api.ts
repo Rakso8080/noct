@@ -1,5 +1,8 @@
+import type { ArcadeGame } from '../../shared/arcade';
 import type {
   ArchiveEntry,
+  ArcadeLeaderboardResponse,
+  ArcadeScoreResponse,
   HintResponse,
   LeaderboardResponse,
   MeResponse,
@@ -72,6 +75,13 @@ const remoteApi: NoctApi = {
       body: JSON.stringify({ name }),
     }),
   deleteMe: () => request<{ ok: boolean }>('/api/me', { method: 'DELETE' }),
+  arcadeScore: (game: ArcadeGame, score: number) =>
+    request<ArcadeScoreResponse>('/api/arcade/score', {
+      method: 'POST',
+      body: JSON.stringify({ game, score }),
+    }),
+  arcadeLeaderboard: (game: ArcadeGame, scope: 'today' | 'week' | 'all') =>
+    request<ArcadeLeaderboardResponse>(`/api/arcade/leaderboard?game=${game}&scope=${scope}`),
 };
 
 /**

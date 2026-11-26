@@ -641,6 +641,10 @@ button {
   padding: 0;
   margin: 0;
   background: var(--tone);
+  /* Drag-to-place needs the cell, not the scroller, to own the gesture. */
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
   display: grid;
   place-items: center;
   cursor: pointer;

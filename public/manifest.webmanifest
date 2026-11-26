@@ -1,7 +1,7 @@
 {
-  "name": "Noct — seven nightly boards and six side tables",
+  "name": "Noct — a new board every night",
   "short_name": "Noct",
-  "description": "Seven nightly boards — Common, Rare, Noct, chess, mines, pairs and lights — plus six side tables: Snake, 2048, Reversi, Checkers, Connect Four and Dominoes.",
+  "description": "Seven nightly boards — Common, Rare, Noct, chess, mines, pairs and lights — plus ten side tables: Snake, 2048, Reversi, Checkers, Connect Four, Dominoes, Word Well, Memory Bell, Mancala and Peg Solitaire.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

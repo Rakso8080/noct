@@ -49,12 +49,12 @@ function run(mode: 'common' | 'rare'): SurveyRun {
   };
 }
 
-test('the atlas holds all thirteen places in three chapters', () => {
-  assert.equal(PLACES.length, 13);
-  assert.equal(new Set(PLACES.map((place) => place.id)).size, 13);
+test('the atlas holds all nineteen places in three chapters', () => {
+  assert.equal(PLACES.length, 19);
+  assert.equal(new Set(PLACES.map((place) => place.id)).size, 19);
   assert.deepEqual(
     CHAPTERS.map((chapter) => PLACES.filter((place) => place.chapter === chapter.id).length),
-    [3, 4, 6],
+    [3, 5, 11],
   );
 });
 
@@ -76,9 +76,11 @@ test('the nightly route is deterministic, unique and one stop per chapter', () =
   );
 });
 
-test('the weather is deterministic, stable and one of the five skies', () => {
+test('the weather is deterministic, stable and one of the ten skies', () => {
   const ids = new Set(WEATHERS.map((weather) => weather.id));
-  assert.equal(ids.size, 5);
+  assert.equal(ids.size, 10);
+  assert.ok(ids.has('fireflies'));
+  assert.ok(ids.has('storm'));
   for (const day of [1, 2, 10, 365, 9001]) {
     const weather = routeWeather(day);
     assert.ok(ids.has(weather.id));
@@ -126,6 +128,35 @@ test('noct marks come from the daily result and all-time stats', () => {
     keepsake: true,
   });
   assert.equal(placeView('noct', withNoct).record?.key, 'Best {n} / {max}');
+});
+
+test('the crate yard and the thread loom have their own marks and records', () => {
+  const games = readGames();
+  games.crates.daily['10'] = { moves: 18, pushes: 5 };
+  games.crates.bestMoves = 18;
+  games.boxes.daily['10'] = { result: 'win', margin: 3, boxes: 9 };
+  games.boxes.wins = 1;
+  games.boxes.bestMargin = 3;
+  const base = { ...sources(), games };
+
+  assert.deepEqual(marksFor('crates', base), {
+    waymark: true,
+    night: true,
+    keepsake: true,
+  });
+  assert.deepEqual(placeView('crates', base).record, {
+    key: 'Best {n} moves',
+    vars: { n: 18 },
+  });
+  assert.deepEqual(marksFor('boxes', base), {
+    waymark: true,
+    night: true,
+    keepsake: true,
+  });
+  assert.deepEqual(placeView('boxes', base).record, {
+    key: '{wins}W · {losses}L · {draws}D',
+    vars: { wins: 1, losses: 0, draws: 0 },
+  });
 });
 
 test('a side table is lit today and keeps a record from the existing store', () => {

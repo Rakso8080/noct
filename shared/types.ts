@@ -108,6 +108,34 @@ export interface ArchiveEntry {
   playable: boolean;
 }
 
+import type { ArcadeGame } from './arcade';
+
+export interface ArcadeScoreResponse {
+  ok: true;
+  game: ArcadeGame;
+  day: number;
+  /** the best score this player has on the table today */
+  best: number;
+  plays: number;
+  rank: number;
+}
+
+export interface ArcadeLeaderboardResponse {
+  game: ArcadeGame;
+  scope: 'today' | 'week' | 'all';
+  rows: LeaderRow[];
+  me: LeaderRow | null;
+  totalPlayers: number;
+}
+
+export interface ArcadeStat {
+  game: ArcadeGame;
+  plays: number;
+  best: number;
+  total: number;
+  lastDay: number;
+}
+
 export interface StatsResponse {
   played: number;
   dailyCompleted: number;
@@ -123,6 +151,7 @@ export interface StatsResponse {
   calendar: { day: number; date: string; score: number | null }[];
   practiceRounds: number;
   archivePlayed: number;
+  arcade: ArcadeStat[];
 }
 
 export interface MeResponse {

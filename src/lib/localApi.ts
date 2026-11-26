@@ -21,8 +21,12 @@ import {
 } from '../../shared/score';
 import { dayNumber, dayToISO, nextResetAt } from '../../shared/dates';
 import { countSolutions, generatePuzzle, hintCell, isSolved, type Puzzle } from '../../shared/puzzle';
+import type { ArcadeGame } from '../../shared/arcade';
 import type {
   ArchiveEntry,
+  ArcadeLeaderboardResponse,
+  ArcadeScoreResponse,
+  ArcadeStat,
   GlobalToday,
   LeaderRow,
   LeaderboardResponse,
@@ -89,6 +93,8 @@ interface LocalState {
   sessions: Record<string, LocalSession>;
   playedSessions: number;
   practiceRounds: number;
+  /** side-table scores kept on this device; the static build has no table */
+  arcade?: Partial<Record<ArcadeGame, { plays: number; best: number; total: number; lastDay: number }>>;
 }
 
 /* ------------------------------------------------------------------ storage */
@@ -568,6 +574,13 @@ export const localApi: NoctApi = {
       calendar,
       practiceRounds: state.practiceRounds,
       archivePlayed: Object.keys(state.archive).length,
+      arcade: Object.entries(state.arcade ?? {}).map(([game, row]) => ({
+        game: game as ArcadeGame,
+        plays: row?.plays ?? 0,
+        best: row?.best ?? 0,
+        total: row?.total ?? 0,
+        lastDay: row?.lastDay ?? 0,
+      })) as ArcadeStat[],
     };
   },
 
@@ -600,5 +613,34 @@ export const localApi: NoctApi = {
       /* ignore */
     }
     return { ok: true };
+  },
+
+  async arcadeScore(game: ArcadeGame, score: number): Promise<ArcadeScoreResponse> {
+    const state = load();
+    const today = dayNumber();
+    const table = state.arcade ?? (state.arcade = {});
+    const row = table[game] ?? { plays: 0, best: 0, total: 0, lastDay: today };
+    row.plays += 1;
+    row.best = Math.max(row.best, score);
+    row.total += score;
+    row.lastDay = today;
+    table[game] = row;
+    save(state);
+    return { ok: true, game, day: today, best: row.best, plays: row.plays, rank: 1 };
+  },
+
+  async arcadeLeaderboard(
+    game: ArcadeGame,
+    scope: 'today' | 'week' | 'all',
+  ): Promise<ArcadeLeaderboardResponse> {
+    const state = load();
+    const today = dayNumber();
+    const row = state.arcade?.[game];
+    const inScope =
+      row && (scope === 'all' || (scope === 'today' ? row.lastDay === today : row.lastDay >= today - 6));
+    const me: LeaderRow | null = inScope
+      ? { rank: 1, name: state.name ?? 'You', score: row.best, streak: 0, me: true }
+      : null;
+    return { game, scope, rows: me ? [me] : [], me, totalPlayers: me ? 1 : 0 };
   },
 };

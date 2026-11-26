@@ -8,6 +8,7 @@ import { haptic } from '../lib/settings';
 import { HINT_COST, parMs } from '../../shared/score';
 import { useT } from '../lib/i18n';
 import { dayNumber } from '../../shared/dates';
+import type { Challenge } from '../lib/challenge';
 
 interface PlayProps {
   mode: 'daily' | 'practice' | 'archive';
@@ -17,6 +18,7 @@ interface PlayProps {
   onExit: () => void;
   onTutorial: () => void;
   onToday?: () => void;
+  challenge?: Challenge | null;
 }
 
 function clock(ms: number): string {
@@ -26,7 +28,7 @@ function clock(ms: number): string {
   return `${m}:${String(s).padStart(2, '0')}`;
 }
 
-export function Play({ mode, level, day, onFinish, onExit, onTutorial, onToday }: PlayProps) {
+export function Play({ mode, level, day, onFinish, onExit, onTutorial, onToday, challenge }: PlayProps) {
   const t = useT();
   const [session, setSession] = useState<StartResponse | null>(null);
   const [phase, setPhase] = useState<'loading' | 'playing' | 'solving' | 'error'>('loading');
@@ -43,6 +45,7 @@ export function Play({ mode, level, day, onFinish, onExit, onTutorial, onToday }
   const [elapsed, setElapsed] = useState(0);
   const [attempts, setAttempts] = useState(0);
   const [hintOpen, setHintOpen] = useState(false);
+  const [challengeHidden, setChallengeHidden] = useState(false);
 
   const roundStart = useRef(Date.now());
   const busy = useRef(false);
@@ -296,6 +299,28 @@ export function Play({ mode, level, day, onFinish, onExit, onTutorial, onToday }
       <div className="wrap">
         <div className="play-grid">
           <div className="play-main">
+            {challenge && !challengeHidden ? (
+              <div className="challenge-line" role="status">
+                <div className="stack">
+                  <span className="eyebrow">{t('A shared night')}</span>
+                  <p>
+                    {t('{name} scored {score} — beat it.', {
+                      name: challenge.name,
+                      score: challenge.score,
+                    })}
+                  </p>
+                </div>
+                <button
+                  className="icon-btn"
+                  onClick={() => setChallengeHidden(true)}
+                  aria-label={t('Dismiss')}
+                >
+                  <svg width="12" height="12" viewBox="0 0 14 14" aria-hidden="true">
+                    <path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                  </svg>
+                </button>
+              </div>
+            ) : null}
             <div className="play-head">
               <div className="row gap-10">
                 <button className="icon-btn" onClick={onExit} aria-label={t('Leave this board')}>

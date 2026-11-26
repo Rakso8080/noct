@@ -1,5 +1,5 @@
 /**
- * The Long Road: a projection of the 13 places and the records already kept
+ * The Long Road: a projection of the 19 places and the records already kept
  * by the games. Nothing here changes a rule or duplicates a score.
  */
 import { MAX_SCORE } from '../../shared/score.ts';
@@ -32,7 +32,13 @@ export type PlaceId =
   | 'reversi'
   | 'checkers'
   | 'connect4'
-  | 'dominoes';
+  | 'dominoes'
+  | 'wordwell'
+  | 'memorybell'
+  | 'mancala'
+  | 'pegs'
+  | 'crates'
+  | 'boxes';
 
 type GamePlaceId = Exclude<PlaceId, 'common' | 'rare' | 'noct'>;
 
@@ -49,7 +55,13 @@ export type PlaceShape =
   | 'spark'
   | 'crown'
   | 'drop'
-  | 'domino';
+  | 'domino'
+  | 'well'
+  | 'bell'
+  | 'bowl'
+  | 'cross'
+  | 'crate'
+  | 'thread';
 
 export interface Chapter {
   id: ChapterId;
@@ -212,6 +224,17 @@ export const PLACES: readonly Place[] = [
     note: 'Twenty-five leaded windows; shut them all and let the stars through.',
   },
   {
+    id: 'memorybell',
+    chapter: 'keep',
+    path: '/memorybell',
+    name: 'Memory Bell',
+    placeName: 'The Memory Bell',
+    kind: 'bells',
+    tone: 'amber',
+    shape: 'bell',
+    note: 'Four bells keep the order they were rung; repeat it until the tower forgets you.',
+  },
+  {
     id: 'snake',
     chapter: 'tables',
     path: '/snake',
@@ -276,6 +299,61 @@ export const PLACES: readonly Place[] = [
     tone: 'ivory',
     shape: 'domino',
     note: 'Bone, rosewood and brass on a bridge over black water; empty your hand first.',
+  },
+  {
+    id: 'wordwell',
+    chapter: 'tables',
+    path: '/wordwell',
+    name: 'Word Well',
+    placeName: 'The Word Well',
+    kind: 'words',
+    tone: 'moss',
+    shape: 'well',
+    note: 'Five letters are lowered into the well each night; six guesses bring them back.',
+  },
+  {
+    id: 'mancala',
+    chapter: 'tables',
+    path: '/mancala',
+    name: 'Mancala',
+    placeName: 'The Stone Circle',
+    kind: 'stones',
+    tone: 'sand',
+    shape: 'bowl',
+    note: 'Four stones in every cup; sow the circle, take the extra turn, and keep the fuller store.',
+  },
+  {
+    id: 'pegs',
+    chapter: 'tables',
+    path: '/pegs',
+    name: 'Peg Solitaire',
+    placeName: 'The Hermit’s Cross',
+    kind: 'solitaire',
+    tone: 'moss',
+    shape: 'cross',
+    note: 'Thirty-two pegs on a stone cross; jump until one is left and the hermit nods.',
+  },
+  {
+    id: 'crates',
+    chapter: 'tables',
+    path: '/crates',
+    name: 'Crates',
+    placeName: 'The Crate Yard',
+    kind: 'crates',
+    tone: 'clay',
+    shape: 'crate',
+    note: 'Chalk marks, stacked crates and a keeper who can push but never pull.',
+  },
+  {
+    id: 'boxes',
+    chapter: 'tables',
+    path: '/boxes',
+    name: 'Dots & Boxes',
+    placeName: 'The Thread Loom',
+    kind: 'threads',
+    tone: 'teal',
+    shape: 'thread',
+    note: 'Forty threads between twenty-five dots; close a box and keep the shuttle.',
   },
 ];
 
@@ -417,6 +495,58 @@ function gameMarks(id: GamePlaceId, games: GamesStore, day: number): PlaceMarks 
         keepsake: games.dominoes.bestMargin !== null || total > 0,
       };
     }
+    case 'wordwell': {
+      const daily = games.word.daily[key];
+      const total = games.word.wins + games.word.losses;
+      return {
+        waymark: Boolean(daily) || total > 0,
+        night: Boolean(daily),
+        keepsake: games.word.bestGuesses !== null || games.word.wins > 0,
+      };
+    }
+    case 'memorybell': {
+      const daily = games.bell.daily[key];
+      return {
+        waymark: Boolean(daily) || games.bell.rounds > 0,
+        night: Boolean(daily),
+        keepsake: (games.bell.bestLevel ?? 0) >= 6 || games.bell.rounds >= 20,
+      };
+    }
+    case 'mancala': {
+      const daily = games.mancala.daily[key];
+      const total = games.mancala.wins + games.mancala.losses + games.mancala.draws;
+      return {
+        waymark: Boolean(daily) || total > 0,
+        night: Boolean(daily),
+        keepsake: games.mancala.bestStones !== null || total > 0,
+      };
+    }
+    case 'pegs': {
+      const daily = games.pegs.daily[key];
+      return {
+        waymark: Boolean(daily) || games.pegs.bestPegs !== null,
+        night: Boolean(daily),
+        keepsake: games.pegs.wins > 0 || games.pegs.bestPegs !== null,
+      };
+    }
+    case 'crates': {
+      const daily = games.crates.daily[key];
+      const hasBest = games.crates.bestMoves !== null || games.crates.bestFreeMoves !== null;
+      return {
+        waymark: Boolean(daily) || hasBest || games.crates.solved > 0,
+        night: Boolean(daily),
+        keepsake: hasBest || games.crates.solved > 0,
+      };
+    }
+    case 'boxes': {
+      const daily = games.boxes.daily[key];
+      const total = games.boxes.wins + games.boxes.losses + games.boxes.draws;
+      return {
+        waymark: Boolean(daily) || total > 0,
+        night: Boolean(daily),
+        keepsake: games.boxes.bestMargin !== null || total > 0,
+      };
+    }
   }
 }
 
@@ -453,6 +583,29 @@ function gameRecord(id: GamePlaceId, games: GamesStore): AtlasRecord | null {
       return tableRecord(games.connect4.wins, games.connect4.losses, games.connect4.draws);
     case 'dominoes':
       return tableRecord(games.dominoes.wins, games.dominoes.losses, games.dominoes.draws);
+    case 'wordwell':
+      return games.word.bestGuesses === null
+        ? null
+        : { key: 'Best {n} guesses', vars: { n: games.word.bestGuesses } };
+    case 'memorybell':
+      return games.bell.bestLevel === null
+        ? null
+        : { key: 'Bell {n} steps', vars: { n: games.bell.bestLevel } };
+    case 'mancala':
+      return games.mancala.bestStones === null
+        ? null
+        : { key: 'Best {n} stones', vars: { n: games.mancala.bestStones } };
+    case 'pegs':
+      if (games.pegs.bestPegs === null) return null;
+      return games.pegs.bestPegs === 1
+        ? { key: 'Best 1 peg' }
+        : { key: 'Best {n} pegs', vars: { n: games.pegs.bestPegs } };
+    case 'crates': {
+      const best = games.crates.bestMoves ?? games.crates.bestFreeMoves;
+      return best === null ? null : { key: 'Best {n} moves', vars: { n: best } };
+    }
+    case 'boxes':
+      return tableRecord(games.boxes.wins, games.boxes.losses, games.boxes.draws);
   }
 }
 
@@ -503,7 +656,17 @@ export function nightRoute(day: number): Place[] {
   });
 }
 
-export type WeatherId = 'clear' | 'mist' | 'meteors' | 'snow' | 'aurora';
+export type WeatherId =
+  | 'clear'
+  | 'mist'
+  | 'meteors'
+  | 'snow'
+  | 'aurora'
+  | 'rain'
+  | 'wind'
+  | 'fireflies'
+  | 'storm'
+  | 'still';
 
 export interface RouteWeather {
   id: WeatherId;
@@ -511,7 +674,7 @@ export interface RouteWeather {
   note: string;
 }
 
-/** Five skies over the same road. Deterministic, so everyone shares the night. */
+/** Ten skies over the same road. Deterministic, so everyone shares the night. */
 export const WEATHERS: readonly RouteWeather[] = [
   {
     id: 'clear',
@@ -537,6 +700,31 @@ export const WEATHERS: readonly RouteWeather[] = [
     id: 'aurora',
     name: 'Aurora',
     note: 'Green light over the water, and the road lit from above.',
+  },
+  {
+    id: 'rain',
+    name: 'Long rain',
+    note: 'Rain on every roof; the boards keep their own dry hour.',
+  },
+  {
+    id: 'wind',
+    name: 'Rising wind',
+    note: 'Wind in the pines, and the lanterns leaning away from it.',
+  },
+  {
+    id: 'fireflies',
+    name: 'Fireflies',
+    note: 'Warm air over the water; the valley stays out a little longer.',
+  },
+  {
+    id: 'storm',
+    name: 'Storm',
+    note: 'Rain and a low sky; the lightning reads the rooftops once.',
+  },
+  {
+    id: 'still',
+    name: 'Still air',
+    note: 'No weather at all; the valley holds its breath until dawn.',
   },
 ];
 

@@ -1,5 +1,8 @@
+import type { ArcadeGame } from '../../shared/arcade';
 import type {
   ArchiveEntry,
+  ArcadeLeaderboardResponse,
+  ArcadeScoreResponse,
   HintResponse,
   LeaderboardResponse,
   MeResponse,
@@ -23,4 +26,6 @@ export interface NoctApi {
   me(): Promise<MeResponse>;
   setName(name: string): Promise<{ ok: boolean; name: string | null }>;
   deleteMe(): Promise<{ ok: boolean }>;
+  arcadeScore(game: ArcadeGame, score: number): Promise<ArcadeScoreResponse>;
+  arcadeLeaderboard(game: ArcadeGame, scope: 'today' | 'week' | 'all'): Promise<ArcadeLeaderboardResponse>;
 }

@@ -1,14 +1,19 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  FIELD_NOTES,
+  FIELD_PAGES,
+  PAGE_TIER_LABEL,
   SIGHTINGS,
   addSighting,
   clearJournal,
   journalProgress,
+  pageIsUnlocked,
+  pageText,
+  pagesFor,
   readSightings,
-  unlockedNoteIds,
+  unlockedPages,
 } from '../src/lib/journal.ts';
+import { PLACES } from '../src/lib/atlas.ts';
 import { readGames } from '../src/lib/gamesStore.ts';
 import type { AtlasSources } from '../src/lib/atlas.ts';
 
@@ -38,24 +43,65 @@ function mockStorage(): void {
   });
 }
 
-test('the field book holds one note per place and six sightings', () => {
-  assert.equal(FIELD_NOTES.length, 13);
-  assert.equal(new Set(FIELD_NOTES.map((note) => note.place)).size, 13);
+test('the field book holds three pages per place and six sightings', () => {
+  assert.equal(FIELD_PAGES.length, PLACES.length * 3);
+  assert.deepEqual(
+    PLACES.map((place) => pagesFor(place.id).length),
+    PLACES.map(() => 3),
+  );
+  assert.deepEqual(
+    PLACES.map((place) => pagesFor(place.id).map((page) => page.tier).join(',')),
+    PLACES.map(() => 'waymark,night,keepsake'),
+  );
+  assert.equal(new Set(FIELD_PAGES.map((page) => `${page.place}:${page.tier}`)).size, FIELD_PAGES.length);
+  for (const page of FIELD_PAGES) {
+    assert.ok(page.en.length > 40, `${page.place}/${page.tier} needs a real English page`);
+    assert.ok(page.nb.length > 40, `${page.place}/${page.tier} needs a real Norwegian page`);
+    assert.notEqual(page.en, page.nb);
+  }
   assert.equal(SIGHTINGS.length, 6);
   assert.equal(new Set(SIGHTINGS.map((sighting) => sighting.id)).size, 6);
+  assert.deepEqual(Object.keys(PAGE_TIER_LABEL), ['waymark', 'night', 'keepsake']);
 });
 
-test('a note unlocks from any existing mark', () => {
+test('a page unlocks from the mark it belongs to, tier by tier', () => {
   const base = sources();
-  assert.deepEqual(unlockedNoteIds(base), []);
+  assert.deepEqual(unlockedPages(base), []);
 
   const visited = { ...base, games: readGames() };
-  visited.games.mines.daily['10'] = { won: true, ms: 9000, at: 0 };
-  assert.deepEqual(unlockedNoteIds(visited), ['mines']);
+  visited.games.mines.daily['10'] = { won: false, ms: 5000, at: 0 };
+  assert.deepEqual(
+    unlockedPages(visited).map((page) => `${page.place}:${page.tier}`),
+    ['mines:waymark', 'mines:night'],
+  );
 
-  const withBest = { ...base, games: readGames() };
-  withBest.games.snake.best = 12;
-  assert.deepEqual(unlockedNoteIds(withBest), ['snake']);
+  const kept = { ...base, games: readGames() };
+  kept.games.snake.best = 12;
+  assert.deepEqual(
+    unlockedPages(kept).map((page) => `${page.place}:${page.tier}`),
+    ['snake:waymark', 'snake:keepsake'],
+  );
+  const snake = pagesFor('snake');
+  assert.equal(pageIsUnlocked(snake[0], kept), true);
+  assert.equal(pageIsUnlocked(snake[1], kept), false);
+  assert.equal(pageIsUnlocked(snake[2], kept), true);
+});
+
+test('page text follows the chosen language', () => {
+  const page = FIELD_PAGES[0];
+  assert.equal(pageText(page, 'en'), page.en);
+  assert.equal(pageText(page, 'nb'), page.nb);
+});
+
+test('the two new tables unlock pages like the older ones', () => {
+  const base = { ...sources(), games: readGames() };
+  base.games.word.daily['10'] = { won: true, guesses: 3, answer: 'CRANE' };
+  assert.deepEqual(
+    unlockedPages(base)
+      .filter((page) => page.place === 'wordwell')
+      .map((page) => page.tier),
+    ['waymark', 'night'],
+  );
 });
 
 test('sightings are idempotent and survive a reload', () => {
@@ -69,8 +115,9 @@ test('sightings are idempotent and survive a reload', () => {
 
     const progress = journalProgress(sources(), readSightings());
     assert.equal(progress.sightings, 2);
+    assert.equal(progress.pages, 0);
     assert.equal(progress.found, 2);
-    assert.equal(progress.total, 19);
+    assert.equal(progress.total, FIELD_PAGES.length + SIGHTINGS.length);
 
     clearJournal();
     assert.deepEqual(readSightings(), []);

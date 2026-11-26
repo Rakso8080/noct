@@ -13,10 +13,14 @@ import {
   mainDifficulty,
   nextResetAt,
 } from './daily.ts';
+import { ARCADE_MAX_SCORE, isArcadeGame, type ArcadeGame } from '../shared/arcade.ts';
 import { countSolutions, hintCell, isSolved, type Puzzle } from '../shared/puzzle.ts';
 import { HINT_COST, MAX_HINTS, MAX_SCORE, ROUND_SIZES, maxScore, ratingFor, scoreRound } from '../shared/score.ts';
 import type {
   ArchiveEntry,
+  ArcadeLeaderboardResponse,
+  ArcadeScoreResponse,
+  ArcadeStat,
   GlobalToday,
   HintResponse,
   LeaderRow,
@@ -243,6 +247,22 @@ function globalToday(day: number): GlobalToday {
   );
   const avg = num(one('select avg(score) as a from daily_results where day = ?', day)?.a);
   return { started, completed, avgScore: Math.round(avg) };
+}
+
+function arcadeStats(pid: string): ArcadeStat[] {
+  return all(
+    `select game, sum(plays) as plays, max(score) as best, sum(score) as total, max(day) as last_day
+     from arcade_scores where player_id = ? group by game order by last_day desc`,
+    pid,
+  )
+    .filter((r) => isArcadeGame(r.game))
+    .map((r) => ({
+      game: r.game as ArcadeGame,
+      plays: num(r.plays),
+      best: num(r.best),
+      total: num(r.total),
+      lastDay: num(r.last_day),
+    }));
 }
 
 function streaksFor(pid: string, today: number): { current: number; best: number } {
@@ -742,7 +762,105 @@ async function handleApi(req: IncomingMessage, res: ServerResponse, url: URL): P
         one("select count(*) as c from round_plays rp join sessions s on s.id = rp.session_id where s.player_id = ? and s.mode = 'practice'", pid)?.c,
       ),
       archivePlayed: num(one('select count(*) as c from archive_results where player_id = ?', pid)?.c),
+      arcade: arcadeStats(pid),
     };
+    return json(res, 200, payload);
+  }
+
+  if (path === '/api/arcade/score' && method === 'POST') {
+    const body = await readJson(req);
+    const game = body.game;
+    if (!isArcadeGame(game)) throw new HttpError(400, 'unknown game');
+    const score = Number(body.score);
+    if (!Number.isInteger(score) || score < 0 || score > ARCADE_MAX_SCORE) {
+      throw new HttpError(400, 'score out of range');
+    }
+    if (body.day !== undefined && Number(body.day) !== today) throw new HttpError(400, 'only today counts');
+    const previous = one(
+      'select score, plays from arcade_scores where player_id = ? and game = ? and day = ?',
+      pid,
+      game,
+      today,
+    );
+    run(
+      `insert into arcade_scores (player_id, game, day, score, plays, updated_at)
+       values (?, ?, ?, ?, 1, ?)
+       on conflict(player_id, game, day) do update set
+         score = case when excluded.score > arcade_scores.score then excluded.score else arcade_scores.score end,
+         plays = arcade_scores.plays + 1,
+         updated_at = excluded.updated_at`,
+      pid,
+      game,
+      today,
+      score,
+      Date.now(),
+    );
+    const best = Math.max(score, previous ? num(previous.score) : 0);
+    const rank = num(
+      one(
+        'select count(*) as c from arcade_scores where game = ? and day = ? and score > ?',
+        game,
+        today,
+        best,
+      )?.c,
+    ) + 1;
+    const payload: ArcadeScoreResponse = {
+      ok: true,
+      game,
+      day: today,
+      best,
+      plays: (previous ? num(previous.plays) : 0) + 1,
+      rank,
+    };
+    return json(res, 200, payload);
+  }
+
+  if (path === '/api/arcade/leaderboard' && method === 'GET') {
+    const game = url.searchParams.get('game');
+    if (!isArcadeGame(game)) throw new HttpError(400, 'unknown game');
+    const scopeRaw = url.searchParams.get('scope');
+    const scope: 'today' | 'week' | 'all' = scopeRaw === 'week' || scopeRaw === 'all' ? scopeRaw : 'today';
+    const from = scope === 'today' ? today : scope === 'week' ? today - 6 : 0;
+    const aggregate = scope === 'today' ? 'max(score)' : 'sum(score)';
+    const data = all(
+      `select a.player_id as pid, p.name as name, ${aggregate} as total
+       from arcade_scores a join players p on p.id = a.player_id
+       where a.game = ? and a.day >= ? group by a.player_id order by total desc limit 25`,
+      game,
+      from,
+    );
+    const rows: LeaderRow[] = data.map((r, i) => ({
+      rank: i + 1,
+      name: displayName(str(r.pid), r.name === null ? null : str(r.name)),
+      score: num(r.total),
+      streak: 0,
+      me: str(r.pid) === pid,
+    }));
+    const totalPlayers = num(
+      one('select count(distinct player_id) as c from arcade_scores where game = ? and day >= ?', game, from)?.c,
+    );
+    const mine = one(
+      `select ${aggregate} as total from arcade_scores where player_id = ? and game = ? and day >= ?`,
+      pid,
+      game,
+      from,
+    );
+    let me: LeaderRow | null = null;
+    if (mine && mine.total !== null) {
+      const better = num(
+        one(
+          `select count(*) as c from (
+             select player_id, ${aggregate} as total from arcade_scores
+             where game = ? and day >= ? group by player_id
+           ) x where x.total > ?`,
+          game,
+          from,
+          num(mine.total),
+        )?.c,
+      );
+      me = { rank: better + 1, name: 'You', score: num(mine.total), streak: 0, me: true };
+    }
+    const payload: ArcadeLeaderboardResponse = { game, scope, rows, me, totalPlayers };
     return json(res, 200, payload);
   }
 

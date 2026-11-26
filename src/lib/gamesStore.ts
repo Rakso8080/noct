@@ -67,6 +67,41 @@ export interface DominoesDay {
   margin: number;
 }
 
+export interface WordDay {
+  won: boolean;
+  guesses: number;
+  /** the answer, kept so a finished day can be read back without the word list */
+  answer: string;
+}
+
+export interface BellDay {
+  level: number;
+  won: boolean;
+}
+
+export interface MancalaDay {
+  result: TableResult;
+  stones: number;
+  moves: number;
+}
+
+export interface PegsDay {
+  pegs: number;
+  moves: number;
+  cleared: boolean;
+}
+
+export interface CratesDay {
+  moves: number;
+  pushes: number;
+}
+
+export interface BoxesDay {
+  result: TableResult;
+  margin: number;
+  boxes: number;
+}
+
 export interface SavedSnakeRound {
   day: number;
   snake: number[];
@@ -133,6 +168,43 @@ export interface GamesStore {
     bestMargin: number | null;
     daily: Record<string, DominoesDay>;
   };
+  word: {
+    bestGuesses: number | null;
+    wins: number;
+    losses: number;
+    daily: Record<string, WordDay>;
+  };
+  bell: {
+    bestLevel: number | null;
+    rounds: number;
+    daily: Record<string, BellDay>;
+  };
+  mancala: {
+    wins: number;
+    losses: number;
+    draws: number;
+    bestStones: number | null;
+    daily: Record<string, MancalaDay>;
+  };
+  pegs: {
+    wins: number;
+    bestPegs: number | null;
+    bestMoves: number | null;
+    daily: Record<string, PegsDay>;
+  };
+  crates: {
+    bestMoves: number | null;
+    bestFreeMoves: number | null;
+    solved: number;
+    daily: Record<string, CratesDay>;
+  };
+  boxes: {
+    wins: number;
+    losses: number;
+    draws: number;
+    bestMargin: number | null;
+    daily: Record<string, BoxesDay>;
+  };
   mines: { best: Record<string, number>; bestFree: number | null; daily: Record<string, MinesDay> };
   pairs: {
     bestMoves: number | null;
@@ -163,6 +235,12 @@ function empty(): GamesStore {
     checkers: { wins: 0, losses: 0, draws: 0, bestWin: null, daily: {} },
     connect4: { wins: 0, losses: 0, draws: 0, bestWin: null, daily: {} },
     dominoes: { wins: 0, losses: 0, draws: 0, bestMargin: null, daily: {} },
+    word: { bestGuesses: null, wins: 0, losses: 0, daily: {} },
+    bell: { bestLevel: null, rounds: 0, daily: {} },
+    mancala: { wins: 0, losses: 0, draws: 0, bestStones: null, daily: {} },
+    pegs: { wins: 0, bestPegs: null, bestMoves: null, daily: {} },
+    crates: { bestMoves: null, bestFreeMoves: null, solved: 0, daily: {} },
+    boxes: { wins: 0, losses: 0, draws: 0, bestMargin: null, daily: {} },
     mines: { best: {}, bestFree: null, daily: {} },
     pairs: { bestMoves: null, bestMs: null, bestFreeMoves: null, bestFreeMs: null, daily: {} },
     lights: { bestMoves: null, bestFree: null, daily: {} },
@@ -192,6 +270,24 @@ export function readGames(): GamesStore {
       checkers: { ...base.checkers, ...parsed.checkers, daily: { ...base.checkers.daily, ...parsed.checkers?.daily } },
       connect4: { ...base.connect4, ...parsed.connect4, daily: { ...base.connect4.daily, ...parsed.connect4?.daily } },
       dominoes: { ...base.dominoes, ...parsed.dominoes, daily: { ...base.dominoes.daily, ...parsed.dominoes?.daily } },
+      word: { ...base.word, ...parsed.word, daily: { ...base.word.daily, ...parsed.word?.daily } },
+      bell: { ...base.bell, ...parsed.bell, daily: { ...base.bell.daily, ...parsed.bell?.daily } },
+      mancala: {
+        ...base.mancala,
+        ...parsed.mancala,
+        daily: { ...base.mancala.daily, ...parsed.mancala?.daily },
+      },
+      pegs: { ...base.pegs, ...parsed.pegs, daily: { ...base.pegs.daily, ...parsed.pegs?.daily } },
+      crates: {
+        ...base.crates,
+        ...parsed.crates,
+        daily: { ...base.crates.daily, ...parsed.crates?.daily },
+      },
+      boxes: {
+        ...base.boxes,
+        ...parsed.boxes,
+        daily: { ...base.boxes.daily, ...parsed.boxes?.daily },
+      },
       mines: { ...base.mines, ...parsed.mines, best: { ...base.mines.best, ...parsed.mines?.best } },
       pairs: { ...base.pairs, ...parsed.pairs },
       lights: { ...base.lights, ...parsed.lights },
@@ -370,6 +466,113 @@ export function recordCheckers(day: number, result: TableResult, plies: number):
   write(store);
 }
 
+export function recordMancala(
+  day: number,
+  result: TableResult,
+  stones: number,
+  moves: number,
+  mode: GameMode = 'daily',
+): void {
+  const store = readGames();
+  const key = String(day);
+  if (mode === 'daily') {
+    const prev = store.mancala.daily[key];
+    if (
+      !prev ||
+      betterTableDay(prev, result) ||
+      (result === 'win' && prev.result === 'win' && stones > prev.stones)
+    ) {
+      store.mancala.daily[key] = { result, stones, moves };
+    }
+  }
+  if (result === 'win') store.mancala.wins++;
+  else if (result === 'loss') store.mancala.losses++;
+  else store.mancala.draws++;
+  if (store.mancala.bestStones === null || stones > store.mancala.bestStones) {
+    store.mancala.bestStones = stones;
+  }
+  write(store);
+}
+
+export function recordPegs(
+  day: number,
+  pegs: number,
+  moves: number,
+  cleared: boolean,
+  mode: GameMode = 'daily',
+): void {
+  const store = readGames();
+  const key = String(day);
+  if (mode === 'daily') {
+    const prev = store.pegs.daily[key];
+    if (!prev || pegs < prev.pegs || (pegs === prev.pegs && moves < prev.moves)) {
+      store.pegs.daily[key] = { pegs, moves, cleared };
+    } else if (cleared && !prev.cleared) {
+      store.pegs.daily[key] = { ...prev, cleared: true };
+    }
+  }
+  if (cleared) {
+    store.pegs.wins++;
+    if (store.pegs.bestMoves === null || moves < store.pegs.bestMoves) {
+      store.pegs.bestMoves = moves;
+    }
+  }
+  if (store.pegs.bestPegs === null || pegs < store.pegs.bestPegs) store.pegs.bestPegs = pegs;
+  write(store);
+}
+
+export function recordCrates(
+  day: number,
+  moves: number,
+  pushes: number,
+  mode: GameMode = 'daily',
+): void {
+  const store = readGames();
+  if (mode === 'daily') {
+    const key = String(day);
+    const prev = store.crates.daily[key];
+    if (!prev || moves < prev.moves || (moves === prev.moves && pushes < prev.pushes)) {
+      store.crates.daily[key] = { moves, pushes };
+    }
+    if (store.crates.bestMoves === null || moves < store.crates.bestMoves) {
+      store.crates.bestMoves = moves;
+    }
+  } else if (store.crates.bestFreeMoves === null || moves < store.crates.bestFreeMoves) {
+    store.crates.bestFreeMoves = moves;
+  }
+  store.crates.solved++;
+  write(store);
+}
+
+export function recordBoxes(
+  day: number,
+  result: TableResult,
+  margin: number,
+  boxes: number,
+  mode: GameMode = 'daily',
+): void {
+  const store = readGames();
+  if (mode === 'daily') {
+    const key = String(day);
+    const prev = store.boxes.daily[key];
+    const rank: Record<TableResult, number> = { win: 2, draw: 1, loss: 0 };
+    if (!prev || rank[result] > rank[prev.result] || (rank[result] === rank[prev.result] && margin > prev.margin)) {
+      store.boxes.daily[key] = { result, margin, boxes };
+    }
+  }
+  if (result === 'win') {
+    store.boxes.wins++;
+    if (store.boxes.bestMargin === null || margin > store.boxes.bestMargin) {
+      store.boxes.bestMargin = margin;
+    }
+  } else if (result === 'loss') {
+    store.boxes.losses++;
+  } else {
+    store.boxes.draws++;
+  }
+  write(store);
+}
+
 export function recordConnect4(day: number, result: TableResult, moves: number): void {
   const store = readGames();
   const key = String(day);
@@ -391,6 +594,7 @@ export function recordConnect4(day: number, result: TableResult, moves: number):
   write(store);
 }
 
+
 export function recordDominoes(day: number, result: TableResult, margin: number): void {
   const store = readGames();
   const key = String(day);
@@ -409,6 +613,35 @@ export function recordDominoes(day: number, result: TableResult, margin: number)
   } else {
     store.dominoes.draws++;
   }
+  write(store);
+}
+
+/** The first finished run of the day is the one the day keeps. */
+export function recordWord(day: number, won: boolean, guesses: number, answer: string): void {
+  const store = readGames();
+  const key = String(day);
+  const prev = store.word.daily[key];
+  if (!prev || (won && !prev.won) || (won === prev.won && guesses < prev.guesses)) {
+    store.word.daily[key] = { won, guesses, answer };
+  }
+  if (won) {
+    store.word.wins++;
+    if (store.word.bestGuesses === null || guesses < store.word.bestGuesses) {
+      store.word.bestGuesses = guesses;
+    }
+  } else {
+    store.word.losses++;
+  }
+  write(store);
+}
+
+export function recordBell(day: number, level: number, won: boolean): void {
+  const store = readGames();
+  const key = String(day);
+  const prev = store.bell.daily[key];
+  if (!prev || level > prev.level) store.bell.daily[key] = { level, won };
+  store.bell.rounds++;
+  if (store.bell.bestLevel === null || level > store.bell.bestLevel) store.bell.bestLevel = level;
   write(store);
 }
 
@@ -500,6 +733,30 @@ export function resetDominoes(): void {
   write(store);
 }
 
+export function resetWord(): void {
+  const store = readGames();
+  store.word = { bestGuesses: null, wins: 0, losses: 0, daily: {} };
+  write(store);
+}
+
+export function resetBell(): void {
+  const store = readGames();
+  store.bell = { bestLevel: null, rounds: 0, daily: {} };
+  write(store);
+}
+
+export function resetCrates(): void {
+  const store = readGames();
+  store.crates = { bestMoves: null, bestFreeMoves: null, solved: 0, daily: {} };
+  write(store);
+}
+
+export function resetBoxes(): void {
+  const store = readGames();
+  store.boxes = { wins: 0, losses: 0, draws: 0, bestMargin: null, daily: {} };
+  write(store);
+}
+
 /** Part of "delete my data": the side games live only in this browser. */
 export function clearGames(): void {
   try {
@@ -536,4 +793,20 @@ export function connect4Today(day = dayNumber()): Connect4Day | null {
 
 export function dominoesToday(day = dayNumber()): DominoesDay | null {
   return readGames().dominoes.daily[String(day)] ?? null;
+}
+
+export function wordToday(day = dayNumber()): WordDay | null {
+  return readGames().word.daily[String(day)] ?? null;
+}
+
+export function bellToday(day = dayNumber()): BellDay | null {
+  return readGames().bell.daily[String(day)] ?? null;
+}
+
+export function cratesToday(day = dayNumber()): CratesDay | null {
+  return readGames().crates.daily[String(day)] ?? null;
+}
+
+export function boxesToday(day = dayNumber()): BoxesDay | null {
+  return readGames().boxes.daily[String(day)] ?? null;
 }

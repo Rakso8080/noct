@@ -14,6 +14,7 @@ import './games.css';
 import './realm.css';
 import './atlas.css';
 import './scenes.css';
+import './place.css';
 
 applyTheme();
 watchSystemTheme();

@@ -1,9 +1,18 @@
 import { useEffect, useState } from 'react';
-import { LOCAL_MODE, api, type LeaderboardResponse } from '../lib/api';
+import { LOCAL_MODE, api } from '../lib/api';
+import { ARCADE_GAMES, ARCADE_LABELS, type ArcadeGame } from '../../shared/arcade';
+import type { LeaderRow } from '../../shared/types';
 import { ScreenHead } from '../components/ui';
 import { useT } from '../lib/i18n';
 
 type Scope = 'today' | 'week' | 'all';
+type Board = 'nightly' | ArcadeGame;
+
+interface Table {
+  rows: LeaderRow[];
+  me: LeaderRow | null;
+  totalPlayers: number;
+}
 
 const SCOPES: { value: Scope; label: string }[] = [
   { value: 'today', label: 'Today' },
@@ -29,7 +38,8 @@ const EMPTY: Record<Scope, { title: string; body: string }> = {
 export function Leaderboard({ navigate }: { navigate: (path: string) => void }) {
   const t = useT();
   const [scope, setScope] = useState<Scope>('today');
-  const [data, setData] = useState<LeaderboardResponse | null>(null);
+  const [board, setBoard] = useState<Board>('nightly');
+  const [data, setData] = useState<Table | null>(null);
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
 
@@ -37,11 +47,10 @@ export function Leaderboard({ navigate }: { navigate: (path: string) => void }) 
     let alive = true;
     setLoading(true);
     setFailed(false);
-    api
-      .leaderboard(scope)
+    (board === 'nightly' ? api.leaderboard(scope) : api.arcadeLeaderboard(board, scope))
       .then((d) => {
         if (alive) {
-          setData(d);
+          setData({ rows: d.rows, me: d.me, totalPlayers: d.totalPlayers });
           setLoading(false);
         }
       })
@@ -54,7 +63,7 @@ export function Leaderboard({ navigate }: { navigate: (path: string) => void }) 
     return () => {
       alive = false;
     };
-  }, [scope]);
+  }, [scope, board]);
 
   const rows = data?.rows ?? [];
   const meInRows = rows.some((r) => r.me);
@@ -73,6 +82,28 @@ export function Leaderboard({ navigate }: { navigate: (path: string) => void }) 
             )}
           </p>
         ) : null}
+
+        <div className="lb-tabs" style={{ marginBottom: 10 }}>
+          <button
+            className="tab"
+            aria-selected={board === 'nightly'}
+            role="tab"
+            onClick={() => setBoard('nightly')}
+          >
+            {t('Nightly')}
+          </button>
+          {ARCADE_GAMES.map((game) => (
+            <button
+              key={game}
+              className="tab"
+              aria-selected={board === game}
+              role="tab"
+              onClick={() => setBoard(game)}
+            >
+              {t(ARCADE_LABELS[game])}
+            </button>
+          ))}
+        </div>
 
         <div className="lb-tabs" style={{ marginBottom: 16 }}>
           {SCOPES.map((s) => (
@@ -103,10 +134,21 @@ export function Leaderboard({ navigate }: { navigate: (path: string) => void }) 
             </div>
           ) : rows.length === 0 ? (
             <div className="empty">
-              <span className="eyebrow">{t(EMPTY[scope].title)}</span>
-              <p style={{ maxWidth: '36ch' }}>{t(EMPTY[scope].body)}</p>
-              <button className="btn btn-primary" onClick={() => navigate('/play')}>
-                {t('Play today’s board')}
+              <span className="eyebrow">
+                {t(board === 'nightly' ? EMPTY[scope].title : 'No scores on this table tonight')}
+              </span>
+              <p style={{ maxWidth: '36ch' }}>
+                {t(
+                  board === 'nightly'
+                    ? EMPTY[scope].body
+                    : 'Finish a Word Well or a Memory Bell run today and it lands here, with the board it was played on.',
+                )}
+              </p>
+              <button
+                className="btn btn-primary"
+                onClick={() => navigate(board === 'nightly' ? '/play' : `/${board}`)}
+              >
+                {t(board === 'nightly' ? 'Play today’s board' : 'Play this table')}
               </button>
             </div>
           ) : (

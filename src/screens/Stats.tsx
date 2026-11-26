@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { api, type StatsResponse } from '../lib/api';
 import { ScreenHead, StatBox, formatDay } from '../components/ui';
 import { MAX_SCORE } from '../../shared/score';
+import { ARCADE_LABELS } from '../../shared/arcade';
 import { useT } from '../lib/i18n';
 
 function calendarLevel(score: number | null): '0' | '1' | '2' | '3' {
@@ -59,7 +60,7 @@ export function Stats({ navigate }: { navigate: (path: string) => void }) {
     );
   }
 
-  if (stats.dailyCompleted === 0) {
+  if (stats.dailyCompleted === 0 && stats.arcade.length === 0) {
     return (
       <main className="main">
         <div className="wrap">
@@ -136,6 +137,35 @@ export function Stats({ navigate }: { navigate: (path: string) => void }) {
             )}
           </p>
         </section>
+
+        {stats.arcade.length > 0 ? (
+          <section className="card stack gap-14" style={{ marginBottom: 20 }}>
+            <div className="row" style={{ justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
+              <span className="eyebrow">{t('Side tables')}</span>
+              <span className="par-note" style={{ margin: 0 }}>
+                {t('Kept with your player, not just this browser.')}
+              </span>
+            </div>
+            <div className="stack">
+              {stats.arcade.map((entry) => (
+                <div
+                  key={entry.game}
+                  className="row"
+                  style={{ justifyContent: 'space-between', gap: 10, padding: '8px 0', borderBottom: '1px solid var(--line)' }}
+                >
+                  <span>{t(ARCADE_LABELS[entry.game])}</span>
+                  <span className="row gap-14">
+                    <span className="par-note">{t('{n} plays', { n: entry.plays })}</span>
+                    <span className="mono">{t('best {n}', { n: entry.best })}</span>
+                  </span>
+                </div>
+              ))}
+            </div>
+            <button className="btn btn-sm btn-ghost" onClick={() => navigate('/leaderboard')}>
+              {t('See the side tables')}
+            </button>
+          </section>
+        ) : null}
 
         <div style={{ display: 'grid', gap: 20, gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))' }}>
           <section className="card stack gap-14">

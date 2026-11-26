@@ -1,5 +1,6 @@
-import type { ReactNode } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 import { useT } from '../lib/i18n';
+import { preferReducedMotion } from '../lib/settings';
 import type { SightingId } from '../lib/journal';
 
 /**
@@ -90,8 +91,32 @@ const WANDERER = [
 
 /** The night scene behind the wordmark: sky, village, water and wildlife. */
 export function HeroWorld() {
+  const art = useRef<HTMLDivElement | null>(null);
+
+  /* Two or three pixels of lean, never more; touch and reduced motion stay still. */
+  useEffect(() => {
+    if (!window.matchMedia('(hover: hover)').matches || preferReducedMotion()) return;
+    let frame = 0;
+    const onMove = (event: PointerEvent) => {
+      if (frame) return;
+      frame = requestAnimationFrame(() => {
+        frame = 0;
+        const el = art.current;
+        if (!el) return;
+        const rect = el.getBoundingClientRect();
+        el.style.setProperty('--hero-x', ((event.clientX - rect.left) / Math.max(1, rect.width) - 0.5).toFixed(3));
+        el.style.setProperty('--hero-y', ((event.clientY - rect.top) / Math.max(1, rect.height) - 0.5).toFixed(3));
+      });
+    };
+    window.addEventListener('pointermove', onMove, { passive: true });
+    return () => {
+      window.removeEventListener('pointermove', onMove);
+      if (frame) cancelAnimationFrame(frame);
+    };
+  }, []);
+
   return (
-    <div className="hero-art" aria-hidden="true">
+    <div ref={art} className="hero-art" aria-hidden="true">
       <span className="hero-stars" />
       <span className="hero-stars hero-stars-twinkle" />
       <span className="hero-moon" />

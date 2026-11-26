@@ -3,11 +3,12 @@ import { Home } from './screens/Home';
 import { RouteBoundary } from './components/RouteBoundary';
 import { RealmBackdrop } from './components/RealmBackdrop';
 import { SceneLayer } from './components/SceneLayer';
-import { routeWeather, type PlaceId } from './lib/atlas';
+import { PLACE_BY_ID, routeWeather, type PlaceId } from './lib/atlas';
+import { PlaceScene } from './components/PlaceScene';
 import type { SceneKey } from './lib/scenes';
 
 /* Every screen but the menu is its own chunk, so the first paint ships the
-   menu, not all fifteen boards. */
+   menu, not all nineteen boards. */
 const Play = lazy(() => import('./screens/Play').then((m) => ({ default: m.Play })));
 const Results = lazy(() => import('./screens/Results').then((m) => ({ default: m.Results })));
 const Archive = lazy(() => import('./screens/Archive').then((m) => ({ default: m.Archive })));
@@ -28,10 +29,18 @@ const Connect4 = lazy(() => import('./screens/Connect4').then((m) => ({ default:
 const Dominoes = lazy(() => import('./screens/Dominoes').then((m) => ({ default: m.Dominoes })));
 const Arcade = lazy(() => import('./screens/Arcade').then((m) => ({ default: m.Arcade })));
 const Atlas = lazy(() => import('./screens/Atlas').then((m) => ({ default: m.Atlas })));
+const Night = lazy(() => import('./screens/Night').then((m) => ({ default: m.Night })));
+const WordWell = lazy(() => import('./screens/WordWell').then((m) => ({ default: m.WordWell })));
+const MemoryBell = lazy(() => import('./screens/MemoryBell').then((m) => ({ default: m.MemoryBell })));
+const Mancala = lazy(() => import('./screens/Mancala').then((m) => ({ default: m.Mancala })));
+const Pegs = lazy(() => import('./screens/Pegs').then((m) => ({ default: m.Pegs })));
+const Crates = lazy(() => import('./screens/Crates').then((m) => ({ default: m.Crates })));
+const Boxes = lazy(() => import('./screens/Boxes').then((m) => ({ default: m.Boxes })));
 import { Logo } from './components/ui';
 import { getSummary, setSummary } from './lib/results';
 import { dayNumber } from '../shared/dates';
-import { useT } from './lib/i18n';
+import { parseChallenge, parseTableChallenge } from './lib/challenge';
+import { translate, useT } from './lib/i18n';
 import { BRAND } from './brand';
 
 /** The site can be served from a subpath (GitHub Pages: /noct/), so routes carry the base. */
@@ -86,6 +95,12 @@ const ATLAS_PLACE_BY_SECTION: Record<string, PlaceId> = {
   checkers: 'checkers',
   connect4: 'connect4',
   dominoes: 'dominoes',
+  wordwell: 'wordwell',
+  memorybell: 'memorybell',
+  mancala: 'mancala',
+  pegs: 'pegs',
+  crates: 'crates',
+  boxes: 'boxes',
 };
 
 const NAV: NavItem[] = [
@@ -98,6 +113,7 @@ const NAV: NavItem[] = [
     match: (s: string[]) => s[0] === 'play' || s[0] === 'practice' || s[0] === 'archive',
   },
   { path: '/chess', label: 'Chess', match: (s: string[]) => s[0] === 'chess' },
+  { path: '/night', label: 'Night', match: (s: string[]) => s[0] === 'night' },
   { path: '/atlas', label: 'Atlas', match: (s: string[]) => s[0] === 'atlas' },
   { path: '/arcade', label: 'Arcade', match: (s: string[]) => s[0] === 'arcade', always: true },
   { path: '/stats', label: 'Stats', match: (s: string[]) => s[0] === 'stats' },
@@ -136,6 +152,13 @@ export function App() {
           : null);
   const weather = routeWeather(dayNumber());
   const atlasQuery = atlasPlace ? `?place=${atlasPlace}` : '';
+  const place = atlasPlace ? PLACE_BY_ID[atlasPlace] : null;
+
+  /* Each route names its own tab; the menu keeps the brand alone. */
+  useEffect(() => {
+    const name = place ? translate(place.name) : null;
+    document.title = name ? `${name} · Noct` : 'Noct — a new board every night';
+  }, [path, place]);
   const realm =
     !section
       ? 'home'
@@ -168,6 +191,7 @@ export function App() {
       <Play
         key="daily"
         mode="daily"
+        challenge={parseChallenge(url.search)}
         onFinish={finish}
         onExit={() => navigate('/')}
         onTutorial={() => navigate('/how-to')}
@@ -253,6 +277,34 @@ export function App() {
     page = <Dominoes key="dominoes" navigate={navigate} />;
   } else if (section === 'arcade') {
     page = <Arcade key="arcade" navigate={navigate} />;
+  } else if (section === 'night') {
+    page = <Night key="night" navigate={navigate} />;
+  } else if (section === 'wordwell') {
+    page = <WordWell key="wordwell" navigate={navigate} />;
+  } else if (section === 'memorybell') {
+    page = <MemoryBell key="memorybell" navigate={navigate} />;
+  } else if (section === 'mancala') {
+    const challenge = parseTableChallenge(url.search, 'mancala', dayNumber());
+    page = (
+      <Mancala
+        key={url.search ? `mancala-${url.search}` : 'mancala'}
+        navigate={navigate}
+        challenge={challenge}
+      />
+    );
+  } else if (section === 'pegs') {
+    const challenge = parseTableChallenge(url.search, 'pegs', dayNumber());
+    page = (
+      <Pegs
+        key={url.search ? `pegs-${url.search}` : 'pegs'}
+        navigate={navigate}
+        challenge={challenge}
+      />
+    );
+  } else if (section === 'crates') {
+    page = <Crates key="crates" navigate={navigate} />;
+  } else if (section === 'boxes') {
+    page = <Boxes key="boxes" navigate={navigate} />;
   } else if (section === 'atlas') {
     page = <Atlas key="atlas" navigate={navigate} />;
   } else if (section === 'stats') {
@@ -357,6 +409,13 @@ export function App() {
           </nav>
         </div>
       </header>
+
+      {place && !immersive ? (
+        <div className="place-band" aria-hidden="true">
+          <PlaceScene place={place.id} weather={weather.id} variant="band" />
+          <span className="place-band-name">{t(place.placeName)}</span>
+        </div>
+      ) : null}
 
       <div key={path} className="page-enter">
         <RouteBoundary>

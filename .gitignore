@@ -9,3 +9,5 @@ dist/
 .DS_Store
 .allowed-origins.txt
 crowd-dist/
+.secrets/
+worker-dist/

@@ -133,6 +133,35 @@
   background: linear-gradient(180deg, rgba(226, 232, 255, 0.08), transparent 60%);
 }
 
+.scene-layer[data-weather='fireflies'] .scene-weather {
+  opacity: 1;
+  background-image:
+    radial-gradient(2px 2px at 22% 64%, rgba(255, 233, 168, 0.8), transparent),
+    radial-gradient(1.5px 1.5px at 58% 48%, rgba(255, 233, 168, 0.6), transparent),
+    radial-gradient(2px 2px at 78% 72%, rgba(255, 233, 168, 0.7), transparent);
+  background-size: 210px 160px, 260px 190px, 230px 170px;
+  animation: scene-fireflies 21s ease-in-out infinite alternate;
+}
+
+.scene-layer[data-weather='storm'] .scene-weather {
+  opacity: 0.7;
+  background-image: repeating-linear-gradient(
+    102deg,
+    rgba(200, 220, 255, 0.2) 0 1px,
+    transparent 1px 9px
+  );
+  animation: scene-rain 1.4s linear infinite;
+}
+
+.scene-layer[data-weather='storm'] .scene-weather::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(210, 228, 255, 0.35);
+  opacity: 0;
+  animation: scene-lightning 11s steps(1, end) infinite;
+}
+
 .scene-layer[data-weather='meteors'] .scene-weather {
   opacity: 1;
   background: none;
@@ -259,6 +288,22 @@
     transform: translate3d(3%, 1.4%, 0) skewY(-1.2deg);
     opacity: 1;
   }
+}
+
+@keyframes scene-fireflies {
+  from { background-position: 0 0, 0 0, 0 0; }
+  to { background-position: 30px -22px, -24px 18px, 20px 26px; }
+}
+
+@keyframes scene-rain {
+  from { background-position: 0 0; }
+  to { background-position: -16px 90px; }
+}
+
+@keyframes scene-lightning {
+  0%, 94%, 97%, 100% { opacity: 0; }
+  95% { opacity: 0.4; }
+  96% { opacity: 0.12; }
 }
 
 @keyframes scene-shoot {

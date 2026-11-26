@@ -1,0 +1,24 @@
+{
+  // Local mirror of the Sites deployment: Worker + built assets + D1.
+  // Run: npm run build && npm run build:worker && npx wrangler dev --config wrangler.worker.jsonc --port 8787
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "noct-app",
+  "main": "worker-dist/index.js",
+  "compatibility_date": "2025-09-01",
+  "observability": { "enabled": true },
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "noct-app",
+      "database_id": "00000000-0000-0000-0000-000000000000"
+    }
+  ],
+  // Local development only; production uses a Sites secret of the same name.
+  "vars": {
+    "PUZZLE_SECRET": "noct-local-parity-secret-please-rotate"
+  }
+}

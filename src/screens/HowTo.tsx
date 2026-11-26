@@ -203,7 +203,7 @@ export function HowTo({ navigate }: { navigate: (path: string) => void }) {
           </ul>
           <p className="par-note" style={{ margin: 0 }}>
             {t(
-              'Six more tables wait in the {arcade}: the glass orchard (Snake), the doubling room (2048), the turning table (Reversi), the quiet draughts table (Checkers), the lantern column (Connect Four) and the long table (Dominoes). They are free play — their records live in this browser and never touch the daily streak.',
+              'Twelve more tables wait in the {arcade}: the glass orchard (Snake), the doubling room (2048), the turning table (Reversi), the quiet draughts table (Checkers), the lantern column (Connect Four), the long table (Dominoes), the word well (Word Well), the memory bell (Memory Bell), the stone circle (Mancala), the hermit’s cross (Peg Solitaire), the crate yard (Crates) and the thread loom (Dots & Boxes). Their records live in this browser and never touch the daily streak.',
               { arcade: t('Arcade') },
             )}
           </p>
@@ -239,7 +239,7 @@ export function HowTo({ navigate }: { navigate: (path: string) => void }) {
           <span className="eyebrow">{t('The side tables')}</span>
           <p className="par-note" style={{ margin: 0 }}>
             {t(
-              'Every side table is a complete game against a bot, with two strengths and a local record. These are the rules that matter once you sit down.',
+              'Most side tables are complete games against a bot, with a local record. The hermit’s cross and the crate yard are solo puzzles. These are the rules that matter once you sit down.',
             )}
           </p>
           <ul className="rule-list">
@@ -267,6 +267,38 @@ export function HowTo({ navigate }: { navigate: (path: string) => void }) {
                 )}
               </span>
             </li>
+            <li>
+              <span>
+                <strong>{t('The stone circle')}</strong> ({t('Mancala')}) —{' '}
+                {t(
+                  'sow counter-clockwise from one of your six cups. The last stone in your store buys another turn; the last stone in an empty cup takes the opposite cup. When one side runs dry, the fuller store wins.',
+                )}
+              </span>
+            </li>
+            <li>
+              <span>
+                <strong>{t('The hermit’s cross')}</strong> ({t('Peg Solitaire')}) —{' '}
+                {t(
+                  'a jump removes the peg it passes over. Clear the stone cross down to one peg; the centre starts empty, and undo is free.',
+                )}
+              </span>
+            </li>
+            <li>
+              <span>
+                <strong>{t('The crate yard')}</strong> ({t('Crates')}) —{' '}
+                {t(
+                  'walk freely, but push only one crate at a time. A crate cannot be pulled, so plan the corners before you commit. Cover every chalk mark; undo and restart are free.',
+                )}
+              </span>
+            </li>
+            <li>
+              <span>
+                <strong>{t('The thread loom')}</strong> ({t('Dots & Boxes')}) —{' '}
+                {t(
+                  'draw one line between two neighbouring dots. Close the fourth side of a box to claim it and keep your turn. The loom answers on its own; the fuller side of the finished cloth wins.',
+                )}
+              </span>
+            </li>
           </ul>
           <div className="row gap-10" style={{ flexWrap: 'wrap' }}>
             <button className="btn btn-sm" onClick={() => navigate('/checkers')}>
@@ -278,6 +310,18 @@ export function HowTo({ navigate }: { navigate: (path: string) => void }) {
             <button className="btn btn-sm btn-ghost" onClick={() => navigate('/dominoes')}>
               {t('Dominoes')}
             </button>
+            <button className="btn btn-sm btn-ghost" onClick={() => navigate('/mancala')}>
+              {t('Mancala')}
+            </button>
+            <button className="btn btn-sm btn-ghost" onClick={() => navigate('/pegs')}>
+              {t('Peg Solitaire')}
+            </button>
+            <button className="btn btn-sm btn-ghost" onClick={() => navigate('/crates')}>
+              {t('Crates')}
+            </button>
+            <button className="btn btn-sm btn-ghost" onClick={() => navigate('/boxes')}>
+              {t('Dots & Boxes')}
+            </button>
             <button className="btn btn-sm btn-ghost" onClick={() => navigate('/arcade')}>
               {t('Arcade')}
             </button>
@@ -288,7 +332,7 @@ export function HowTo({ navigate }: { navigate: (path: string) => void }) {
           <span className="eyebrow">{t('The Long Road')}</span>
           <p className="par-note" style={{ margin: 0 }}>
             {t(
-              'The Hollow Atlas gathers all thirteen places into one road. Each place keeps three marks: a waymark for a first visit, a night mark for today, and a keepsake for a personal record. The nightly route suggests three stops, but it never locks a door or breaks a streak.',
+              'The Hollow Atlas gathers all nineteen places into one road. Each place keeps three marks: a waymark for a first visit, a night mark for today, and a keepsake for a personal record. The nightly route suggests three stops, but it never locks a door or breaks a streak.',
             )}
           </p>
           <div className="row gap-10" style={{ flexWrap: 'wrap' }}>

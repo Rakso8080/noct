@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { api } from '../lib/api';
+import { challengeLink } from '../lib/challenge';
 import type { Summary } from '../../shared/types';
 import { MAX_SCORE, parMs, speedTier } from '../../shared/score';
 import { dayToISO } from '../../shared/dates';
@@ -133,6 +135,21 @@ export function Results({ summary, navigate }: ResultsProps) {
   const t = useT();
   const [revealed, setRevealed] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [nightCopied, setNightCopied] = useState(false);
+  const [playerName, setPlayerName] = useState<string | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    api
+      .me()
+      .then((me) => {
+        if (alive) setPlayerName(me.name);
+      })
+      .catch(() => undefined);
+    return () => {
+      alive = false;
+    };
+  }, []);
   const counted = useCountUp(summary?.score ?? 0, 900);
 
   if (!summary) {
@@ -177,6 +194,23 @@ export function Results({ summary, navigate }: ResultsProps) {
     setCopied(ok);
     if (ok) sfx.tap();
     setTimeout(() => setCopied(false), 2200);
+  }
+
+  async function handleChallenge(): Promise<void> {
+    const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
+    const link = challengeLink(
+      { name: playerName ?? t('A player'), score: summary!.score },
+      window.location.origin,
+      base,
+    );
+    const ok = await copyText(t('{name} scored {score}. Beat it: {link}', {
+      name: playerName ?? t('A player'),
+      score: summary!.score,
+      link,
+    }));
+    setNightCopied(ok);
+    if (ok) sfx.tap();
+    setTimeout(() => setNightCopied(false), 2400);
   }
 
   async function handleShare(): Promise<void> {
@@ -395,6 +429,20 @@ export function Results({ summary, navigate }: ResultsProps) {
                 </p>
               </div>
             </div>
+
+            {isDaily ? (
+              <div className="card stack gap-10">
+                <span className="eyebrow">{t('Send the night')}</span>
+                <p className="par-note" style={{ margin: 0 }}>
+                  {t(
+                    'A link to today’s board with your score on it. Whoever opens it sees the line, not your streak.',
+                  )}
+                </p>
+                <button className="btn btn-sm btn-block" onClick={() => void handleChallenge()}>
+                  {nightCopied ? t('Link copied') : t('Copy challenge link')}
+                </button>
+              </div>
+            ) : null}
 
             <div className="card stack gap-10">
               <span className="eyebrow">{t('Next')}</span>

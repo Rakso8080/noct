@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { api, type TodayResponse } from '../lib/api';
 import { Countdown } from '../components/ui';
-import { PlaceGlyph } from '../components/PlaceGlyph';
+import { PlaceScene } from '../components/PlaceScene';
+import { FirstNight } from '../components/FirstNight';
 import { HeroWorld, WorldFinds, WorldStrip } from '../components/World';
 import { dailyRunFor, streakFor, type SurveyRun } from '../lib/surveyStore';
 import { dayNumber, nextResetAt } from '../../shared/dates';
@@ -13,6 +14,7 @@ import {
   recordRouteStamp,
   routeWeather,
   surveySnapshot,
+  type PlaceId,
   type PlaceShape,
 } from '../lib/atlas';
 import { addSighting, readSightings, type SightingId } from '../lib/journal';
@@ -26,6 +28,7 @@ interface HomeProps {
 
 interface TileProps {
   index: string;
+  place: PlaceId;
   kind: string;
   name: string;
   line: string;
@@ -50,7 +53,7 @@ interface TileProps {
   onPlay: () => void;
 }
 
-function GameTile({ index, kind, name, line, meta, tone, shape, status, action, onPlay }: TileProps) {
+function GameTile({ index, place, kind, name, line, meta, tone, status, action, onPlay }: TileProps) {
   const t = useT();
   return (
     <article className="game-card" data-tone={tone}>
@@ -60,9 +63,9 @@ function GameTile({ index, kind, name, line, meta, tone, shape, status, action, 
         </span>
         <span className="game-status">{t(status)}</span>
       </div>
-      <div className="row gap-10" style={{ alignItems: 'center' }}>
+      <div className="row gap-10" style={{ alignItems: 'center', flexWrap: 'wrap' }}>
         <span className="game-icon">
-          <PlaceGlyph shape={shape} />
+          <PlaceScene place={place} variant="thumb" />
         </span>
         <h2 className="game-name">{t(name)}</h2>
       </div>
@@ -164,6 +167,8 @@ export function Home({ navigate, onTutorial }: HomeProps) {
   const checkersDay = games.checkers.daily[key];
   const connect4Day = games.connect4.daily[key];
   const dominoesDay = games.dominoes.daily[key];
+  const cratesDay = games.crates.daily[key];
+  const boxesDay = games.boxes.daily[key];
   const checkersStatus = checkersDay
     ? checkersDay.result === 'win'
       ? t('Won · {n} plies', { n: checkersDay.plies })
@@ -191,6 +196,20 @@ export function Home({ navigate, onTutorial }: HomeProps) {
     : games.dominoes.wins + games.dominoes.losses + games.dominoes.draws
       ? t('{wins}W · {losses}L', { wins: games.dominoes.wins, losses: games.dominoes.losses })
       : t('Unplayed');
+  const cratesStatus = cratesDay
+    ? t('Best today {n} moves', { n: cratesDay.moves })
+    : games.crates.bestMoves !== null
+      ? t('Best {n} moves', { n: games.crates.bestMoves })
+      : t('Unplayed');
+  const boxesStatus = boxesDay
+    ? boxesDay.result === 'win'
+      ? t('Won · +{n}', { n: boxesDay.margin })
+      : boxesDay.result === 'loss'
+        ? t('Lost today')
+        : t('Drawn today')
+    : games.boxes.wins + games.boxes.losses + games.boxes.draws
+      ? t('{wins}W · {losses}L', { wins: games.boxes.wins, losses: games.boxes.losses })
+      : t('Unplayed');
 
   const route = nightRoute(day);
   const routeSources = {
@@ -214,6 +233,7 @@ export function Home({ navigate, onTutorial }: HomeProps) {
 
   return (
     <main className="main">
+      <FirstNight onPlay={() => navigate('/common')} />
       <div className="wrap">
         <section className="home-hero">
           <HeroWorld />
@@ -234,7 +254,7 @@ export function Home({ navigate, onTutorial }: HomeProps) {
             <h1 className="wordmark">Noct</h1>
             <p className="hero-line">
               {t(
-                'Thirteen places on one road: seven nightly boards and six side tables. Twenty-five seconds a prompt, one attempt each.',
+                'Nineteen places on one road: seven nightly boards and twelve side tables. A new board every night, one attempt each.',
               )}
             </p>
 
@@ -296,6 +316,7 @@ export function Home({ navigate, onTutorial }: HomeProps) {
         <div className="menu-grid" style={{ marginTop: 20 }} aria-label={t('Choose a game')}>
           <GameTile
             index="01"
+            place="common"
             kind="choir"
             name="Common"
             line="The night choir: everyone sings the same note. The loudest answer in the crowd pays best."
@@ -308,6 +329,7 @@ export function Home({ navigate, onTutorial }: HomeProps) {
           />
           <GameTile
             index="02"
+            place="rare"
             kind="hall"
             name="Rare"
             line="The empty hall: one voice in the dark. The quietest answer on the board pays best."
@@ -320,6 +342,7 @@ export function Home({ navigate, onTutorial }: HomeProps) {
           />
           <GameTile
             index="03"
+            place="noct"
             kind="lanterns"
             name="Noct"
             line="The lantern grid: four boards of dark windows. One spark per row, column and tone; never let two touch."
@@ -332,6 +355,7 @@ export function Home({ navigate, onTutorial }: HomeProps) {
           />
           <GameTile
             index="04"
+            place="chess"
             kind="board"
             name="Chess"
             line="Every rule, no clock. Face tonight’s bot, or open a private table and send a friend the code."
@@ -344,6 +368,7 @@ export function Home({ navigate, onTutorial }: HomeProps) {
           />
           <GameTile
             index="05"
+            place="mines"
             kind="sky"
             name="Mines"
             line="Ten fallen stars under a 9×9 field. The first tap is always safe."
@@ -356,6 +381,7 @@ export function Home({ navigate, onTutorial }: HomeProps) {
           />
           <GameTile
             index="06"
+            place="pairs"
             kind="keepsakes"
             name="Pairs"
             line="Twelve keepsakes face down. Turn two; a match goes on the shelf."
@@ -368,6 +394,7 @@ export function Home({ navigate, onTutorial }: HomeProps) {
           />
           <GameTile
             index="07"
+            place="lights"
             kind="windows"
             name="Lights"
             line="Twenty-five lit windows. Every press flips its neighbours too; each one shut lets a star through."
@@ -380,6 +407,20 @@ export function Home({ navigate, onTutorial }: HomeProps) {
           />
           <GameTile
             index="08"
+            place="memorybell"
+            kind="bells"
+            name="Memory Bell"
+            line="Four bells keep the order they were rung. Repeat it until the wooden tower runs out of notes."
+            meta="4 bells · 12 rounds"
+            tone="amber"
+            shape="bell"
+            status={games.bell.bestLevel === null ? t('Unplayed') : t('Best {n} rounds', { n: games.bell.bestLevel })}
+            action={games.bell.daily[key] ? 'Ring again' : 'Play'}
+            onPlay={() => navigate('/memorybell')}
+          />
+          <GameTile
+            index="09"
+            place="snake"
             kind="orchard"
             name="Snake"
             line="The glass orchard: one press, one step. Twelve apples before the walls or your tail."
@@ -391,7 +432,8 @@ export function Home({ navigate, onTutorial }: HomeProps) {
             onPlay={() => navigate('/snake')}
           />
           <GameTile
-            index="09"
+            index="10"
+            place="numbers"
             kind="room"
             name="2048"
             line="The doubling room: slide the lanterns, fuse equals, light a 512 tile."
@@ -403,7 +445,8 @@ export function Home({ navigate, onTutorial }: HomeProps) {
             onPlay={() => navigate('/numbers')}
           />
           <GameTile
-            index="10"
+            index="11"
+            place="reversi"
             kind="table"
             name="Reversi"
             line="The turning table: trap the bot’s lines, flip the discs, own the most stones."
@@ -415,7 +458,8 @@ export function Home({ navigate, onTutorial }: HomeProps) {
             onPlay={() => navigate('/reversi')}
           />
           <GameTile
-            index="11"
+            index="12"
+            place="checkers"
             kind="draughts"
             name="Checkers"
             line="The quiet draughts table: forced captures, long jump chains and a crown waiting on the far rank."
@@ -427,7 +471,8 @@ export function Home({ navigate, onTutorial }: HomeProps) {
             onPlay={() => navigate('/checkers')}
           />
           <GameTile
-            index="12"
+            index="13"
+            place="connect4"
             kind="columns"
             name="Connect Four"
             line="The lantern column: drop, stack and line up four before the bot seals the middle."
@@ -439,7 +484,8 @@ export function Home({ navigate, onTutorial }: HomeProps) {
             onPlay={() => navigate('/connect4')}
           />
           <GameTile
-            index="13"
+            index="14"
+            place="dominoes"
             kind="line"
             name="Dominoes"
             line="The long table: match either open end, draw from the boneyard, and empty your hand first."
@@ -449,6 +495,81 @@ export function Home({ navigate, onTutorial }: HomeProps) {
             status={dominoesStatus}
             action="Play"
             onPlay={() => navigate('/dominoes')}
+          />
+          <GameTile
+            index="15"
+            place="wordwell"
+            kind="words"
+            name="Word Well"
+            line="Five letters are lowered into the well each night. Six guesses bring them up; green is the right letter in the right place."
+            meta="5 letters · 6 guesses"
+            tone="moss"
+            shape="well"
+            status={games.word.bestGuesses === null ? t('Unplayed') : t('Best {n} guesses', { n: games.word.bestGuesses })}
+            action={games.word.daily[key] ? 'Play again' : 'Play'}
+            onPlay={() => navigate('/wordwell')}
+          />
+          <GameTile
+            index="16"
+            place="mancala"
+            kind="stones"
+            name="Mancala"
+            line="The stone circle: sow four stones around twelve cups, keep the extra turn and take the opposite cup."
+            meta="12 cups · four stones"
+            tone="sand"
+            shape="bowl"
+            status={
+              games.mancala.bestStones === null
+                ? t('Unplayed')
+                : t('Best {n} stones', { n: games.mancala.bestStones })
+            }
+            action={games.mancala.daily[key] ? 'Play again' : 'Play'}
+            onPlay={() => navigate('/mancala')}
+          />
+          <GameTile
+            index="17"
+            place="pegs"
+            kind="solitaire"
+            name="Peg Solitaire"
+            line="The hermit’s cross: jump a peg over its neighbour, remove it, and leave only one on the stone cross."
+            meta="33 holes · one peg"
+            tone="moss"
+            shape="cross"
+            status={
+              games.pegs.bestPegs === null
+                ? t('Unplayed')
+                : games.pegs.bestPegs === 1
+                  ? t('Best 1 peg')
+                  : t('Best {n} pegs', { n: games.pegs.bestPegs })
+            }
+            action={games.pegs.daily[key] ? 'Play again' : 'Play'}
+            onPlay={() => navigate('/pegs')}
+          />
+          <GameTile
+            index="18"
+            place="crates"
+            kind="crates"
+            name="Crates"
+            line="The crate yard: walk freely, push one crate at a time, and cover every chalk mark without pulling anything back."
+            meta="7×7 · push only"
+            tone="clay"
+            shape="crate"
+            status={cratesStatus}
+            action={cratesDay ? 'Play again' : 'Play'}
+            onPlay={() => navigate('/crates')}
+          />
+          <GameTile
+            index="19"
+            place="boxes"
+            kind="threads"
+            name="Dots & Boxes"
+            line="The thread loom: draw one line between two dots, close a box to keep the turn, and leave the loom with fewer rooms."
+            meta="5×5 dots · 4×4 boxes"
+            tone="teal"
+            shape="thread"
+            status={boxesStatus}
+            action={boxesDay ? 'Play again' : 'Play'}
+            onPlay={() => navigate('/boxes')}
           />
         </div>
 
